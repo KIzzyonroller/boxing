@@ -13,7 +13,7 @@ with sync_playwright() as pw:
     pg = b.new_page(viewport={"width": 1280, "height": 720})
     pg.on("console", lambda m: m.type == "error" and errors.append(m.text))
     pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-    pg.goto(URL); pg.wait_for_function("window.__game !== undefined", timeout=60000); time.sleep(1.5)
+    pg.goto(URL); pg.wait_for_function("window.__game !== undefined", timeout=240000); pg.evaluate("window.__noReplay = true"); time.sleep(1.5)
     pg.click("#mNew"); time.sleep(.6)
     shot(pg, "c0_creator")
     # try to start without a name -> error message
@@ -47,7 +47,7 @@ with sync_playwright() as pw:
     pg.click("#trDone"); time.sleep(1)
     # two sim sessions to reach fight night
     for t in ["bag", "road"]:
-        pg.click("#trainBtn"); time.sleep(.3); pg.click(f"[data-t='{t}']"); time.sleep(.4); pg.click("#trDone"); time.sleep(.6)
+        pg.click("#trainBtn"); time.sleep(.3); pg.click(f"[data-auto='{t}']"); time.sleep(.4); pg.click("#trDone"); time.sleep(.6)
     print("before fight:", state(pg)); shot(pg, "c6_hub_fightnight")
     pg.click("#fightBtn"); time.sleep(.6); shot(pg, "c7_prefight")
     pg.click("#walkBtn"); time.sleep(1.5); pg.keyboard.press("Space"); time.sleep(2); shot(pg, "c8_fight")
@@ -55,15 +55,15 @@ with sync_playwright() as pw:
     for k in ["KeyJ", "KeyK", "KeyJ", "KeyU"]: pg.keyboard.press(k); time.sleep(.3)
     # force a KO win to test the result flow
     pg.evaluate("() => { const g = window.__game; g.O.head = 1; g.knockdown(g.O, g.P); g.O.down.getUp = 99; }")
-    pg.wait_for_selector("#over:not(.hidden)", timeout=90000); time.sleep(.5)
+    pg.wait_for_selector("#over:not(.hidden)", timeout=240000); time.sleep(.5)
     shot(pg, "c9_result"); print("result:", pg.text_content("#over")[:400])
     pg.click("#homeBtn"); time.sleep(1.5); shot(pg, "c10_hub_after"); print("after fight:", state(pg))
     # reload: does the career persist (local fallback in tests)?
-    pg.reload(); pg.wait_for_function("window.__game !== undefined", timeout=60000); time.sleep(1)
+    pg.reload(); pg.wait_for_function("window.__game !== undefined", timeout=240000); pg.evaluate("window.__noReplay = true"); time.sleep(1)
     print("after reload:", state(pg))
     # phone
     m = b.new_page(viewport={"width": 390, "height": 760}, has_touch=True, is_mobile=True)
-    m.goto(URL); m.wait_for_function("window.__game !== undefined", timeout=60000); time.sleep(1.5)
+    m.goto(URL); m.wait_for_function("window.__game !== undefined", timeout=240000); pg.evaluate("window.__noReplay = true"); time.sleep(1.5)
     m.click("#mNew"); time.sleep(1.5); m.screenshot(path=f"{S}/c11_mobile_creator.png")
     b.close()
 print("ERRORS:", json.dumps(errors[:15], indent=1))

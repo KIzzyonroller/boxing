@@ -8,3 +8,4 @@ __pycache__/
 voice/node_modules
 dist/vox/
 dist/voxworker.js
+test_*.html

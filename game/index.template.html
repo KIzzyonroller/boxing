@@ -12,7 +12,7 @@
    PICTURE: your own fighter, full bleed in a lit gym; the ring under one spotlight on fight night
    COLOUR and TYPE: near-black, red corner vs blue corner, gold for what matters; Barlow Condensed
    LAYOUT: 3D fills the screen; a side column holds menus (bottom sheet on phones) */
-:root{color-scheme:dark;--bg:#07080c;--ink:#f2efe8;--dim:#9aa0ad;--red:#d7262e;--blue:#2f6fe4;--gold:#e8b931;--panel:rgba(10,12,18,.88);--line:rgba(255,255,255,.1)}
+:root{color-scheme:dark;--green:#3fd18a;--bg:#07080c;--ink:#f2efe8;--dim:#9aa0ad;--red:#d7262e;--blue:#2f6fe4;--gold:#e8b931;--panel:rgba(10,12,18,.88);--line:rgba(255,255,255,.1)}
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none}
 canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
@@ -108,7 +108,7 @@ button.wide:hover{border-color:rgba(232,185,49,.6)}
 .hud::before{content:"";position:fixed;left:0;right:0;top:0;height:150px;background:linear-gradient(rgba(0,0,0,.6),transparent);z-index:-1;pointer-events:none}
 .caption{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);width:max-content;max-width:min(760px,92vw);background:rgba(0,0,0,.66);padding:8px 16px 10px;border-radius:4px;font:500 18px/1.35 Barlow,sans-serif;text-align:center;pointer-events:none;z-index:4}
 .caption b{display:block;font:600 13px "Barlow Condensed",sans-serif;color:var(--gold);letter-spacing:.02em}
-.lower{position:fixed;left:6vw;bottom:15vh;min-width:min(420px,88vw);pointer-events:none;z-index:4;animation:slide .5s cubic-bezier(.2,.8,.2,1) both}
+.lower{position:fixed;left:6vw;bottom:max(15vh,150px);min-width:min(420px,88vw);pointer-events:none;z-index:4;animation:slide .5s cubic-bezier(.2,.8,.2,1) both}
 .lower .bar1{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(10,12,18,.95),rgba(10,12,18,.75));padding:10px 18px 8px}
 .lower .chip{width:14px;height:44px;border-radius:2px}
 .lower .nm2{font:800 clamp(30px,5vw,46px)/1 "Barlow Condensed",sans-serif}
@@ -117,6 +117,33 @@ button.wide:hover{border-color:rgba(232,185,49,.6)}
 @keyframes slide{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
 #skipBtn{position:fixed;right:16px;bottom:16px;z-index:5;background:rgba(10,12,18,.7)}
 @media (prefers-reduced-motion:reduce){.side,.lower{animation:none}}
+.drill{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);width:min(640px,92vw);pointer-events:none;z-index:3;font-family:"Barlow Condensed",sans-serif}
+.drill .row{display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;color:var(--ink);text-shadow:0 2px 10px #000;margin:4px 2px}
+.meter{position:relative;height:14px;background:rgba(0,0,0,.6);border-radius:7px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.meter.tall{height:26px}
+.meter i{position:absolute;inset:0 auto 0 0;transition:width .1s}
+.meter .zone{position:absolute;top:0;bottom:0;background:rgba(232,185,49,.3);border-left:2px solid var(--gold);border-right:2px solid var(--gold)}
+.meter .needle{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:#fff;border-radius:2px}
+.lane{position:relative;height:58px;background:rgba(0,0,0,.6);border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.lane .hitline{position:absolute;left:18%;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--gold);box-shadow:0 0 14px var(--gold)}
+.lane .note{position:absolute;top:11px;width:36px;height:36px;margin-left:-18px;border-radius:50%;display:grid;place-items:center;font:800 17px "Barlow Condensed",sans-serif;color:#111}
+.lane .note.jab{background:var(--gold)}.lane .note.cross{background:#ff5a60}
+.lane .note.perfect,.lane .note.good{opacity:.25;transform:scale(1.3)}.lane .note.miss{opacity:.2;background:#666}
+.drillrow{display:flex;gap:6px;align-items:stretch;margin:7px 0}
+.drillrow .wide{flex:1;margin:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;text-align:left}
+.drillrow .wide span{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px}
+.drillrow .wide em{font-style:normal;font-weight:500;color:var(--gold);font-size:13px}
+.drillrow .wide small{text-align:left;max-width:none}
+.drillrow .auto{flex:none;width:86px;font-size:13px;line-height:1.2;padding:6px}
+.replaytag{position:fixed;left:24px;bottom:28px;z-index:4;font:800 30px "Barlow Condensed",sans-serif;letter-spacing:.06em;color:#fff;background:var(--red);padding:4px 16px 2px;border-radius:3px;animation:blink 1.2s steps(2) infinite}@keyframes blink{50%{opacity:.55}}
+.photobar{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:6;display:flex;gap:8px;align-items:center;background:rgba(10,12,18,.85);padding:8px 12px;border-radius:8px}.photobar span{color:var(--dim);font-size:14px;margin-right:6px}
+.photoshot{position:fixed;inset:6vh 8vw;z-index:7;background:rgba(10,12,18,.95);padding:14px;border-radius:8px;overflow:auto;text-align:center}.photoshot img{max-width:100%;max-height:70vh;border-radius:4px}
+body.photo .hud,body.photo #hint,body.photo #pauseBtn,body.photo .caption,body.photo .pad{display:none!important}
+.bracket{padding-left:20px}.bracket li{margin:6px 0;color:var(--dim)}.bracket li.won{color:var(--gold)}.bracket li.now{color:var(--ink);font-weight:600}
+.fpv{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:1;background:radial-gradient(ellipse at center,transparent 45%,rgba(120,0,0,.55) 100%)}
+.belts{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}.belt{background:linear-gradient(180deg,#f7d774,#b8860b);color:#111;font:700 13px "Barlow Condensed",sans-serif;padding:3px 9px;border-radius:3px;box-shadow:inset 0 -3px 0 var(--c)}
+.gold{color:var(--gold)}.bad{color:#ff8a8a}.news summary{cursor:pointer;color:var(--dim);margin-top:8px}
+button.offer small{display:block;text-align:left;margin-top:3px;line-height:1.35}button.offer{flex-direction:column;align-items:flex-start;margin:7px 0}button.offer span{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}button.offer em{font-style:normal;color:var(--gold);font-size:13px}
 .hidden{display:none!important}
 .pad{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;gap:10px;padding:10px max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));pointer-events:none}
 .pad .grp{display:grid;gap:6px;pointer-events:auto}
@@ -168,12 +195,18 @@ button.wide:hover{border-color:rgba(232,185,49,.6)}
 <div class="msg hidden" id="msg"></div>
 <div class="mash hidden" id="mash">Hammer Space or tap to beat the count<div class="bar"><i id="mashBar" style="background:var(--gold);width:0"></i></div></div>
 <div class="hint hidden" id="hint"></div>
+<div class="drill hidden" id="drill"></div>
+<div class="fpv" id="fpv"></div>
+<div class="replaytag hidden" id="replayTag">Replay</div>
+<div class="photobar hidden" id="photoBar"><span>Photo mode · drag to orbit, scroll to zoom</span><button id="phSnap" class="go">Take photo</button><button id="phExit">Back to the fight</button></div>
+<div class="photoshot hidden" id="photoShot"></div>
 <div class="call hidden" id="call"><div class="nums" id="callNums"></div><div class="keys kbonly" id="callKeys"></div><div class="meta" id="callMeta"></div></div>
 
 <div class="panel" id="loading"><h1>Boxing career prototype</h1><p id="loadTxt">Loading the gym…</p></div>
 <aside class="side hidden" id="hub"></aside>
 <aside class="side hidden" id="creator"></aside>
 <aside class="side hidden" id="trainMenu"></aside>
+<aside class="side hidden" id="offers"></aside>
 <aside class="side hidden" id="menu"></aside>
 <aside class="side hidden" id="slots"></aside>
 <aside class="side hidden" id="settings"></aside>
@@ -200,6 +233,8 @@ button.wide:hover{border-color:rgba(232,185,49,.6)}
     <button data-a="slipL">Slip L</button><button data-a="block">Block</button><button data-a="slipR">Slip R</button>
     <button data-a="jab">1 Jab</button><button data-a="cross">2 Cross</button><button data-a="body">Body</button>
     <button data-a="hook">3 Hook</button><button data-a="upper">6 Upper</button><button data-a="cam">Cam</button>
+    <button data-a="lupper">5 Upper</button><button data-a="over">Overhand</button><button data-a="roll">Roll</button>
+    <button data-a="feint">Feint</button><button data-a="pull">Pull</button><button data-a="clinch">Clinch</button>
   </div>
 </div>
 
@@ -283,6 +318,7 @@ const RING = 3.1;
   }
   const seats = [];
   for (let s = 0; s < 4; s++) for (let r = 0; r < 7; r++) { const d = 5.4 + r * .95, y = -.6 + r * .55; for (let x = -d + .3; x < d - .3; x += .58) if (Math.random() < .88) seats.push({ s, x: x + rand(-.08, .08), d, y }); }
+  seats.sort((a, b) => a.d - b.d + rand(-.3, .3));
   const cm = new THREE.MeshStandardMaterial({ roughness: 1 });
   const bodies = new THREE.InstancedMesh(new THREE.CapsuleGeometry(.2, .45, 3, 8), cm, seats.length), heads = new THREE.InstancedMesh(new THREE.SphereGeometry(.12, 10, 8), cm, seats.length);
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
@@ -292,6 +328,7 @@ const RING = 3.1;
     col.setHSL(Math.random(), rand(.1, .4), rand(.06, .17)); bodies.setColorAt(i, col); col.setHSL(rand(.04, .09), .4, rand(.08, .3)); heads.setColorAt(i, col);
   });
   arena.add(bodies, heads);
+  window.__crowd = f => { bodies.count = heads.count = Math.max(1, Math.round(seats.length * f)); };
   const N = 90, pos = new Float32Array(N * 3), fcol = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) { const p = pick(seats), a = p.s * Math.PI / 2; pos[i * 3] = p.x * Math.cos(a) + (p.d - .3) * Math.sin(a); pos[i * 3 + 1] = p.y + 1.0; pos[i * 3 + 2] = -p.x * Math.sin(a) + (p.d - .3) * Math.cos(a); }
   const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); fg.setAttribute('color', new THREE.BufferAttribute(fcol, 3));
@@ -326,12 +363,12 @@ const _bd = new V3(), _up = new V3(0, 1, 0);
 function updateShowLights(t, level) {
   showLights.forEach((s, i) => {
     const a = t * .55 + i * 1.7;
-    s.target.position.set(Math.sin(a) * 2.4, 0, Math.cos(a * 1.27) * 2.4);
-    s.intensity = 220 * level;
+    const w = G.state === 'intro' && INTRO.walker; if (w && i < 2) s.target.position.set(w.pos.x + Math.sin(a * 3) * .3, 0, w.pos.z); else s.target.position.set(Math.sin(a) * 2.4, 0, Math.cos(a * 1.27) * 2.4);
+    s.intensity = 220 * level * (G.venue ? G.venue.lights : 1);
     const b = s.userData.beam, d = _bd.subVectors(s.target.position, s.position), L = d.length();
     b.scale.set(L * Math.tan(.2), L, L * Math.tan(.2));
     b.quaternion.setFromUnitVectors(_up, d.normalize().negate());
-    b.material.opacity = .055 * level;
+    b.material.opacity = .055 * level * (G.venue ? Math.min(1.2, G.venue.lights) : 1);
   });
 }
 
@@ -421,11 +458,17 @@ function buildShelf(trophies) {
   while (shelfG.children.length) shelfG.remove(shelfG.children[0]);
   TROPHIES.forEach((t, i) => {
     if (!trophies || !trophies[t.id]) return;
-    const y = i < 5 ? 1.125 : 1.645, z = -1.1 + (i % 5) * .55;
+    const y = i < 7 ? 1.125 : 1.645, z = -1.1 + (i % 7) * .37;
     const m = new THREE.MeshStandardMaterial({ color: TIER[t.tier], metalness: 1, roughness: .28 });
     const cup = new THREE.Mesh(cupGeo, m); cup.position.set(-4.8, y + .06, z); cup.castShadow = true; shelfG.add(cup);
     const base = new THREE.Mesh(baseGeo, baseM); base.position.set(-4.8, y + .03, z); shelfG.add(base);
     for (const s of [-1, 1]) { const h = new THREE.Mesh(handleGeo, m); h.position.set(-4.8, y + .27, z + s * .09); h.rotation.y = Math.PI / 2; shelfG.add(h); }
+  });
+  // world title belts hang on the wall above the shelf
+  Object.keys((PR && PR.belts) || {}).forEach((b, i) => {
+    const bd = BODIES.find(x => x.id === b), z = -.9 + i * .62;
+    const strap = new THREE.Mesh(new THREE.BoxGeometry(.02, .1, .56), new THREE.MeshStandardMaterial({ color: bd.col, roughness: .5 })); strap.position.set(-4.96, 2.3, z); shelfG.add(strap);
+    const plate = new THREE.Mesh(new THREE.CylinderGeometry(.11, .11, .025, 28), new THREE.MeshStandardMaterial({ color: 0xe8b931, metalness: 1, roughness: .22 })); plate.rotation.z = Math.PI / 2; plate.position.set(-4.94, 2.3, z); shelfG.add(plate);
   });
 }
 function updateDust(dt) {
@@ -523,15 +566,24 @@ const STANCE = -0.42, PIV = new V3(0, 0.98, 0);
 const GUARD = { L: new V3(0.12, 1.44, 0.30), R: new V3(-0.10, 1.42, 0.20) };
 const GUARD_HI = { L: new V3(0.085, 1.56, 0.25), R: new V3(-0.075, 1.56, 0.22) };
 const GUARD_LOW = { L: new V3(0.2, 1.2, 0.26), R: new V3(-0.16, 1.22, 0.16) };
+const GUARD_REF = { L: new V3(0.24, 1.02, 0.12), R: new V3(-0.24, 1.02, 0.12) };
 const GUARD_MITT = { L: new V3(0.2, 1.5, 0.36), R: new V3(-0.2, 1.5, 0.36) };
 const FEET = { L: new V3(0.13, 0.09, 0.21), R: new V3(-0.17, 0.09, -0.21) };
+// southpaw: everything mirrored left to right, lead and rear hands swapped
+const mirrorSet = set => ({ L: new V3(-set.R.x, set.R.y, set.R.z), R: new V3(-set.L.x, set.L.y, set.L.z) });
+const FEET_SP = mirrorSet(FEET);
+const SPCACHE = {};
+const punchFor = (type, sp) => { const d = PUNCH[type]; if (!sp) return d; return SPCACHE[type] || (SPCACHE[type] = Object.assign({}, d, { hand: d.hand === 'L' ? 'R' : 'L', twist: -d.twist })); };
 const PUNCH = {
   jab:   { hand: 'L', wind: .05, ext: .11, ret: .15, dmg: 5,  cost: 4, twist: -.72, lean: .10, path: 'straight', block: .92, name: 'Jab', num: 1 },
   cross: { hand: 'R', wind: .08, ext: .13, ret: .19, dmg: 10, cost: 8, twist: .32,  lean: .18, path: 'straight', block: .9,  name: 'Cross', num: 2 },
   hook:  { hand: 'L', wind: .10, ext: .15, ret: .21, dmg: 12, cost: 9, twist: .02,  lean: .14, path: 'hook',     block: .6,  name: 'Hook', num: 3 },
-  upper: { hand: 'R', wind: .11, ext: .14, ret: .21, dmg: 13, cost: 10, twist: -.12, lean: .04, path: 'upper',    block: .45, name: 'Uppercut', num: 6 }
+  upper: { hand: 'R', wind: .11, ext: .14, ret: .21, dmg: 13, cost: 10, twist: -.12, lean: .04, path: 'upper',    block: .45, name: 'Uppercut', num: 6 },
+  // from the combo video: the lead uppercut dips to the lead side, elbow bent; the overhand loops over the guard with a big forward lean
+  lupper: { hand: 'L', wind: .09, ext: .13, ret: .19, dmg: 11, cost: 9, twist: -.62, lean: .02, path: 'upper',  block: .45, name: 'Lead uppercut', num: 5 },
+  over:  { hand: 'R', wind: .14, ext: .17, ret: .25, dmg: 15, cost: 12, twist: .55, lean: .34, path: 'over',     block: .55, name: 'Overhand', num: 'OH' }
 };
-const tv = new V3(), tv2 = new V3(), tq = new Q(), tq2 = new Q();
+const tv = new V3(), tv2 = new V3(), tq = new Q(), tq2 = new Q(), BRUISE = new THREE.Color(0x5a2a3a);
 
 class Fighter {
   constructor(gltf, isPlayer) {
@@ -550,6 +602,14 @@ class Fighter {
     if (this.mats.Gloves) { this.mats.Gloves.roughness = .28; }
     if (this.mats.Skin) { this.mats.Skin.roughness = .5; }
     this.headMesh = this.model.getObjectByName('HeadMesh');
+    // the face gets its own material so it can bruise; swelling and a cut sit on it
+    if (this.headMesh) {
+      const hm = this.headMesh.isMesh ? this.headMesh : this.headMesh.getObjectByProperty('isMesh', true);
+      if (hm) this.mats.Head = hm.material = hm.material.clone(); else this.mats.Head = this.mats.Skin;
+      this.swellM = {};
+      for (const [side, x] of [['L', .043], ['R', -.043]]) { const m = new THREE.Mesh(new THREE.SphereGeometry(.03, 12, 10), this.mats.Head); m.position.set(x, .012, .094); m.scale.setScalar(.001); this.headMesh.add(m); this.swellM[side] = m; }
+      this.cutM = new THREE.Mesh(new THREE.BoxGeometry(.035, .006, .01), new THREE.MeshStandardMaterial({ color: 0x7a0008, roughness: .25 })); this.cutM.visible = false; this.headMesh.add(this.cutM);
+    }
     this.gloves = { L: this.model.getObjectByName('GloveL'), R: this.model.getObjectByName('GloveR') };
     this.model.updateMatrixWorld(true);
     for (const b of Object.values(this.B)) {
@@ -568,24 +628,31 @@ class Fighter {
   // body proportions and colours from a fighter description
   look(d) {
     this.s = d.h / 180;
-    const bx = [.95, 1, 1.06][d.build ?? 1];
+    const bx = [.95, 1, 1.06][d.build ?? 1] * (.93 + (d.w ?? 4) * .017);   // heavier divisions carry more bulk
     this.root.scale.set(this.s * bx, this.s, this.s * bx);
+    this.sp = !!d.southpaw; this.pstyle = d.pstyle || null;
+    if (!this.tats) { this.tats = ['L', 'R'].map(s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.05, .046, .09, 14, 1, true), new THREE.MeshStandardMaterial({ color: 0x1a2430, roughness: .6, transparent: true, opacity: .75, side: THREE.DoubleSide })); this.B['UpperArm' + s].add(m); m.position.set(0, .12, 0); return m; }); }
+    this.tats[0].visible = (d.tattoo || 0) >= 1; this.tats[1].visible = d.tattoo === 2;
+    if (!this.robe) { this.robe = new THREE.Mesh(new THREE.CylinderGeometry(.21, .3, .95, 20, 1, true), new THREE.MeshStandardMaterial({ roughness: .35, metalness: .15, side: THREE.DoubleSide })); this.B.Chest.add(this.robe); this.robe.position.set(0, -.28, 0); this.robe.visible = false; }
+    this.robe.material.color.set(KIT[d.trunks] ?? 0x8a1010); this.walkTheme = d.walkTheme || 0;
+    const f = d.face || { w: 1, h: 1, jaw: 1 }; if (this.headMesh) this.headMesh.scale.set(f.w, f.h, f.jaw);
+    if (this.mats.Hair) this.mats.Hair.color.set(d.hair ?? 0x0c0806);
     const arm = clamp(d.reach / d.h, .94, 1.1);
     for (const s of ['L', 'R']) for (const n of ['ForeArm' + s, 'Hand' + s]) { const b = this.B[n]; b.userData.restP.copy(b.userData.baseP).multiplyScalar(arm); b.position.copy(b.userData.restP); }
     const set = (n, c) => { if (this.mats[n] && c != null) this.mats[n].color.set(c); };
-    set('Skin', SKINS[d.skin]); set('Trunks', KIT[d.trunks]); set('Gloves', d.mittColor ?? KIT[d.gloves]); set('Waistband', KIT[d.trim]); set('Shoes', d.shoes ?? 0x111114); set('Hair', 0x0c0806);
+    set('Skin', SKINS[d.skin]); set('Head', SKINS[d.skin]); this.skinCol = new THREE.Color(SKINS[d.skin]); set('Trunks', KIT[d.trunks]); set('Gloves', d.mittColor ?? KIT[d.gloves]); set('Waistband', KIT[d.trim]); set('Shoes', d.shoes ?? 0x111114); set('Hair', d.hair ?? 0x0c0806);
     this.model.updateMatrixWorld(true);
   }
   stats(d) { const e = engineStats(d); Object.assign(this, e); }
   reset(start, yaw) {
     this.pos.copy(start); this.yaw = yaw; this.vel.set(0, 0, 0); this.push.set(0, 0, 0);
     this.head = 100; this.headCap = 100; this.body = 100; this.stam = 100; this.stamMax = 100;
-    this.punch = null; this.queue = []; this.stun = 0; this.slip = null; this.blocking = false;
+    this.punch = null; this.queue = []; this.stun = 0; this.slip = null; this.rollD = null; this.rolledT = -9; this.feint = null; this.pullD = null; this.buckle = 0; this.swell = { L: 0, R: 0 }; this.sweat = 0; this.cut = null; this.blocking = false;
     this.down = null; this.kdFight = 0; this.kdRound = 0; this.totalHeadDmg = 0; this.fall = 0; this.ai = null;
     this.inp = { mx: 0, mz: 0, block: false };
     this.stats_ = []; this.newRound();
     this.root.position.set(this.pos.x, 0, this.pos.z); this.root.rotation.set(0, yaw, 0); this.root.updateMatrixWorld(true);
-    for (const s of ['L', 'R']) { this.feet[s].p.copy(this.root.localToWorld(FEET[s].clone())); this.feet[s].step = null; }
+    for (const s of ['L', 'R']) { this.feet[s].p.copy(this.root.localToWorld((this.sp ? FEET_SP : FEET)[s].clone())); this.feet[s].step = null; }
   }
   newRound() { this.st = { thrown: 0, landed: 0, power: 0, dmg: 0, kd: 0, jabs: 0, missed: 0, countered: 0 }; this.stats_.push(this.st); this.kdRound = 0; }
   headPos(v = new V3()) { return this.headMesh.getWorldPosition(v); }
@@ -595,16 +662,20 @@ class Fighter {
   get busy() { return !!(this.down || this.stun > 0); }
 
   startPunch(type, body) {
-    if (this.busy || this.slip) return false;
+    if (this.busy || this.slip || this.rollD || this.pullD || (G.clinch && MODE === 'fight')) return false;
     if (this.punch) { if (this.queue.length < 1) this.queue.push([type, body]); return false; }
-    const d = PUNCH[type];
+    const d = punchFor(type, this.sp);
     const tired = 0.55 + 0.45 * clamp(this.stam / 100, 0, 1);
     (this.recent || (this.recent = [])).push({ type, t: G.time }); if (this.recent.length > 10) this.recent.shift();
-    this.stam = Math.max(0, this.stam - d.cost * (this.stam < 15 ? 1.4 : 1));
-    this.punch = { type, d, body, t: 0, phase: 0, k: 0, hit: false, spd: this.speed * tired, aim: null, seen: false };
+    this.stam = Math.max(0, this.stam - d.cost * (this.stam < 15 ? 1.4 : 1) * (this.pstyle === 'out' && type === 'jab' ? .7 : 1));
+    this.punch = { type, d, body, t: 0, phase: 0, k: 0, hit: false, spd: this.speed * tired * (this.tell && type !== 'jab' && MODE === 'fight' ? .88 : 1), aim: null, seen: false };
     this.st.thrown++; if (type === 'jab') this.st.jabs++;
     return true;
   }
+  doFeint() { if (this.busy || this.punch || this.slip || this.rollD || this.stam < 2) return; this.feint = { t: 0, seen: false }; this.stam -= 1.2; }
+  doPull() { if (this.busy || this.punch || this.slip || this.rollD || this.pullD || this.stam < 3) return; this.pullD = { t: 0 }; this.stam -= 2.5; }
+  doPivot(dir) { if (this.busy || this.punch || this.pivotD || this.stam < 3) return; this.pivotD = { t: 0, dir }; this.stam -= 2.5; }
+  doRoll() { if (this.busy || this.punch || this.slip || this.rollD || this.stam < 4) return; this.rollD = { t: 0, dir: this.isPlayer ? 1 : (Math.random() < .5 ? 1 : -1) }; this.stam -= 3.5; }
   doSlip(dir) { if (this.busy || this.punch || this.slip || this.stam < 3) return; this.slip = { dir, t: 0 }; this.stam -= 2.5; }
 
   update(dt, opp, time) {
@@ -614,7 +685,7 @@ class Fighter {
     this.stun = Math.max(0, this.stun - dt); this.poise = Math.max(0, (this.poise || 0) - dt);
     if (this.down) return this.updateDown(dt);
     const resting = !this.punch && !this.inp.block;
-    this.stam = Math.min(this.stamMax, this.stam + dt * (resting ? 7.5 : 2.2) * this.cardio);
+    this.stam = Math.min(this.stamMax, this.stam + dt * (resting ? 7.5 : 2.2) * this.cardio * (this.pstyle === 'swarmer' ? 1.15 : 1));
     this.head = Math.min(this.headCap, this.head + dt * .35);
     this.body = Math.min(100, this.body + dt * .25);
     this.blocking = this.inp.block && !this.punch && !this.stun;
@@ -626,7 +697,8 @@ class Fighter {
     if (this.stun > 0) mx = mz = 0;
     const want = new V3().addScaledVector(f, mz).addScaledVector(r, mx);
     if (want.lengthSq() > 1) want.normalize();
-    const spd = 1.65 * (0.55 + 0.45 * this.stam / 100) * (this.punch ? .35 : 1) * (this.blocking ? .6 : 1) * (hurt ? .75 : 1);
+    if (this.taunt > 0) this.blocking = false;
+    const spd = 1.65 * (0.55 + 0.45 * this.stam / 100) * (this.punch ? .35 : 1) * (this.blocking ? .6 : 1) * (hurt ? .75 : 1) * (this.buckle > 0 ? .45 : 1);
     this.vel.lerp(want.multiplyScalar(spd), Math.min(1, dt * 9));
     this.pos.addScaledVector(this.vel, dt).addScaledVector(this.push, dt);
     this.push.multiplyScalar(Math.exp(-dt * 6));
@@ -652,21 +724,42 @@ class Fighter {
     if (!this.punch && this.queue.length && !this.busy) { const [t, b] = this.queue.shift(); this.startPunch(t, b); }
     let slipEnv = 0;
     if (this.slip) { const T = this.slip.t += dt; slipEnv = T < .12 ? easeOut(T / .12) : T < .32 ? 1 : 1 - easeIO((T - .32) / .16); if (T > .48) this.slip = null; }
-    let tw = STANCE, lean = .06, roll = 0, crouch = -.05 + Math.sin(time * 11.3) * .011 * (this.punch || this.mitt ? 0 : 1);
+    let rollEnv = 0, rollK = 0, feintE = 0, pullE = 0;
+    if (this.feint) { const T = this.feint.t += dt; feintE = Math.sin(Math.PI * clamp(T / .2, 0, 1)); if (T > .2) this.feint = null; }
+    if (this.pullD) { const T = this.pullD.t += dt; pullE = Math.sin(Math.PI * clamp(T / .5, 0, 1)); if (T > .5) { this.pullD = null; this.rolledT = G.time; } }
+    this.buckle = Math.max(0, (this.buckle || 0) - dt); this.taunt = Math.max(0, (this.taunt || 0) - dt);
+    if (this.pivotD) { this.pivotD.t += dt; this.push.addScaledVector(this.right(), this.pivotD.dir * dt * 26).addScaledVector(this.fwd(), dt * 4); if (this.pivotD.t > .22) { this.pivotD = null; this.rolledT = G.time; } }
+    if (this.rollD) { const T = this.rollD.t += dt; rollK = clamp(T / .55, 0, 1); rollEnv = Math.sin(Math.PI * rollK); if (T > .55) this.rollD = null; }
+    const ST = this.sp ? -STANCE : STANCE;
+    let tw = ST, lean = .06, roll = 0, crouch = -.05 + Math.sin(time * 11.3) * .011 * (this.punch || this.mitt ? 0 : 1);
     const off = new V3();
     if (p && this.punch) {
       const fct = p.phase === 0 ? -.18 * easeIO(p.k) : p.phase === 1 ? easeOut(p.k) : 1 - easeIO(p.k);
-      tw = lerp(STANCE, p.d.twist, fct); lean += p.d.lean * fct; off.z += .06 * fct;
+      tw = lerp(ST, p.d.twist, fct); lean += p.d.lean * fct; off.z += .06 * fct;
       if (p.body) { crouch -= .09 * Math.max(0, fct); lean += .1 * fct; }
       if (p.d.path === 'upper') crouch -= (p.phase === 0 ? .07 * p.k : .07 * (1 - fct));
+      if (p.d.path === 'over') { crouch -= .06 * Math.max(0, fct); off.x += (p.d.hand === 'R' ? .05 : -.05) * Math.max(0, fct); }
+      if (p.type === 'lupper') { off.x += .05 * Math.max(0, p.phase === 0 ? p.k : 1 - fct); }
     }
     if (this.mitt) { tw = -.1; lean = .02; }
     if (this.blocking) { lean += .1; crouch -= .03; }
+    if (this.taunt > 0) { roll += Math.sin(time * 16) * .12; lean -= .06; }
+    if (feintE) { tw += (this.sp ? 1 : -1) * .18 * feintE; lean += .07 * feintE; off.z += .03 * feintE; }
+    if (pullE) { lean -= .3 * pullE; off.z -= .13 * pullE; }
+    if (this.buckle > 0) { const b = Math.min(1, this.buckle); crouch -= .13 * b; off.x += Math.sin(time * 5.3) * .06 * b; roll += Math.sin(time * 3.7) * .14 * b; }
+    if (this.rollD || rollEnv) { const d = this.rollD ? this.rollD.dir : 1; crouch -= .2 * rollEnv; lean += .14 * rollEnv; off.x += Math.cos(Math.PI * rollK) * .09 * d * rollEnv * 1.4; roll += -Math.cos(Math.PI * rollK) * .25 * d * rollEnv; }
     if (this.slip) { const d = this.slip.dir; roll = -d * .36 * slipEnv; off.x += d * .09 * slipEnv; crouch -= .07 * slipEnv; lean += .08 * slipEnv; }
     if (hurt) { off.x += Math.sin(time * 3.1) * .035; roll += Math.sin(time * 2.3) * .06; crouch -= .02; }
     off.y += crouch;
     this.tw = tw; this.lean = lean; this.roll = roll; this.off = off;
-    this.qT = qE(lean - .06, tw - STANCE, roll);
+    this.qT = qE(lean - .06, tw - ST, roll);
+    if (MODE === 'fight' && !this.isRef) {
+      this.sweat = Math.min(1, this.sweat + dt * (.004 + (100 - this.stam) * .00009));
+      if (this.mats.Skin) this.mats.Skin.roughness = .5 - .3 * this.sweat;
+      if (this.mats.Head && this.skinCol) { this.mats.Head.roughness = .5 - .3 * this.sweat; this.mats.Head.color.copy(this.skinCol).lerp(BRUISE, clamp((100 - this.headCap) / 70, 0, .55)); }
+      if (this.swellM) for (const s2 of ['L', 'R']) this.swellM[s2].scale.setScalar(.001 + this.swell[s2] * 1.05);
+      if (this.cutM) { this.cutM.visible = !!this.cut; if (this.cut) this.cutM.position.set(this.cut.side === 'L' ? .045 : -.045, .045, .1); }
+    } else if (this.mats.Skin && this.sweat) { this.sweat = 0; this.mats.Skin.roughness = .5; }
     this.updateFeet(dt);
     this.pose(hurt);
   }
@@ -675,7 +768,7 @@ class Fighter {
     const ank = .09 * this.s;
     for (const s of ['L', 'R']) {
       const F = this.feet[s], o = this.feet[s === 'L' ? 'R' : 'L'];
-      const want = this.root.localToWorld(FEET[s].clone()); want.y = ank;
+      const want = this.root.localToWorld((this.sp ? FEET_SP : FEET)[s].clone()); want.y = ank;
       if (F.step) {
         F.step.t += dt / .15; const k = Math.min(1, F.step.t);
         F.p.lerpVectors(F.step.from, F.step.to, easeIO(k)); F.p.y = ank + Math.sin(Math.PI * k) * .05;
@@ -714,12 +807,13 @@ class Fighter {
     const p = this.punch;
     for (const s of ['L', 'R']) {
       const sx = s === 'L' ? 1 : -1;
-      const gset = this.mitt ? GUARD_MITT : this.blocking ? GUARD_HI : hurt || this.stam < 12 ? GUARD_LOW : GUARD;
+      let gset = this.isRef ? GUARD_REF : this.mitt ? GUARD_MITT : this.taunt > 0 ? GUARD_LOW : this.blocking || this.rollD || this.pullD ? GUARD_HI : hurt || this.stam < 12 ? GUARD_LOW : GUARD;
+      if (this.sp && !this.isRef && !this.mitt) gset = gset.sp || (gset.sp = mirrorSet(gset));
       const g = gset[s].clone(); if (this.mitt) g.z -= this.mittKick[s];
       let target = this.W(this.T(g));
       let pole = this.W(this.T(new V3(sx * .62, .7, -.15)));
       if (p && p.d.hand === s) {
-        const cockL = gset[s].clone().add(p.d.path === 'hook' ? new V3(sx * .1, -.02, -.04) : p.d.path === 'upper' ? new V3(0, -.16, -.02) : new V3(0, -.03, -.05));
+        const cockL = gset[s].clone().add(p.d.path === 'hook' ? new V3(sx * .1, -.02, -.04) : p.d.path === 'upper' ? new V3(0, -.16, -.02) : p.d.path === 'over' ? new V3(sx * .08, .04, -.12) : new V3(0, -.03, -.05));
         const cock = this.W(this.T(cockL));
         if (p.phase === 0) target = cock.lerp(target, 1 - easeIO(p.k));
         else {
@@ -730,6 +824,7 @@ class Fighter {
             const e = easeOut(p.k); let ctrl;
             if (p.d.path === 'hook') { ctrl = this.W(this.T(new V3(sx * .55, 1.42, .3))); pole = this.W(this.T(new V3(sx * 1.0, 1.5, -.2))); }
             else if (p.d.path === 'upper') { ctrl = this.W(this.T(new V3(sx * .04, 1.02, .32))); pole = this.W(this.T(new V3(sx * .3, .3, -.2))); }
+            else if (p.d.path === 'over') { ctrl = this.W(this.T(new V3(sx * .3, 1.86, .28))); pole = this.W(this.T(new V3(sx * .9, 1.9, -.1))); }
             else ctrl = cock.clone().lerp(aim, .5);
             target = cock.clone().multiplyScalar((1 - e) * (1 - e)).addScaledVector(ctrl, 2 * (1 - e) * e).addScaledVector(aim, e * e);
             p.reach = target.clone();
@@ -739,6 +834,8 @@ class Fighter {
           }
         }
       }
+      if (this.feint && !p && s === (this.sp ? 'R' : 'L')) target.add(this.fwd().multiplyScalar(.09 * Math.sin(Math.PI * clamp(this.feint.t / .2, 0, 1))));
+      if (this.handT && this.handT[s]) { target = this.handT[s]; pole = this.W(this.T(new V3(sx * .7, .9, -.3))); }
       this.ik(B['UpperArm' + s], B['ForeArm' + s], target, pole);
     }
     for (const s of ['L', 'R']) { const sx = s === 'L' ? 1 : -1; this.ik(B['Thigh' + s], B['Shin' + s], this.feet[s].p, this.W(new V3(sx * .18, .55, .9))); }
@@ -759,17 +856,26 @@ class Fighter {
 /* ================= profile, opponents, career ================= */
 const WEIGHTS = [['Flyweight', '112 lb'], ['Bantamweight', '118 lb'], ['Featherweight', '126 lb'], ['Lightweight', '135 lb'], ['Welterweight', '147 lb'], ['Middleweight', '160 lb'], ['Light heavyweight', '175 lb'], ['Cruiserweight', '200 lb'], ['Heavyweight', 'over 200 lb']];
 const htRange = w => { const c = 163 + w * 3.6; return [Math.round(c - 9), Math.round(c + 11)]; };
+const SHOES = [0x111114, 0xf2efe8, 0xd7262e, 0x2f6fe4, 0xe8b931];
+const HAIRS = [0x0c0806, 0x2b1a10, 0x4a3020, 0x6b5440, 0xb08a50, 0x8a8a8a];
+const PSTYLES = [['', 'Balanced', 'No special habits.'], ['out', 'Out-boxer', 'Lives off the jab: jabs cost 30% less stamina.'], ['swarmer', 'Swarmer', 'Pressure and volume: stamina comes back 15% faster.'], ['slugger', 'Slugger', 'Sits down on everything: power punches hit 8% harder.']];
 const SKINS = [0x3d2216, 0x5e3522, 0x7a4a30, 0x9c6a48, 0xc8916a, 0xe3bc9a];
 const KIT = [0xb0121c, 0x1747a6, 0x141416, 0xe8e4dc, 0xc9a227, 0x0f7a4a, 0x6a1b9a, 0xe0601a];
 const BUILDS = ['Lean', 'Athletic', 'Stocky'];
 const STAT_KEYS = [['power', 'Power'], ['speed', 'Speed'], ['chin', 'Chin'], ['cardio', 'Cardio']];
-const STYLES = [{ name: 'Pressure fighter', aggr: .78, ideal: .78, combo: .55 }, { name: 'Boxer', aggr: .56, ideal: .95, combo: .45 }, { name: 'Counterpuncher', aggr: .42, ideal: .88, combo: .4 }];
+const STYLES = [
+  { name: 'Pressure fighter', aggr: .78, ideal: .78, combo: .55, tell: 'He walks forward behind a high guard and throws in bunches.', tip: 'he comes forward. Jab and slip, then counter as he steps in.' },
+  { name: 'Boxer', aggr: .56, ideal: .95, combo: .45, tell: 'He likes range and lives off the jab; he resets after every exchange.', tip: 'he wants range. Cut off the ring and work inside with hooks.' },
+  { name: 'Counterpuncher', aggr: .42, ideal: .88, combo: .4, tell: 'He waits. Lead with something and he fires straight back.', tip: 'he waits to counter, so feint and double the jab before you commit.' },
+  { name: 'Slugger', aggr: .62, ideal: .84, combo: .25, heavy: true, tell: 'One-punch power. He loads up on the overhand and the hook, and he leaves gaps doing it.', tip: 'he loads up. Make him miss, roll under the hook and make him pay.' },
+  { name: 'Swarmer', aggr: .92, ideal: .7, combo: .78, tell: 'Non-stop volume up close. He will try to smother you and outwork you.', tip: 'he swarms. Tie him up, turn him and catch him with uppercuts on the way in.' }
+];
 const FIRST = ['Marcus', 'Dante', 'Luis', 'Andre', 'Viktor', 'Tomas', 'Kofi', 'Ray', 'Eli', 'Mateo', 'Jamal', 'Sergio', 'Owen', 'Nikolai', 'Hector', 'Isaac', 'Bruno', 'Cyrus', 'Felix', 'Gideon', 'Rafael', 'Darius'];
 const LAST = ['Vega', 'Okafor', 'Reyes', 'Kowalski', 'Mendez', 'Hart', 'Silva', 'Duarte', 'Novak', 'Brooks', 'Castillo', 'Ferreira', 'Haddad', 'Lindqvist', 'Moreno', 'Petrov', 'Quinn', 'Santos', 'Tanaka', 'Walsh', 'Abara', 'Cruz'];
 
 function newProfile() {
   return { v: 1, created: false, name: '', nick: '', w: 4, h: 178, reach: 183, build: 1, skin: 2, trunks: 0, gloves: 0, trim: 3,
-    stats: { power: 45, speed: 45, chin: 45, cardio: 45 }, pts: 20,
+    stats: { power: 45, speed: 45, chin: 45, cardio: 45 }, pts: 20, age: 20, ageWeek: 1, money: 0, belts: {},
     am: { w: 0, l: 0 }, pro: { w: 0, l: 0, d: 0, ko: 0 }, stage: 'amateur', rank: null, week: 1, fightIn: 3, rounds: 3, next: null, history: [], cam: 0, totals: { fights: 0, rounds: 0, thrown: 0, landed: 0, power: 0, kdFor: 0, kdAgainst: 0 }, trophies: {} };
 }
 function engineStats(d) {
@@ -780,18 +886,11 @@ function makeOpp(level, w, avoid) {
   const [lo, hi] = htRange(w), h = Math.round(rand(lo, hi)), base = 36 + level * 52;
   const r = () => Math.round(clamp(base + rand(-8, 8), 22, 97));
   let trunks; do trunks = randInt(0, KIT.length - 1); while (trunks === avoid || trunks === 3);
-  return { name: pick(FIRST) + ' ' + pick(LAST), style: randInt(0, 2), w, h, reach: Math.round(h + rand(-5, 10)), build: randInt(0, 2), skin: randInt(0, 5),
+  return { name: pick(FIRST) + ' ' + pick(LAST), style: randInt(0, 4), trait: pickTrait(), southpaw: Math.random() < .15, face: { w: rand(.93, 1.07), h: rand(.94, 1.06), jaw: rand(.94, 1.07) }, hair: pick([0x0c0806, 0x0c0806, 0x2b1a10, 0x4a3020, 0x161616, 0x6b5440]), w, h, reach: Math.round(h + rand(-5, 10)), build: randInt(0, 2), skin: randInt(0, 5),
     trunks, gloves: trunks, trim: pick([3, 4, 2]), stats: { power: r(), speed: r(), chin: r(), cardio: r() }, level };
 }
-function aiFor(o) { const S = STYLES[o.style], L = o.level; return { reflex: .45 + L * .9, blockP: .34 + L * .36, slipP: .1 + L * .22, aggr: S.aggr * (.85 + L * .45), combo: S.combo + L * .3, ideal: S.ideal, counter: .15 + L * .55 }; }
+function aiFor(o) { const S = STYLES[o.style], L = o.level, T = o.trait; const r = { reflex: .45 + L * .9, blockP: .34 + L * .36, slipP: .1 + L * .22, aggr: S.aggr * (.85 + L * .45), combo: S.combo + L * .3, ideal: S.ideal, counter: .15 + L * .55 }; if (T === 'cocky') r.blockP -= .12; if (T === 'nervous') { r.ideal += .12; r.aggr *= .8; } if (T === 'engine') r.aggr *= 1.2; return r; }
 function recStr(r) { return r.d != null ? `${r.w}-${r.l}${r.d ? '-' + r.d : ''}` : `${r.w}-${r.l}`; }
-function scheduleNext(pr) {
-  const am = pr.stage === 'amateur', n = am ? pr.am.w + pr.am.l : pr.pro.w + pr.pro.l + pr.pro.d;
-  const level = am ? clamp(.06 + n * .07, 0, .45) : clamp(.33 + n * .045 + (pr.rank ? (30 - pr.rank) * .012 : 0), 0, .97);
-  const o = makeOpp(level, pr.w, pr.trunks);
-  o.rec = am ? { w: randInt(0, 3 + n), l: randInt(0, 3) } : { w: randInt(n + 1, n * 2 + 6), l: randInt(0, 3), d: Math.random() < .2 ? 1 : 0 };
-  pr.next = o; pr.fightIn = am ? 3 : 4; pr.rounds = am ? 3 : (n < 3 ? 4 : 6);
-}
 function recordResult(pr, won, draw, how, extra) {
   const am = pr.stage === 'amateur', o = pr.next, notes = [];
   pr.history.unshift(Object.assign({ wk: pr.week, opp: o.name, res: draw ? 'D' : won ? 'W' : 'L', how, stage: pr.stage }, extra || {}));
@@ -807,19 +906,24 @@ function recordResult(pr, won, draw, how, extra) {
       else { const old = pr.rank; pr.rank = Math.max(1, pr.rank - randInt(2, 5)); notes.push(`Ranking up from ${old} to ${pr.rank}.`); }
     } else { pr.pro.l++; if (pr.rank != null) { pr.rank = Math.min(40, pr.rank + 4); notes.push(`Ranking drops to ${pr.rank}.`); } }
   }
-  pr.week++;
+  if (!am || pr.stage === 'pro') { careerAfterFight(pr, won, draw, how, notes); if (pr.rank) pr.bestRank = Math.min(pr.bestRank || 99, pr.rank); }
+  pr.week++; pr.fatigue = Math.min(100, (pr.fatigue || 0) + 20); pr.scout = null; careerWeek(pr);
   scheduleNext(pr);
   return notes;
 }
 
+/*@include career*/
+
 /* ================= save ================= */
-const DEFAULT_KEYS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', jab: 'KeyJ', cross: 'KeyK', hook: 'KeyU', upper: 'KeyI', body: 'ShiftLeft', block: 'Space', slipL: 'KeyQ', slipR: 'KeyE', cam: 'KeyC' };
+const DEFAULT_KEYS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', jab: 'KeyJ', cross: 'KeyK', hook: 'KeyU', upper: 'KeyI', lupper: 'KeyO', over: 'KeyL', roll: 'KeyR', feint: 'KeyF', pull: 'KeyX', clinch: 'KeyG', taunt: 'KeyT', pivot: 'KeyV', body: 'ShiftLeft', block: 'Space', slipL: 'KeyQ', slipR: 'KeyE', cam: 'KeyC' };
 function defaultSettings() { return { keys: { ...DEFAULT_KEYS }, cam: { view: 0, shake: true, wide: false }, audio: { master: 80, fx: 90, crowd: 70, voice: true, comm: true, engine: 'jarvis' }, careerRoundLen: 90 }; }
 function newSave() { return { v: 2, slots: [null, null, null], active: 0, settings: defaultSettings(), qf: { w: 0, l: 0, d: 0 }, tutDone: false }; }
 function fixProfile(p) {
   p.totals = Object.assign({ fights: 0, rounds: 0, thrown: 0, landed: 0, power: 0, kdFor: 0, kdAgainst: 0 }, p.totals || {});
-  p.trophies = p.trophies || {}; p.history = p.history || [];
-  if (!p.next) scheduleNext(p);
+  p.trophies = p.trophies || {}; p.history = p.history || []; p.fatigue = p.fatigue || 0;
+  p.v = 3; if (p.age == null) { p.age = 21; p.ageWeek = p.week || 1; } p.money = p.money || 0; p.belts = p.belts || {}; p.trainer = p.trainer || 0;
+  if (p.stage === 'pro' && !p.next && !(p.offers && p.offers.length) && p.created) scheduleNext(p);
+  if (!p.next && p.stage !== 'pro') scheduleNext(p);
   return p;
 }
 function normalizeSave(data) {
@@ -889,7 +993,7 @@ let MODE = 'load', PR = null, P, O, QUICK = null, SAVE = null, SET = null;
 const G = { state: 'idle', round: 1, rounds: 3, roundLen: 90, clock: 90, ai: aiFor({ style: 0, level: .5 }), timeScale: 1, slowT: 0, shake: 0, cam: 0, time: 0, cards: [[], [], []], judgesBias: [0, 0, 0], paused: false };
 const ghost = { pos: new V3(.35, 0, 1.1), headPos: (v = new V3()) => v.set(.33, 1.62, 1.0), bodyPos: (v = new V3()) => v.set(.33, 1.2, 1.0) };
 const shadow = { t: 1.5 };
-const PANELS = ['menu', 'slots', 'hub', 'creator', 'trainMenu', 'trainResult', 'prefight', 'brk', 'over', 'loading', 'settings', 'quick', 'records', 'trophy', 'pause'];
+const PANELS = ['offers', 'menu', 'slots', 'hub', 'creator', 'trainMenu', 'trainResult', 'prefight', 'brk', 'over', 'loading', 'settings', 'quick', 'records', 'trophy', 'pause'];
 function showOnly(...ids) { for (const id of PANELS) $(id).classList.toggle('hidden', !ids.includes(id)); }
 function fightUI(on, hint) {
   $('hud').classList.toggle('hidden', !on || MODE !== 'fight');
@@ -913,6 +1017,10 @@ function ai(me, op, dt) {
   const rep = last6.length >= 4 ? Math.max(...Object.values(counts)) / last6.length : 0;
   const read = clamp(rep * .45 + (rate > 2 ? .2 : 0), 0, .5) * (.6 + D.reflex * .4);
   const dist = me.pos.distanceTo(op.pos);
+  if (op.feint && !op.feint.seen) { op.feint.seen = true; if (Math.random() < .75 - D.reflex * .25) { A.blockT = .45; if (Math.random() < .4) me.doSlip(Math.random() < .5 ? 1 : -1); } }
+  if (!G.clinch && dist < .7 && (me.head < 35 || me.trait === 'dirty') && Math.random() < dt * (me.trait === 'dirty' ? .5 : .8)) startClinch(me);
+  if (me.trait === 'cocky' && !me.punch && !me.taunt && Math.random() < dt * .12) me.taunt = 1;
+  if ((G.oppDesc && (G.oppDesc.style === 0 || G.oppDesc.style === 4)) && Math.max(Math.abs(op.pos.x), Math.abs(op.pos.z)) > RING - .9) A.cut = Math.sign(op.vel.dot(me.right()) || 1); else A.cut = 0;   // cut off the ring
   if (op.punch && !op.punch.seen) { op.punch.seen = true; A.react = { t: rand(.08, .2) / D.reflex * (1 - read * .6), p: op.punch }; }
   if (A.react) {
     A.react.t -= dt;
@@ -922,6 +1030,7 @@ function ai(me, op, dt) {
         const r = Math.random(), hb = (me.head < 40 ? .2 : 0) + read;
         if (r < D.blockP + hb) A.blockT = .5;
         else if (r < D.blockP + hb + D.slipP && !pr.body && pr.d.path === 'straight') me.doSlip(Math.random() < .5 ? 1 : -1);
+        else if (r < D.blockP + hb + D.slipP * 1.6 && !pr.body && (pr.d.path === 'hook' || pr.d.path === 'over')) me.doRoll();
       }
     }
   }
@@ -936,7 +1045,8 @@ function ai(me, op, dt) {
       A.ctr = null;
       if (!me.punch && !me.busy) {
         A.blockT = 0; me.inp.block = false;
-        me.startPunch(dist < .8 ? pick(['hook', 'upper', 'cross']) : 'cross', Math.random() < .2);
+        if (G.time - me.rolledT < .6) me.startPunch(pick(['over', 'lupper', 'hook']), false);
+        else me.startPunch(dist < .8 ? pick(['hook', 'upper', 'cross', 'lupper']) : pick(['cross', 'cross', 'over']), Math.random() < .2);
         if (Math.random() < D.combo) me.queue.push([pick(['hook', 'cross', 'jab']), false]);
       }
     }
@@ -946,14 +1056,15 @@ function ai(me, op, dt) {
   const ideal = me.head < 35 || me.stam < 20 ? 1.35 : opTired ? D.ideal - .08 : me.stam > 45 ? D.ideal : D.ideal + .12;
   me.inp.mz = clamp((dist - ideal) * 3, -1, 1);
   A.latT -= dt; if (A.latT <= 0) { A.latT = rand(1.2, 3); A.lat = Math.random() < .5 ? -1 : 1; if (Math.random() < .35) A.lat = 0; }
-  me.inp.mx = A.lat * .55;
+  me.inp.mx = A.cut ? A.cut * .9 : A.lat * .55;
   if (Math.max(Math.abs(me.pos.x), Math.abs(me.pos.z)) > RING - .7) me.inp.mx = A.lat || 1;
   A.t -= dt;
   if (A.t <= 0 && !me.punch && !me.inp.block) {
     A.t = rand(.35, 1.0) / (D.aggr + .2) * (opTired ? .6 : 1);
     if (dist < .98 && me.stam > 12 && Math.random() < D.aggr + (opTired ? .3 : 0)) {
-      const combos = [['jab'], ['jab'], ['jab', 'cross'], ['jab', 'jab', 'cross'], ['cross', 'hook'], ['jab', 'cross', 'hook'], ['hook'], ['upper', 'hook'], ['cross']];
-      let c = pick(combos); if (Math.random() > D.combo) c = c.slice(0, 1);
+      const combos = [['jab'], ['jab'], ['jab', 'cross'], ['jab', 'jab', 'cross'], ['cross', 'hook'], ['jab', 'cross', 'hook'], ['hook'], ['upper', 'hook'], ['cross'], ['jab', 'over'], ['lupper', 'cross'], ['jab', 'cross', 'lupper'], ['over', 'hook']];
+      const S = STYLES[G.oppDesc ? G.oppDesc.style : 0];
+      let c = pick(S.heavy ? [['over'], ['hook'], ['jab', 'over'], ['cross', 'hook'], ['lupper', 'over'], ['jab']] : combos); if (Math.random() > D.combo) c = c.slice(0, 1);
       if (op.blocking) c = Math.random() < .5 ? ['upper', 'hook'] : ['jab', 'hook'];
       const body = Math.random() < (op.blocking ? .45 : .2);
       c.forEach((t, i) => i === 0 ? me.startPunch(t, body) : me.queue.push([t, body && Math.random() < .4]));
@@ -962,7 +1073,7 @@ function ai(me, op, dt) {
 }
 
 /* ================= input ================= */
-const ACTIONS = [['up', 'Move forward'], ['down', 'Move back'], ['left', 'Move left'], ['right', 'Move right'], ['jab', 'Jab (1)'], ['cross', 'Cross (2)'], ['hook', 'Lead hook (3)'], ['upper', 'Rear uppercut (6)'], ['body', 'Body shots (hold while punching)'], ['block', 'Block (hold)'], ['slipL', 'Slip left'], ['slipR', 'Slip right'], ['cam', 'Switch camera']];
+const ACTIONS = [['up', 'Move forward'], ['down', 'Move back'], ['left', 'Move left'], ['right', 'Move right'], ['jab', 'Jab (1)'], ['cross', 'Cross (2)'], ['hook', 'Lead hook (3)'], ['upper', 'Rear uppercut (6)'], ['lupper', 'Lead uppercut (5)'], ['over', 'Overhand right'], ['roll', 'Roll under hooks'], ['feint', 'Feint'], ['pull', 'Pull back'], ['clinch', 'Clinch (when close)'], ['pivot', 'Pivot off the ropes'], ['taunt', 'Taunt'], ['body', 'Body shots (hold while punching)'], ['block', 'Block (hold)'], ['slipL', 'Slip left'], ['slipR', 'Slip right'], ['cam', 'Switch camera']];
 const ARROWS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
 const NAMED = { Space: 'Space', ShiftLeft: 'Shift', ShiftRight: 'Right Shift', ControlLeft: 'Ctrl', ControlRight: 'Right Ctrl', AltLeft: 'Alt', AltRight: 'Right Alt', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Enter: 'Enter', Tab: 'Tab', Backquote: '`', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Minus: '-', Equal: '=', Backspace: 'Backspace', CapsLock: 'Caps Lock' };
 const held = {};
@@ -971,7 +1082,7 @@ function actionOf(code) { if (!SET) return null; for (const [a] of ACTIONS) if (
 function keyLabel(code) { if (!code) return '?'; if (NAMED[code]) return NAMED[code]; if (code.startsWith('Key')) return code.slice(3); if (code.startsWith('Digit')) return code.slice(5); if (code.startsWith('Numpad')) return 'Num ' + code.slice(6); return code; }
 const K = a => keyLabel(SET.keys[a]);
 function playerInput(me) { me.inp.mz = (held.up ? 1 : 0) - (held.down ? 1 : 0); me.inp.mx = (held.right ? 1 : 0) - (held.left ? 1 : 0); me.inp.block = !!held.block; }
-const ACTP = { jab: 'jab', cross: 'cross', hook: 'hook', upper: 'upper' };
+const ACTP = { jab: 'jab', cross: 'cross', hook: 'hook', upper: 'upper', lupper: 'lupper', over: 'over' };
 function onAction(a) {
   if (MODE === 'train') return trainAction(a);
   if (MODE === 'tutorial') return tutAction(a);
@@ -980,15 +1091,23 @@ function onAction(a) {
   if (ACTP[a]) P.startPunch(ACTP[a], !!held.body);
   if (a === 'slipL') P.doSlip(1);
   if (a === 'slipR') P.doSlip(-1);
-  if (a === 'cam') G.cam = 1 - G.cam;
+  if (a === 'roll') P.doRoll();
+  if (a === 'feint') P.doFeint();
+  if (a === 'pull') P.doPull();
+  if (a === 'clinch') { startClinch(P); if (G.clinch) { G.holds = (G.holds || 0) + 1; if (G.holds >= 4) { foul(P, 'holding'); G.holds = 0; } } }
+  if (a === 'taunt' && !P.punch) { P.taunt = .9; sfx.roar(.18); P.stam = Math.min(P.stamMax, P.stam + 5); CROWD.burst.push(G.time); }
+  if (a === 'pivot') P.doPivot(held.left ? 1 : held.right ? -1 : (P.sp ? -1 : 1));
+  if (a === 'cam') { G.cam = (G.cam + 1) % 3; showMsg('', ['Behind your fighter', 'Broadcast view', 'First person'][G.cam], .9); }
 }
 addEventListener('keydown', e => {
   if (rebinding) { e.preventDefault(); if (e.code === 'Escape') rebinding.cancel(); else rebinding.set(e.code); return; }
   const tag = e.target && e.target.tagName; if (tag === 'INPUT' || tag === 'SELECT') return;
   if (MODE === 'fight' && G.state === 'intro' && ['Escape', 'Space', 'Enter'].includes(e.code)) { e.preventDefault(); skipIntro(); return; }
+  if (PHOTO.on && (e.code === 'Escape' || e.code === 'KeyP')) { e.preventDefault(); photoMode(false); return; }
   if (e.code === 'Escape') {
     if (MODE === 'fight' && G.state === 'fight') { e.preventDefault(); togglePause(); return; }
     if (MODE === 'tutorial') { exitTutorial(); return; }
+    if (MODE === 'train') { abandonDrill(); return; }
   }
   const a = actionOf(e.code);
   if (a && (MODE === 'fight' || MODE === 'train' || MODE === 'tutorial')) e.preventDefault();
@@ -1002,6 +1121,7 @@ for (const b of document.querySelectorAll('.pad button')) {
   for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { b.classList.remove('on'); held[a] = false; });
 }
 addEventListener('pointerdown', e => { if (MODE === 'fight' && G.state === 'fight' && !G.paused && P && P.down && !e.target.closest('button')) mash(); });
+$('phSnap').onclick = photoSnap; $('phExit').onclick = () => photoMode(false);
 $('pauseBtn').onclick = () => { if (MODE === 'fight' && G.state === 'fight') togglePause(); };
 
 /* ================= hits ================= */
@@ -1015,6 +1135,7 @@ function checkHit(a, d) {
   const p = a.punch;
   if (!p || p.hit || d.down) return;
   if (!((p.phase === 1 && p.k > .5) || (p.phase === 2 && p.k < .18))) return;
+  if (!p.body && d.rollD && d.rollD.t > .1 && d.rollD.t < .45 && (p.d.path === 'hook' || p.d.path === 'over')) { if (!p.rolled) { p.rolled = true; d.rolledT = G.time; if (d.isPlayer || a.isPlayer) popText(d.isPlayer ? 'Rolled under' : 'He rolled under it', d.headPos().add(new V3(0, .3, 0)), d.isPlayer ? '#e8b931' : '#ff9b6b'); } return; }
   const g = a.gloves[p.d.hand].getWorldPosition(new V3());
   const tgt = p.body ? d.bodyPos() : d.headPos();
   if (g.distanceTo(tgt) > ((p.body ? .21 : .13) + .085) * d.s) return;
@@ -1023,7 +1144,9 @@ function checkHit(a, d) {
   const counter = !!(d.punch && (d.punch.phase < 2 || d.punch.k < .65));
   const dirW = tgt.clone().sub(a.headPos()).setY(0).normalize();
   const stamF = .3 + .7 * Math.pow(clamp(a.stam / 100, 0, 1), .8);
-  let dmg = p.d.dmg * a.power * stamF * (counter ? 1.4 : 1) * rand(.85, 1.15);
+  const afterRoll = G.time - a.rolledT < .8, taunted = d.taunt > 0;
+  let dmg = p.d.dmg * a.power * stamF * (counter ? 1.4 : 1) * (afterRoll ? 1.25 : 1) * (taunted ? 1.3 : 1) * (a.pstyle === 'slugger' && p.type !== 'jab' ? 1.08 : 1) * rand(.85, 1.15) * (G.spar ? .5 : 1);
+  if (afterRoll && a.isPlayer) { a.rolledT = -9; popText('Roll and return', tgt, '#e8b931'); }
   const range = a.pos.distanceTo(d.pos), smothered = p.d.path === 'straight' && range < .62 * a.s, arm = a.stam < 15;
   if (smothered) dmg *= .45;
   if (arm) dmg *= .6;
@@ -1039,19 +1162,36 @@ function checkHit(a, d) {
   if (dmg >= 9 && d.punch && d.punch.phase < 2) { d.punch = null; d.queue = []; }
   if (counter && d.isPlayer) popText('Countered', d.headPos().add(new V3(0, .25, 0)), '#ff6b6b');
   d.push.addScaledVector(dirW, .25 + dmg * .06);
+  if (d.isPlayer) G.fpHit = Math.min(1, (G.fpHit || 0) + dmg / 14);
+  if (taunted && a.isPlayer) popText('Caught him showboating', tgt, '#e8b931');
+  if (p.body && Math.random() < (a.trait === 'dirty' ? .06 : a.isPlayer ? .004 : .008)) foul(a, 'low blows');
+  if (dmg >= 11) CROWD.burst.push(G.time);
+  if (!QUICK && PR && PR.stage === 'amateur' && !G.spar && dmg >= 11 && d.head > 0 && d.head < 25 && !d.down) standingEight(d);
+  if (REFS.ref && REFS.ref.stopEarly && !G.spar && !d.down && d.head > 0 && d.head < 10 && d.buckle > 0 && G.state === 'fight') { REFS.waveT = 2.5; endFight(a, 'TKO', `The referee stepped in to save ${d.isPlayer ? 'you' : surname(d.name)}`); }
   const big = dmg >= 11;
   if (p.body) { d.body -= dmg * .9; d.stam = Math.max(0, d.stam - dmg * .9); d.stamMax = Math.max(40, d.stamMax - dmg * .3); d.hs.vb += dmg * .22; }
   else {
     const real = dmg / d.chin; d.head -= real; d.totalHeadDmg += real; d.headCap = Math.max(45, 100 - d.totalHeadDmg * .3);
     const k = dmg * .32;
+    // which way the head goes depends on where the punch came from
+    const fromSide = Math.sign(a.right().dot(tgt.clone().sub(a.pos)) || 1);
     if (p.d.path === 'hook') { d.hs.vy += (p.d.hand === 'L' ? -1 : 1) * k * 1.3; d.hs.vr += (p.d.hand === 'L' ? -1 : 1) * k * .6; }
-    else if (p.d.path === 'upper') d.hs.vp -= k * 1.5;
-    else { d.hs.vp -= k; d.hs.vy += rand(-.3, .3) * k; }
+    else if (p.d.path === 'upper') { d.hs.vp -= k * 1.6; d.hs.vy += rand(-.2, .2) * k; }
+    else if (p.d.path === 'over') { d.hs.vp += k * .5; d.hs.vy += (p.d.hand === 'R' ? 1 : -1) * k * 1.1; d.hs.vr += (p.d.hand === 'R' ? 1 : -1) * k * .9; }
+    else { d.hs.vp -= k; d.hs.vy += fromSide * rand(.1, .4) * k; }
+    const side = (p.d.hand === 'L') !== !!a.sp ? 'R' : 'L'; d.swell[side] = Math.min(1, d.swell[side] + real * .012);
+    if (!G.spar && (p.d.path === 'hook' || p.d.path === 'over') && dmg > 9 && Math.random() < .05 + (d.cut ? .3 : 0)) {
+      d.cut = d.cut || { side, sev: 0 }; d.cut.sev += .25 + dmg * .015;
+      if (!G.sim) { popText(d.cut.sev > .3 ? 'Cut worsens' : 'Cut!', d.headPos(), '#ff4050'); if (d.cut.sev <= .3) comment('round', { text: `${surname(d.name)} is cut over the ${d.cut.side === 'L' ? 'left' : 'right'} eye!` }); }
+      if (d.cut.sev >= 1.3) setTimeout(() => endFight(a, 'TKO', `The doctor stopped it: ${d.isPlayer ? 'your' : surname(d.name) + "'s"} cut was too bad to continue`), 400);
+    }
+    if (big && d.head < 48) { d.buckle = Math.max(d.buckle, .5 + (48 - d.head) / 40); if (d.isPlayer) popText('Legs gone', d.headPos(), '#ff6b6b'); }
+    if (d.buckle > 0 && Math.max(Math.abs(d.pos.x), Math.abs(d.pos.z)) > RING - .8) { d.push.addScaledVector(dirW, 1.4); d.hs.vr += fromSide * 2; }
   }
   burst(g, dirW.clone().add(new V3(0, .3, 0)), big ? 22 : 9);
   sfx.hit(dmg); G.shake = Math.max(G.shake, big ? .05 : .018);
   if (counter && big && a.isPlayer) popText('Counter!', tgt); else if (big && a.isPlayer) popText(p.d.name, tgt);
-  if (big) { sfx.roar(.14); setTimeout(() => sfx.roar(.05), 700); __flash(.15); G.zoom = .35; }
+  if (big) { sfx.roar(.14); setTimeout(() => sfx.roar(.05), 700); __flash(.15); G.zoom = .35; G.hitStop = .055 + Math.min(.06, dmg * .003); }
   if (big) comment(a.isPlayer ? (counter ? 'ctrP' : 'bigP') : (counter ? 'ctrO' : 'bigO'), { punch: p.d.name.toLowerCase() });
   else if (p.body && a.isPlayer && d.body < 60) comment('body');
   let kd = d.head <= 0 || d.body <= 0;
@@ -1059,6 +1199,7 @@ function checkHit(a, d) {
   if (kd) knockdown(d, a);
 }
 function knockdown(d, a) {
+  if (G.spar) { endFight(null, 'STOP', ''); return; }
   d.down = { t: 0, count: 0, nextCount: 1.3, mash: 0, need: 12 + d.kdFight * 6 + d.totalHeadDmg / 12, rising: null };
   d.kdFight++; d.kdRound++; d.st.kd++; d.punch = null; d.queue = []; d.slip = null; a.punch = null; a.queue = [];
   G.slowT = .9; sfx.roar(.22); __flash(.3);
@@ -1072,8 +1213,9 @@ function updateCount(f, other, dt) {
   other.inp.mx = other.inp.mz = 0;
   const away = other.pos.clone().sub(f.pos).setY(0); if (away.length() < 2.2) other.pos.addScaledVector(away.normalize(), dt * 1.2);
   if (d.t < d.nextCount) return;
-  d.nextCount += 1.0; d.count++;
-  if (d.final) { endFight(other, 'TKO', 'Three knockdowns in one round'); return; }
+  d.nextCount += REFS.ref ? REFS.ref.count : 1; d.count++;
+  if (REF && REF.root.visible) { REFS.countArm = 1; if (d.count <= 10) say(COUNTW[d.count] + '!', 'ref', true); }
+  if (d.final) { REFS.waveT = 2.5; endFight(other, 'TKO', 'Three knockdowns in one round'); return; }
   showMsg(String(d.count), f.isPlayer ? '' : `${f.name} is down`);
   const up = f.isPlayer ? d.mash >= d.need : d.count >= d.getUp;
   if (up && d.count < 10) {
@@ -1082,13 +1224,83 @@ function updateCount(f, other, dt) {
   } else if (d.count >= 10) endFight(other, 'KO', `${f.isPlayer ? 'You were' : f.name + ' was'} counted out in round ${G.round}`);
 }
 
+/* ================= referee ================= */
+/* A third body from the same rig, dressed in a white shirt and black trousers (layers drawn over the skin).
+   He circles on the far side of the action, steps in to break up smothered clinches, counts knockdowns
+   with his arm, waves fights off and raises the winner's hand. */
+let REF = null;
+const REFS = { close: 0, breakT: 0, side: 1, sideT: 0, countArm: 0, waveT: 0 };
+const COUNTW = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+function makeRef(gltf) {
+  const r = new Fighter(gltf, false); r.name = 'Referee'; r.isRef = true;
+  r.look({ h: 179, reach: 179, build: 1, skin: 2, trunks: 0, gloves: 0, trim: 0, shoes: 0x0d0d0f });
+  r.gloves.L.visible = r.gloves.R.visible = false;
+  for (const n of ['Trunks', 'Waistband']) r.mats[n] && r.mats[n].color.set(0x121216);
+  let skin = null; r.model.traverse(m => { if (m.isSkinnedMesh && m.material.name === 'Skin') skin = m; });
+  const layer = (col, keep, push) => {
+    const mat = new THREE.MeshStandardMaterial({ color: col, roughness: .85 });
+    mat.onBeforeCompile = sh => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vRest;').replace('#include <begin_vertex>', `#include <begin_vertex>\nvRest = position;\ntransformed += normal * ${push};`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vRest;').replace('void main() {', `void main() {\n  float ax = abs(vRest.x), y = vRest.y;\n  if (!(${keep})) discard;`);
+    };
+    mat.customProgramCacheKey = () => 'ref-layer:' + keep + push;   // each layer needs its own shader
+    const m = new THREE.SkinnedMesh(skin.geometry, mat); m.bind(skin.skeleton, skin.bindMatrix); m.frustumCulled = false; m.castShadow = true; skin.parent.add(m);
+  };
+  if (skin) {
+    layer(0xf2f1ec, 'y > 0.98 && y < 1.5 && (ax < 0.17 || (y > 1.24 && ax < 0.3))', '0.008');   // short-sleeved shirt
+    layer(0x141418, 'y > 0.16 && y < 1.06 && ax < 0.19', '0.006');                              // trousers
+  }
+  const tie = new THREE.Mesh(new THREE.BoxGeometry(.07, .03, .02), new THREE.MeshStandardMaterial({ color: 0x0b0b0d })); r.B.Chest.add(tie); tie.position.set(0, .2, .1);
+  r.root.visible = false; return r;
+}
+function refStart() {
+  if (!REF) return; REFS.ref = pick(REFEREES); Object.assign(REFS, { close: 0, breakT: 0, side: 1, sideT: 0, countArm: 0, waveT: 0, lastCount: 0 });
+  REF.root.visible = !G.spar; REF.reset(new V3(1.6, 0, 0), -Math.PI / 2); REF.stats({ stats: { power: 40, speed: 40, chin: 50, cardio: 80 }, w: 4, build: 1 }); REF.handT = null;
+}
+function refSay(t) { say(t, 'ref'); popText(t, REF.headPos().add(new V3(0, .3, 0)), '#f2efe8'); }
+function updateRef(dt) {
+  const R = REF; if (!R || !R.root.visible) return;
+  const mid = P.pos.clone().add(O.pos).multiplyScalar(.5), ax = O.pos.clone().sub(P.pos).setY(0), L = ax.length(); ax.normalize();
+  const perp = new V3(ax.z, 0, -ax.x);
+  REFS.sideT -= dt; if (REFS.sideT <= 0) { REFS.sideT = 1.5; const toCam = camPos.clone().sub(mid).setY(0); REFS.side = perp.dot(toCam) > 0 ? -1 : 1; }
+  let want = mid.clone().addScaledVector(perp, REFS.side * 1.3), face = mid;
+  const downF = P.down ? P : O.down ? O : null;
+  R.handT = null;
+  if (G.state === 'over' && G.winner) {
+    const w = G.winner; want = w.pos.clone().addScaledVector(w.right(), .6); face = w.pos;
+    const up = w.W(w.T(new V3(-.18, 2.12, .08))); w.handT = { R: up }; R.handT = { L: up.clone().add(new V3(0, -.08, 0)) };
+  } else if (downF) {
+    const other = downF === P ? O : P, dirO = other.pos.clone().sub(downF.pos).setY(0).normalize();
+    want = downF.pos.clone().addScaledVector(dirO, .95); face = downF.pos;
+    REFS.countArm = Math.max(0, REFS.countArm - dt * 2.2);
+    const k = REFS.countArm; R.handT = { R: R.W(R.T(new V3(-.28, 1.05 + .75 * k, .35 + .15 * (1 - k)))) };
+  } else if (REFS.waveT > 0) {
+    REFS.waveT -= dt; want = mid; const w = Math.sin(T0 * 14) * .18;
+    R.handT = { L: R.W(R.T(new V3(.05 + w, 1.35, .45))), R: R.W(R.T(new V3(-.05 - w, 1.35, .45))) };
+  } else if (G.state === 'fight') {
+    // smothered at close range for too long: step in and break them
+    REFS.close = L < .6 * (P.s + O.s) / 2 && !P.stun && !O.stun ? REFS.close + dt : Math.max(0, REFS.close - dt * 2);
+    if (REFS.close > (REFS.ref ? REFS.ref.breakT : 1.6) && REFS.breakT <= 0) { REFS.breakT = 1.1; REFS.close = 0; refSay('Break!'); for (const f of [P, O]) { f.punch = null; f.queue = []; } }
+    if (REFS.breakT > 0) {
+      REFS.breakT -= dt; want = mid.clone().addScaledVector(perp, REFS.side * .35);
+      P.push.addScaledVector(ax, -dt * 4.5); O.push.addScaledVector(ax, dt * 4.5);
+      R.handT = { L: R.W(R.T(new V3(.3, 1.3, .55))), R: R.W(R.T(new V3(-.3, 1.3, .55))) };
+    }
+  } else if (G.state === 'intro') { want = new V3(-1.35, 0, 0); face = new V3(0, 0, 0); }
+  want.x = clamp(want.x, -RING + .4, RING - .4); want.z = clamp(want.z, -RING + .4, RING - .4);
+  for (const f of [P, O]) { const away = R.pos.clone().sub(f.pos).setY(0); if (away.length() < .55) want.addScaledVector(away.normalize(), .4); }
+  const to = want.sub(R.pos).setY(0), fw = face.clone().sub(R.pos).setY(0).normalize(), rt = new V3(-fw.z, 0, fw.x);
+  R.inp.mz = clamp(to.dot(fw) * 3, -1, 1); R.inp.mx = clamp(-to.dot(rt) * 3, -1, 1); R.inp.block = false; R.stam = 100;
+  R.update(dt, { pos: face }, T0 + 2.6);
+}
+
 /* ================= announcers ================= */
 /* The ring announcer and commentator speak with Kokoro, the same neural voice model Jarvis uses
    (Lewis for the ring announcer, George for commentary). It runs in a worker beside the page: voxworker.js
    plus the model in vox/. If it can't load, the platform voice and then the browser's voice take over. */
 const VOX_BASE = '', VOX_OFF = false;
 const VOX = { t: null, tried: false, k: null, kState: 'off', kPct: 0, jobs: new Map(), id: 0, cache: new Map(), playing: new Set(), gen: 0 };
-const KVOICE = { ring: { voice: 'bm_lewis', speed: .9 }, comm: { voice: 'bm_george', speed: 1.06 } };
+const KVOICE = { ring: { voice: 'bm_lewis', speed: .92 }, comm: { voice: 'bm_lewis', speed: 1.05 }, coach: { voice: 'bm_lewis', speed: 1.08 }, ref: { voice: 'bm_lewis', speed: 1.0 } };   // Lewis: the voice Jarvis uses
 async function voxInit() { kokoroStart(); if (VOX.tried) return; VOX.tried = true; try { const use = window.claude && window.claude.use; if (use) VOX.t = await use('tts'); } catch (e) { VOX.t = null; } }
 function kokoroStart() {
   if (VOX.k || VOX_OFF || !window.Worker || !SET || !SET.audio.voice || SET.audio.engine === 'standard') return;
@@ -1111,7 +1323,7 @@ const sentences = t => t.split(/(?<=[.!?])\s+/).filter(Boolean);
 function prepare(text, who) {
   if (VOX.kState === 'off' || VOX.kState === 'failed' || G.sim) return null;
   const key = who + '|' + text; if (VOX.cache.has(key)) return VOX.cache.get(key);
-  const id = ++VOX.id, v = KVOICE[who === 'ring' ? 'ring' : 'comm'];
+  const id = ++VOX.id, v = KVOICE[who] || KVOICE.comm;
   const pr = new Promise((res, rej) => VOX.jobs.set(id, { res, rej }));
   pr.catch(() => VOX.cache.delete(key));
   VOX.k.postMessage({ type: 'speak', id, text, voice: v.voice, speed: v.speed });
@@ -1137,6 +1349,10 @@ function playPcm(pcm, who) {
 const within = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
 async function kokoroSay(text, who) {
   const gen = ++VOX.gen, parts = prepareLine(text, who);
+  if (who === 'ring') VOX.ringBusy = gen;
+  try { await kokoroLines(parts, who, gen); } finally { if (VOX.ringBusy === gen) VOX.ringBusy = 0; }
+}
+async function kokoroLines(parts, who, gen) {
   for (let i = 0; i < parts.length; i++) {
     const pcm = await within(parts[i], who === 'ring' ? 12000 : (i ? 6000 : 1800)).catch(() => null);
     if (gen !== VOX.gen) return;                 // hushed or replaced
@@ -1151,13 +1367,14 @@ function caption(who, text, secs) {
 }
 function voxStatus() {
   if (SET.audio.engine === 'standard') return 'Using the standard voice.';
-  return { off: 'The Jarvis voice loads when the game starts (about 105 MB the first time).', loading: `Downloading the Jarvis voice: ${Math.round(VOX.kPct * 100)}%. The standard voice fills in until it's ready.`, ready: 'Jarvis voice ready: Lewis announces, George commentates.', failed: "The Jarvis voice couldn't load here, so the standard voice is used." }[VOX.kState];
+  return { off: 'The Jarvis voice loads when the game starts (about 105 MB the first time).', loading: `Downloading the Jarvis voice: ${Math.round(VOX.kPct * 100)}%. The standard voice fills in until it's ready.`, ready: 'Jarvis voice ready (Lewis, British male).', failed: "The Jarvis voice couldn't load here, so the standard voice is used." }[VOX.kState];
 }
 setInterval(() => { const n = document.getElementById('sVoxNote'); if (n) n.textContent = voxStatus(); }, 700);
-function say(text, who = 'ring') {
+function say(text, who = 'ring', quiet = false) {
   if (G.sim) return Promise.resolve();
-  if (who !== 'ring' && VOX.playing.size && VOX.who === 'ring') return Promise.resolve();   // never talk over the ring announcer
-  caption(who === 'ring' ? 'Ring announcer' : 'Commentary', text);
+  if (who !== 'ring' && (VOX.ringBusy || (VOX.playing.size && VOX.who === 'ring'))) return Promise.resolve();   // never talk over the ring announcer
+  if (!quiet) caption({ ring: 'Ring announcer', comm: 'Commentary', coach: 'Coach', ref: 'Referee' }[who], text);
+  if (who === 'coach' || who === 'ref') return kokoroOn() && SET.audio.voice ? (VOX.who = who, kokoroSay(text, who)) : Promise.resolve();
   const fallback = () => new Promise(r => setTimeout(r, text.length * 70));
   if (!SET.audio.voice || (who !== 'ring' && !SET.audio.comm) || SET.audio.master <= 0) return fallback();
   if (kokoroOn()) { VOX.who = who; for (const s of VOX.playing) try { s.stop(); } catch (e) { } return kokoroSay(text, who); }
@@ -1168,13 +1385,13 @@ function say(text, who = 'ring') {
   return fallback();
 }
 function hush() {
-  VOX.gen++; for (const s of VOX.playing) try { s.stop(); } catch (e) { } VOX.playing.clear();
+  VOX.gen++; VOX.ringBusy = 0; for (const s of VOX.playing) try { s.stop(); } catch (e) { } VOX.playing.clear();
   try { VOX.t && VOX.t.stop(); } catch (e) { } try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) { } $('caption').classList.add('hidden');
 }
 const COMM = { t: -99, tiredP: false, tiredO: false, next: {} };
 const surname = n => (n || 'You').split(' ').pop();
 function comment(kind, x = {}) {
-  if (G.sim || MODE !== 'fight') return;
+  if (G.sim || G.spar || MODE !== 'fight' || (G.state !== 'fight' && kind !== 'round')) return;
   const big = ['kd', 'up', 'round'].includes(kind);
   if (!big && (G.time - COMM.t < 6 || Math.random() < .3)) return;
   COMM.t = G.time;
@@ -1203,9 +1420,42 @@ function commentLines(kind, name) {   // same lines as comment(); used to warm t
 }
 function warmCommentary() {
   COMM.next = {};
+  if (kokoroOn()) { COUNTW.slice(1).forEach(w => prepareLine(w + '!', 'ref')); prepareLine('Break!', 'ref'); }
   for (const k of ['bigP', 'bigO', 'ctrO', 'kd', 'up', 'tiredP', 'tiredO', 'ctrP', 'body', 'miss'])
     for (const n of (k === 'kd' || k === 'up') ? [surname(P.name), surname(O.name)] : ['']) { const t = commentLines(k, n); COMM.next[k + n] = t; if (kokoroOn()) prepareLine(t, 'comm'); }
 }
+/* ================= venues ================= */
+const VENUES = [
+  { name: 'the Eastside Community Hall', crowd: .16, lights: .35, roar: .45 },
+  { name: 'the Foundry Club', crowd: .42, lights: .6, roar: .7 },
+  { name: 'Harbor Arena', crowd: .78, lights: .85, roar: .9 },
+  { name: 'Grand Stadium', crowd: 1, lights: 1.15, roar: 1.1 }
+];
+function venueFor() {
+  if (QUICK || G.spar) return VENUES[2];
+  const d = PR.nextDeal || {};
+  if (d.title) return VENUES[3];
+  if (PR.stage === 'amateur') return VENUES[0];
+  return PR.rank ? VENUES[2] : VENUES[1];
+}
+/* entrance music: a synthesized loop under each fighter's introduction */
+const WALK = { on: false, next: 0, key: 0 };
+function walkMusic(on, key = 0) { WALK.on = on; WALK.key = key; if (on && AU.ctx) WALK.next = AU.ctx.currentTime + .05; }
+function walkTick() {
+  if (!WALK.on || !AU.ctx) return; const c = AU.ctx;
+  while (WALK.next < c.currentTime + .3) {
+    const th = [{ root: 49, step: .5, prog: [1, 1, 1.5, 1.335, 1, 1, 1.2, 1.335] }, { root: 55, step: .36, prog: [1, 1.5, 1, 1.78, 1, 1.5, 1.335, 1.2] }, { root: 41, step: .6, prog: [1, 1.26, 1.5, 1.26, 1, 1.26, 1.335, 1.5] }][WALK.key % 3];
+    const t = WALK.next, beat = Math.round(t / th.step) % 8, root = th.root;
+    const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + .12);
+    g.gain.setValueAtTime(.5, t); g.gain.exponentialRampToValueAtTime(.001, t + .25); o.connect(g).connect(AU.fx); o.start(t); o.stop(t + .3);
+    const b = c.createOscillator(), bg = c.createGain(), f = c.createBiquadFilter(); b.type = 'sawtooth'; b.frequency.value = root * th.prog[beat];
+    f.type = 'lowpass'; f.frequency.value = 420; bg.gain.setValueAtTime(.09, t + .25); bg.gain.exponentialRampToValueAtTime(.001, t + .48);
+    b.connect(f).connect(bg).connect(AU.fx); b.start(t + .25); b.stop(t + .5);
+    if (beat % 2) noiseHit(6000, 1, .05, .06, 'highpass');
+    WALK.next += th.step;
+  }
+}
+
 /* ================= fight intro ================= */
 const INTRO = { i: -1, t: 0, lines: [], spoken: false, minT: 0, maxT: 0, shot: 'wide' };
 const words = n => n === 1 ? 'one' : String(n);
@@ -1214,11 +1464,13 @@ const heightWords = cm => { const t = Math.round(cm / 2.54); return `${Math.floo
 function startIntro() {
   const me = G.me, opp = G.oppDesc, wc = WEIGHTS[me.w][0].toLowerCase(), amateur = !QUICK && PR.stage === 'amateur';
   const myRec = QUICK ? null : PR.stage === 'pro' ? PR.pro : PR.am;
+  G.venue = venueFor(); window.__crowd && window.__crowd(G.venue.crowd);
   INTRO.lines = [
-    { cam: 'wide', roar: .12, min: 4, text: QUICK ? `Ladies and gentlemen, welcome to fight night! This exhibition bout is scheduled for ${G.rounds} rounds in the ${wc} division.` : amateur ? `Ladies and gentlemen, our next bout is a ${G.rounds}-round amateur contest in the ${wc} division.` : `Ladies and gentlemen... it's fight night! ${G.rounds} rounds of professional boxing in the ${wc} division!` },
-    { cam: 'blue', card: 'O', roar: .07, min: 4, text: `Introducing first, in the blue corner. A ${STYLES[opp.style].name.toLowerCase()} with a record of ${recWords(opp.rec)}, standing ${heightWords(opp.h)}... ${opp.name}!` },
-    { cam: 'red', card: 'P', roar: .2, min: 4, text: `And his opponent, in the red corner. ${myRec ? `With a record of ${recWords(myRec)}, standing` : 'Standing'} ${heightWords(me.h)}${me.nick ? `, they call him ${me.nick}` : ''}... ${P.name}!` },
-    { cam: 'center', touch: true, roar: .14, min: 3.2, text: `Touch gloves, and protect yourselves at all times. Let's get it on!` }
+    { cam: 'wide', roar: .12, min: 4, text: (!QUICK && PR.nextDeal && PR.nextDeal.title) ? `Ladies and gentlemen... it's fight night! ${G.rounds} rounds for the ${PR.nextDeal.title.map(b => BODIES.find(x => x.id === b).name).join(' and the ')} ${WEIGHTS[me.w][0].toLowerCase()} championship${PR.nextDeal.title.length > 1 ? 's' : ''} of the world!` : (!QUICK && PR.nextDeal && PR.nextDeal.kind === 'rematch') ? `Ladies and gentlemen, the rematch! ${G.rounds} rounds in the ${wc} division, and this time it's personal.` : QUICK ? `Ladies and gentlemen, welcome to fight night at ${G.venue.name}! This exhibition bout is scheduled for ${G.rounds} rounds in the ${wc} division.` : amateur ? `Ladies and gentlemen, welcome to ${G.venue.name}. Our next bout is a ${G.rounds}-round amateur contest in the ${wc} division.` : `Ladies and gentlemen... it's fight night! ${G.rounds} rounds of professional boxing in the ${wc} division!` },
+    ...(!QUICK ? [{ cam: 'faceoff', faceoff: true, roar: .05, min: 4.5, text: `At yesterday's weigh-in, both men made weight. Here they are, face to face.` }] : []),
+    { cam: 'blue', card: 'O', walk: O, roar: .07, min: 4, text: `Introducing first, in the blue corner. A ${STYLES[opp.style].name.toLowerCase()} with a record of ${recWords(opp.rec)}, standing ${heightWords(opp.h)}... ${opp.name}!` },
+    { cam: 'red', card: 'P', walk: P, roar: .2, min: 4, text: `And his opponent, in the red corner. ${myRec ? `With a record of ${recWords(myRec)}, standing` : 'Standing'} ${heightWords(me.h)}${me.nick ? `, they call him ${me.nick}` : ''}... ${P.name}!` },
+    { cam: 'center', touch: true, roar: .14, min: 3.2, text: `${REFS.ref ? `Your referee tonight is ${REFS.ref.name}. ` : ''}Touch gloves, and protect yourselves at all times. Let's get it on!` }
   ];
   INTRO.i = -1; INTRO.t = 0; G.state = 'intro'; G.camCut = true;
   if (kokoroOn()) { INTRO.lines.forEach(L => prepareLine(L.text, 'ring')); warmCommentary(); } else COMM.next = {};
@@ -1237,7 +1489,9 @@ function nextIntro() {
   INTRO.i++; const L = INTRO.lines[INTRO.i];
   if (!L) return beginRound1();
   INTRO.shot = L.cam; G.camCut = true; INTRO.t = 0; INTRO.spoken = false; INTRO.minT = L.min; INTRO.maxT = Math.max(L.min, L.text.length * .085 + 1.5) + (kokoroOn() ? 14 : 0);
-  lowerThird(L.card || null); if (L.roar) sfx.roar(L.roar);
+  lowerThird(L.card || null); if (L.roar) sfx.roar(L.roar * (G.venue ? G.venue.roar : 1));
+  walkMusic(!!L.walk, L.walk ? (L.walk === P ? P.walkTheme : 1) : 0); INTRO.walker = L.walk || null;
+  for (const f of [P, O]) if (f.robe) f.robe.visible = f === INTRO.walker || (INTRO.i <= 1 && L.cam !== 'blue' && L.cam !== 'red' && L.cam !== 'center' && f.robe.visible);
   if (INTRO.i === 0) sfx.bell(1);
   const gen = VOX.gen + 1;
   say(L.text, 'ring').then(() => { if (VOX.gen <= gen + 1) INTRO.spoken = true; });
@@ -1246,15 +1500,22 @@ function updateIntro(dt) {
   INTRO.t += dt;
   for (const f of [P, O]) { f.inp.mx = f.inp.mz = 0; f.inp.block = false; }
   const L = INTRO.lines[INTRO.i];
-  if (L && L.touch) { P.pos.lerp(new V3(0, 0, -.5), Math.min(1, dt * 1.6)); O.pos.lerp(new V3(0, 0, .5), Math.min(1, dt * 1.6)); }
-  P.update(dt, O, G.time += dt); O.update(dt, P, G.time + 1.7);
+  const toward = (f, z) => f.pos.lerp(new V3(0, 0, z), Math.min(1, dt * 1.6));
+  if (L && L.touch) { toward(P, -.5); toward(O, .5); }
+  else if (L && L.faceoff) { toward(P, -.31); toward(O, .31); if (Math.random() < dt * 5) __flash(.08); else if (Math.random() < .3) __flash(0); }
+  else if (INTRO.i >= 0) { toward(P, -1.9); toward(O, 1.9); }
+  if (INTRO.walker && !INTRO.walker.punch && Math.random() < dt * 1.6) { const w = INTRO.walker; pick([['jab'], ['jab', 'cross'], ['hook']]).forEach((t, k) => k ? w.queue.push([t, false]) : w.startPunch(t, false)); }
+  walkTick();
+  P.update(dt, O, G.time += dt); O.update(dt, P, G.time + 1.7); updateRef(dt);
   if (INTRO.i < 0 || (INTRO.spoken && INTRO.t >= INTRO.minT) || INTRO.t >= INTRO.maxT) nextIntro();
 }
-function skipIntro() { if (G.state !== 'intro') return; hush(); INTRO.i = INTRO.lines.length; beginRound1(); }
+function skipIntro() { if (G.state !== 'intro') return; hush(); walkMusic(false); INTRO.i = INTRO.lines.length; beginRound1(); }
 function beginRound1() {
   if (G.state !== 'intro') return;
+  walkMusic(false); INTRO.walker = null; for (const f of [P, O]) if (f.robe) f.robe.visible = false;
   lowerThird(null); $('skipBtn').classList.add('hidden'); if (!kokoroOn()) warmCommentary();
-  placeCorners(); G.state = 'fight'; camPos.set(0, 6.5, -4.5);
+  placeCorners(); P.stamMax = P.stam = G.stamCap || 100;
+  if (QUICK && QUICK.daily && QUICK.daily.mod.hurt) { P.head = 55; P.headCap = 70; } G.state = 'fight'; camPos.set(0, 6.5, -4.5);
   fightUI(true, hintText());
   sfx.bell(1); sfx.roar(.06); showMsg('Round 1', 'Box!', 1.4);
 }
@@ -1274,8 +1535,9 @@ function scoreRound() {
     const bias = G.judgesBias[j];
     const sa = a.dmg * (1 + bias) + a.landed * .6 + a.thrown * .05 + rand(-2.5, 2.5), sb = b.dmg * (1 - bias) + b.landed * .6 + b.thrown * .05 + rand(-2.5, 2.5);
     let win = 0; if (a.kd !== b.kd) win = a.kd < b.kd ? 1 : -1; else if (Math.abs(sa - sb) > 1.2) win = sa > sb ? 1 : -1;
-    card.push([(win >= 0 ? 10 : 9) - a.kd, (win <= 0 ? 10 : 9) - b.kd]);
+    card.push([(win >= 0 ? 10 : 9) - a.kd - (G.deduct ? G.deduct[0] : 0), (win <= 0 ? 10 : 9) - b.kd - (G.deduct ? G.deduct[1] : 0)]);
   });
+  G.deduct = [0, 0]; G.holds = 0;
 }
 function statsTable(rows) {
   return `<table><thead><tr><th></th><th>${esc(P.name)}</th><th>${esc(O.name.split(' ').pop())}</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>`;
@@ -1288,9 +1550,9 @@ function endRound() {
   const a = P.st, b = O.st;
   $('brk').innerHTML = `<h2>End of round ${G.round}</h2><p>The judges' cards stay sealed until the end.</p>` +
     statsTable([['Punches landed', `${a.landed} of ${a.thrown}`, `${b.landed} of ${b.thrown}`], ['Power punches landed', a.power, b.power], ['Knockdowns scored', b.kd, a.kd]]) +
-    `<p>Your corner: ${cornerAdvice()}</p>` +
+    `<p>Your corner: ${cornerAdvice()}</p>` + cutmanUI() +
     `<button class="go" id="nextBtn">Round ${G.round + 1}</button>`;
-  showOnly('brk'); $('nextBtn').onclick = nextRound; $('nextBtn').focus(); G.breakT = 20;
+  showOnly('brk'); $('nextBtn').onclick = nextRound; $('nextBtn').focus(); G.breakT = P.cut ? 30 : 20; cutmanStart();
 }
 function cornerAdvice() {
   const a = P.st, b = O.st, rec = (P.recent || []).slice(-6), same = rec.length >= 4 && rec.every(r => r.type === rec[0].type);
@@ -1300,24 +1562,26 @@ function cornerAdvice() {
   if (same) return "he's reading you. Mix it up: jab to the body, then come over the top.";
   if (b.landed > a.landed + 4) return `he out-landed you ${b.landed} to ${a.landed}. Hold ${K('block')} when he lets his hands go, then punch back as he resets.`;
   if (O.body < 60) return 'his body is hurting. Keep digging downstairs.';
-  return G.oppDesc.style === 2 ? 'he waits to counter, so feint and double the jab before you commit.' : G.oppDesc.style === 1 ? 'he wants range. Cut off the ring and work inside with hooks.' : 'he comes forward. Jab and slip, then counter as he steps in.';
+  return STYLES[G.oppDesc.style].tip + (G.oppDesc.southpaw ? ' He is a southpaw: circle to your left, away from his power hand.' : '');
 }
 function placeCorners() { P.reset(new V3(0, 0, -1.2), 0); O.reset(new V3(0, 0, 1.2), Math.PI); }
 function nextRound() {
   if (G.state !== 'break') return;
   showOnly(); G.round++; G.clock = G.roundLen;
   for (const f of [P, O]) {
-    const keep = { head: f.head, headCap: f.headCap, body: f.body, stamMax: f.stamMax, kdFight: f.kdFight, tot: f.totalHeadDmg, stats: f.stats_ };
+    const keep = { head: f.head, headCap: f.headCap, body: f.body, stamMax: f.stamMax, kdFight: f.kdFight, tot: f.totalHeadDmg, stats: f.stats_, swell: f.swell, sweat: f.sweat, cut: f.cut };
     f.reset(f === P ? new V3(0, 0, -1.2) : new V3(0, 0, 1.2), f === P ? 0 : Math.PI);
     f.stats_ = keep.stats; f.newRound();
     f.stamMax = Math.min(100, keep.stamMax + 18); f.stam = f.stamMax; f.headCap = keep.headCap; f.head = Math.min(keep.headCap, keep.head + (keep.headCap - keep.head) * .5);
-    f.body = Math.min(100, keep.body + 15); f.kdFight = keep.kdFight; f.totalHeadDmg = keep.tot;
+    f.body = Math.min(100, keep.body + 15); f.kdFight = keep.kdFight; f.totalHeadDmg = keep.tot; f.swell = { L: keep.swell.L * .85, R: keep.swell.R * .85 }; f.sweat = keep.sweat * .7; f.cut = keep.cut; if (f.cut) f.cut.sev *= .8;   // the corner works on it
   }
   O.ai = null; G.state = 'fight'; sfx.bell(1); showMsg(`Round ${G.round}`, '', 1.2); camPos.set(0, 6.5, -4.5);
   comment('round', { text: G.round === G.rounds ? `Final round. ${surname(P.name)} and ${surname(O.name)}, three minutes from the finish.`.replace('three minutes', fmtLen(G.roundLen).replace(':00', ' minutes').replace('1 minutes', 'one minute')) : `Round ${words(G.round)}.` });
 }
 function endFight(winner, how, detail) {
   if (G.state === 'over') return;
+  if (G.spar) return endSpar(how);
+  if (how === 'TKO' || how === 'RTD') REFS.waveT = 2.5;
   G.state = 'over'; G.paused = false; document.body.classList.remove('fighting'); $('pauseBtn').classList.add('hidden');
   sfx.bell(3); sfx.roar(.25); setTimeout(() => sfx.roar(.05), 2500);
   showMsg('', ''); showOnly();
@@ -1347,14 +1611,18 @@ function endFight(winner, how, detail) {
     html += `<div class="seg"><button class="go" id="homeBtn">Back to the gym</button></div>`;
   } else {
     if (!G.sim) { SAVE.qf[draw ? 'd' : won ? 'w' : 'l']++; Save.save(); }
+    if (QUICK.tourney && SAVE.tourney && !G.sim) { if (won) SAVE.tourney.round++; else SAVE.tourney.out = true; Save.save(); html += `<p class="gain">${won ? (SAVE.tourney.round >= 3 ? 'You won the tournament!' : 'Through to the next round.') : 'You are out of the tournament.'}</p>`; }
+    if (QUICK.daily && !G.sim) { SAVE.daily = SAVE.daily || {}; const res = `${draw ? 'Draw' : won ? 'Win' : 'Loss'} by ${how} in round ${G.round}`; const prev = SAVE.daily[QUICK.daily.key]; if (!prev || (won && !prev.startsWith('Win'))) SAVE.daily[QUICK.daily.key] = res; Save.save(); }
     html += `<div class="seg"><button class="go" id="againBtn">Rematch</button><button id="setupBtn">New setup</button><button id="homeBtn">Main menu</button></div>`;
   }
-  setTimeout(() => {
+  const showResult = () => {
     $('over').innerHTML = html; showOnly('over');
-    if (QUICK) { $('homeBtn').onclick = toMenu; $('againBtn').onclick = () => startFight(QUICK.opp, QUICK.cfg); $('setupBtn').onclick = () => openQuick(); }
+    if (QUICK) { $('homeBtn').onclick = toMenu; $('againBtn').onclick = () => startFight(QUICK.opp, QUICK.cfg); $('setupBtn').onclick = () => openQuick(); if (QUICK.tourney) { $('againBtn').textContent = 'Back to the bracket'; $('againBtn').onclick = () => openTourney(); } if (QUICK.daily) { $('againBtn').textContent = 'Try again'; $('setupBtn').onclick = openDaily; } }
     else $('homeBtn').onclick = toHub;
     $(QUICK ? 'againBtn' : 'homeBtn').focus();
-  }, how === 'DEC' || how === 'RTD' ? 600 : 2200);
+  };
+  if ((how === 'KO' || how === 'TKO') && !G.sim) setTimeout(() => { if (!startReplay(G.winner)) showResult(); else REPLAY.play.done = showResult; }, 1800);
+  else setTimeout(showResult, how === 'DEC' || how === 'RTD' ? 600 : 2200);
 }
 function announceResult(won, draw, how) {
   const wn = won ? P.name : O.name;
@@ -1366,20 +1634,26 @@ function announceResult(won, draw, how) {
   else t = `Ladies and gentlemen, ${how === 'KO' ? 'the referee has counted to ten' : 'the referee has stopped the contest'} in round ${words(G.round)}. Your winner, by ${how === 'KO' ? 'knockout' : 'technical knockout'}... ${wn}!`;
   setTimeout(() => { sfx.roar(.22); say(t, 'ring'); setTimeout(() => sfx.roar(.06), 3500); }, 900);
 }
-function hintText() { return `${K('jab')} jab · ${K('cross')} cross · ${K('hook')} hook · ${K('upper')} uppercut · hold ${K('body')} for the body · ${K('block')} block · ${K('slipL')} / ${K('slipR')} slip · ${K('up')}${K('left')}${K('down')}${K('right')} move · ${K('cam')} camera · Esc pause`; }
+function hintText() { return `${K('jab')} jab · ${K('cross')} cross · ${K('hook')} hook · ${K('upper')} uppercut · hold ${K('body')} for the body · ${K('block')} block · ${K('slipL')} / ${K('slipR')} slip · ${K('lupper')} lead upper · ${K('over')} overhand · ${K('roll')} roll · ${K('feint')} feint · ${K('pull')} pull back · ${K('clinch')} clinch · ${K('up')}${K('left')}${K('down')}${K('right')} move · ${K('cam')} camera · Esc pause`; }
 function startFight(opp, cfg = {}) {
+  REPLAY.buf = []; REPLAY.play = null; $('replayTag').classList.add('hidden'); G.fouls = [0, 0]; G.deduct = [0, 0]; G.holds = 0; G.eight = null; G.foulPause = 0; CROWD.burst = []; CROWD.idle = 0; CROWD.chantT = 5;
   MODE = 'fight'; setScene('arena'); audioInit(); showOnly(); G.paused = false; $('coach').classList.add('hidden');
   const me = cfg.fighter || PR;
   G.oppDesc = opp; G.ai = aiFor(opp); G.rounds = cfg.rounds || PR.rounds; G.roundLen = cfg.roundLen || SET.careerRoundLen; G.round = 1; G.clock = G.roundLen;
   G.cards = [[], [], []]; G.judgesBias = [rand(-.15, .15), rand(-.15, .15), rand(-.15, .15)]; G.cam = SET.cam.view;
   P.mitt = false; O.mitt = false; O.aimFor = null; O.root.visible = true; P.root.visible = true;
   P.look(me); P.stats(me); P.name = me.name || 'You';
-  O.look(opp); O.stats(opp); O.name = opp.name; O.mats.Shoes && O.mats.Shoes.color.set(0xe0ddd6);
+  O.look(opp); O.stats(opp); if (opp.trait === 'iron') O.chin *= 1.18; if (opp.trait === 'glass') O.chin *= .82; O.trait = opp.trait; O.name = opp.name; O.mats.Shoes && O.mats.Shoes.color.set(0xe0ddd6);
   placeCorners();
   $('pName').textContent = P.name; $('oName').textContent = O.name;
   fightUI(true, hintText());
   G.me = me; COMM.t = -99; COMM.tiredP = COMM.tiredO = false;
+  P.handT = O.handT = null;
+  G.spar = !!cfg.spar; refStart(); O.tell = !QUICK && !G.spar && PR && PR.scout === opp.name;
+  if (QUICK && QUICK.daily && QUICK.daily.mod.tired) G.stamCap = 70;
+  if (QUICK && QUICK.daily) { G.stamCap = QUICK.daily.mod.tired ? 70 : 100; } else if (!QUICK && !cfg.fighter && PR) { const cap = Math.round(100 - Math.max(0, fatigueOf() - 40) * .5 - (PR.weightCut ? 8 : 0)); P.stamMax = P.stam = cap; G.stamCap = cap; } else if (!(QUICK && QUICK.daily)) G.stamCap = 100;
   if (G.sim) { G.state = 'fight'; return; }
+  if (G.spar) { setScene('gym'); G.state = 'intro'; $('pName').textContent = P.name; $('oName').textContent = O.name + ' (sparring)'; beginRound1(); return; }
   startIntro();
 }
 function togglePause() {
@@ -1388,10 +1662,11 @@ function togglePause() {
 }
 function renderPause() {
   $('pause').innerHTML = `<h2>Paused</h2><p class="note">Round ${G.round} of ${G.rounds} · ${esc(P.name)} vs ${esc(O.name)}</p>
-    <div class="stack"><button class="go" id="pzResume">Resume</button><button id="pzSet">Settings</button><button id="pzQuit">${QUICK ? 'Leave the fight' : 'Retire on your stool'}</button></div><div id="pzExtra"></div>`;
+    <div class="stack"><button class="go" id="pzResume">Resume</button><button id="pzSet">Settings</button><button id="pzPhoto">Photo mode</button><button id="pzQuit">${QUICK ? 'Leave the fight' : 'Retire on your stool'}</button></div><div id="pzExtra"></div>`;
   showOnly('pause');
   $('pzResume').onclick = togglePause; $('pzResume').focus();
   $('pzSet').onclick = () => openSettings(renderPause);
+  $('pzPhoto').onclick = () => photoMode(true);
   $('pzQuit').onclick = () => {
     $('pzExtra').innerHTML = `<div class="card"><p>${QUICK ? 'Leave this fight? It counts as a loss on your quick-fight record.' : 'Retire from this fight? It goes on your record as a loss by stoppage.'}</p><div class="confirm"><button class="go" id="pzYes">${QUICK ? 'Leave' : 'Retire'}</button><button id="pzNo">Keep fighting</button></div></div>`;
     $('pzYes').onclick = () => { G.paused = false; endFight(O, 'RTD', 'You retired on your stool'); };
@@ -1401,15 +1676,16 @@ function renderPause() {
 function prefight() {
   const o = PR.next, me = PR;
   const row = (l, a, b) => `<tr><td>${esc(a)}</td><td>${l}</td><td>${esc(b)}</td></tr>`;
-  $('prefight').innerHTML = `<div class="kicker">Fight night · ${PR.stage === 'pro' ? 'professional' : 'amateur'} bout · ${PR.rounds} rounds of ${fmtLen(SET.careerRoundLen)}</div><h2>${esc(me.name)} vs ${esc(o.name)}</h2>
+  const deal = PR.nextDeal || {};
+  $('prefight').innerHTML = `<div class="kicker">Fight night · ${deal.title ? deal.title.map(b => BODIES.find(x => x.id === b).short).join(', ') + ' world title' : deal.kind === 'rematch' ? 'rematch' : PR.stage === 'pro' ? 'professional' : 'amateur'} bout · ${PR.rounds} rounds of ${fmtLen(SET.careerRoundLen)}</div><h2>${esc(me.name)} vs ${esc(o.name)}</h2>
     <table class="tape"><thead><tr><th>${esc(me.name)}</th><th>Tale of the tape</th><th style="text-align:right">${esc(o.name)}</th></tr></thead><tbody>
     ${row('Record', PR.stage === 'pro' ? recStr(me.pro) : recStr(me.am), recStr(o.rec))}
     ${row('Height', `${me.h} cm (${ftIn(me.h)})`, `${o.h} cm (${ftIn(o.h)})`)}
     ${row('Reach', `${me.reach} cm`, `${o.reach} cm`)}
     ${row('Build', BUILDS[me.build], BUILDS[o.build])}
-    ${row('Style', 'Yours', STYLES[o.style].name)}
+    ${row('Style', me.southpaw ? 'Southpaw' : 'Orthodox', STYLES[o.style].name + (o.southpaw ? ', southpaw' : '') + (o.trait && PR.scout === o.name ? `, ${TRAITS[o.trait].name.toLowerCase()}` : ''))}
     ${row('Power', me.stats.power, o.stats.power)}${row('Speed', me.stats.speed, o.stats.speed)}${row('Chin', me.stats.chin, o.stats.chin)}${row('Cardio', me.stats.cardio, o.stats.cardio)}
-    </tbody></table><p>${o.reach > me.reach + 4 ? 'He has the longer reach. Get inside his jab.' : me.reach > o.reach + 4 ? 'You have the reach. Keep him on the end of your jab.' : 'Even reach. Win the jab battle.'}</p>
+    </tbody></table>${deal.purse ? `<p>Purse: <b>${money(deal.purse)}</b> before your promoter's cut.</p>` : ''}${PR.scout === o.name ? '<p class="gain">You studied his film: his power shots are easier to read.</p>' : ''}${fatigueOf() > 40 ? `<p class="note">You're carrying fatigue (${fatigueOf()}): you start with ${Math.round(100 - (fatigueOf() - 40) * .5)}% stamina.</p>` : ''}<p>${o.reach > me.reach + 4 ? 'He has the longer reach. Get inside his jab.' : me.reach > o.reach + 4 ? 'You have the reach. Keep him on the end of your jab.' : 'Even reach. Win the jab battle.'}</p>
     <div class="seg"><button class="go" id="walkBtn">Walk out</button><button id="backBtn">Not yet</button></div>`;
   showOnly('prefight'); $('walkBtn').onclick = () => { QUICK = null; startFight(PR.next, { rounds: PR.rounds }); }; $('backBtn').onclick = toHub; $('walkBtn').focus();
 }
@@ -1420,8 +1696,8 @@ function statBars(st, edit) {
   return STAT_KEYS.map(([k, l]) => `<div class="stat${edit ? ' edit' : ''}"><span>${l}</span><div class="bar"><i style="width:${st[k]}%;background:var(--gold)"></i></div><b>${st[k]}</b>${edit ? `<span class="pm"><button data-s="${k}" data-d="-1" aria-label="Lower ${l}">−</button><button data-s="${k}" data-d="1" aria-label="Raise ${l}">+</button></span>` : ''}</div>`).join('');
 }
 function idleGym(fighter) {
-  setScene('gym'); fightUI(false); showMsg('', ''); $('call').classList.add('hidden'); $('coach').classList.add('hidden');
-  O.root.visible = false; P.root.visible = true; P.mitt = false;
+  setScene('gym'); fightUI(false); showMsg('', ''); $('call').classList.add('hidden'); $('drill').classList.add('hidden'); $('coach').classList.add('hidden'); propsFor(null); P.root.position.y = 0;
+  O.root.visible = false; P.root.visible = true; P.mitt = false; P.handT = null; if (REF) REF.root.visible = false; P.headMesh.visible = true; renderer.domElement.style.filter = '';
   P.look(fighter); P.stats(fighter); P.reset(new V3(0, 0, 0), .3); shadow.t = 1.2;
 }
 function toHub() {
@@ -1429,22 +1705,50 @@ function toHub() {
   renderHub(); showOnly('hub');
 }
 function renderHub() {
-  const pr = PR, o = pr.next, fightReady = pr.fightIn <= 0;
-  $('hub').innerHTML = `<div class="kicker">${WEIGHTS[pr.w][0]} · ${esc(recLine(pr))}${pr.rank ? ` · ranked ${pr.rank}` : pr.stage === 'pro' ? ' · unranked' : ''}</div>
-    <h1>${esc(pr.name)}</h1>${pr.nick ? `<p>“${esc(pr.nick)}”</p>` : ''}
-    ${statBars(pr.stats)}
-    <div class="card"><div class="kicker">Week ${pr.week} · ${fightReady ? 'Fight night' : `next fight in ${pr.fightIn} week${pr.fightIn > 1 ? 's' : ''}`}</div>
+  const pr = PR, o = pr.next, fightReady = o && pr.fightIn <= 0, pro = pr.stage === 'pro', belts = Object.keys(pr.belts || {});
+  if (pr.retired) { toMenu(); return; }
+  const deal = pr.nextDeal || {}, bodyNames = ids => ids.map(b => BODIES.find(x => x.id === b).short).join(' and ');
+  let card;
+  if (o) card = `<div class="kicker">Week ${pr.week} · ${fightReady ? 'Fight night' : `next fight in ${pr.fightIn} week${pr.fightIn > 1 ? 's' : ''}`}</div>
       <div class="big">vs ${esc(o.name)}</div>
-      <p class="note">${STYLES[o.style].name} · ${recStr(o.rec)} · ${o.h} cm, reach ${o.reach} cm · ${pr.rounds} rounds</p>
-      ${fightReady ? `<button class="go" id="fightBtn">Go to fight night</button>` : `<button class="go" id="trainBtn">Train this week</button>`}
-    </div>
-    <div class="seg" style="margin-top:6px"><button id="recBtn">Records</button><button id="troBtn">Trophy room</button><button id="editBtn">Edit fighter</button><button id="quickBtn">Quick fight</button></div>
-    <div class="seg" style="margin-top:8px"><button id="menuBtn">Main menu</button></div>
+      <p class="note">${deal.title ? `<b class="gold">${bodyNames(deal.title)} title${deal.title.length > 1 ? 's' : ''} on the line.</b> ` : deal.kind === 'rematch' ? '<b class="gold">Rematch.</b> ' : ''}${STYLES[o.style].name}${o.southpaw ? ', southpaw' : ''} · ${recStr(o.rec)} · ${o.h} cm, reach ${o.reach} cm · ${pr.rounds} rounds${deal.purse ? ` · purse ${money(deal.purse)}` : ''}</p>
+      ${fightReady ? `<button class="go" id="fightBtn">Go to fight night</button>` : `<button class="go" id="trainBtn">Train this week</button>`}`;
+  else if (pro && !pr.promoter) card = `<div class="kicker">Week ${pr.week}</div><div class="big">Promoters are calling</div><p class="note">Sign with a promoter to get fights and purses.</p><button class="go" id="promBtn">Hear the offers</button>`;
+  else card = `<div class="kicker">Week ${pr.week}</div><div class="big">${pr.offers && pr.offers[0] && pr.offers[0].kind === 'mandatory' ? 'Mandatory defense due' : 'Pick your next fight'}</div><p class="note">${(pr.offers || []).length} offer${(pr.offers || []).length === 1 ? '' : 's'} on the table.</p><button class="go" id="offBtn">See fight offers</button>`;
+  const news = [pr.news, ...((pr.world && pr.world.news) || []).slice(0, 3)].filter(Boolean);
+  const next = TRAINERS[(pr.trainer || 0) + 1];
+  $('hub').innerHTML = `<div class="kicker">${WEIGHTS[pr.w][0]} · ${esc(recLine(pr))}${pr.rank ? ` · ranked ${pr.rank}` : pro ? ' · unranked' : ''} · age ${ageOf(pr)}${pro ? ` · ${money(pr.money || 0)}` : ''}</div>
+    <h1>${esc(pr.name)}</h1>${pr.nick ? `<p>“${esc(pr.nick)}”</p>` : ''}
+    ${belts.length ? `<p class="belts">${belts.map(b => `<span class="belt" style="--c:${hex(BODIES.find(x => x.id === b).col)}">${BODIES.find(x => x.id === b).short} champion</span>`).join('')}</p>` : ''}
+    ${statBars(pr.stats)}
+    <div class="stat"><span>Fatigue</span><div class="bar"><i style="width:${fatigueOf()}%;background:${fatigueOf() >= 70 ? 'var(--red)' : fatigueOf() >= 45 ? '#f0a040' : 'var(--dim)'}"></i></div><b>${fatigueOf()}</b></div>
+    ${pr.injury ? `<p class="bad">Injured: ${esc(pr.injury.what)}, ${pr.injury.weeks} week${pr.injury.weeks > 1 ? 's' : ''} to heal.</p>` : ''}
+    ${pr.rival ? `<p class="note">Rival: <b>${esc(pr.rival.name)}</b>. ${esc(pr.rival.why)}</p>` : ''}
+    <div class="card">${card}</div>
+    ${news.length ? `<details class="news"><summary>Around the division</summary>${news.map(n => `<p class="note">${esc(n)}</p>`).join('')}</details>` : ''}
+    <div class="seg" style="margin-top:6px"><button id="recBtn">Records</button><button id="troBtn">Trophy room</button>${pro && pr.world ? '<button id="rankBtn">Rankings</button>' : ''}<button id="editBtn">Edit fighter</button><button id="quickBtn">Quick fight</button></div>
+    ${pro ? `<div class="seg" style="margin-top:6px">${pr.w < WEIGHTS.length - 1 ? '<button id="upBtn">Move up a division</button>' : ''}${pr.w > 0 ? '<button id="downBtn">Move down</button>' : ''}${next ? `<button id="hireBtn"${(pr.money || 0) < next.cost ? ' disabled' : ''}>Hire ${next.name.toLowerCase()} (${money(next.cost)})</button>` : ''}</div>` : ''}
+    <div class="seg" style="margin-top:8px"><button id="menuBtn">Main menu</button>${pro ? '<button id="retBtn">Retire</button>' : ''}</div><div id="hubConfirm"></div>
     <p class="note" style="margin-top:14px">Saved to ${Save.where} · slot ${SAVE.active + 1}.</p>`;
-  if (fightReady) $('fightBtn').onclick = prefight; else $('trainBtn').onclick = openTrainMenu;
+  if ($('fightBtn')) $('fightBtn').onclick = prefight; if ($('trainBtn')) $('trainBtn').onclick = openTrainMenu;
+  if ($('promBtn')) $('promBtn').onclick = openPromoters; if ($('offBtn')) $('offBtn').onclick = openOffers;
+  if ($('rankBtn')) $('rankBtn').onclick = openRankings;
+  const confirm = (q, yes, fn) => { $('hubConfirm').innerHTML = `<div class="card"><p>${q}</p><div class="confirm"><button class="go" id="hcYes">${yes}</button><button id="hcNo">Cancel</button></div></div>`; $('hcYes').onclick = fn; $('hcNo').onclick = () => { $('hubConfirm').innerHTML = ''; }; $('hcYes').focus(); };
+  if ($('upBtn')) $('upBtn').onclick = () => confirm(`Move up to ${WEIGHTS[pr.w + 1][0]}? More power, less speed, a new set of opponents.${belts.length ? ' Your titles will be vacated.' : ''}`, 'Move up', () => changeWeight(1));
+  if ($('downBtn')) $('downBtn').onclick = () => confirm(`Cut down to ${WEIGHTS[pr.w - 1][0]}? Quicker, a little less power.${belts.length ? ' Your titles will be vacated.' : ''}`, 'Move down', () => changeWeight(-1));
+  if ($('hireBtn')) $('hireBtn').onclick = hireTrainer;
+  if ($('retBtn')) $('retBtn').onclick = () => confirm(`Retire at ${ageOf(pr)} with a record of ${recStr(pr.pro)}? This ends the career in this slot.`, 'Retire', retire);
   $('recBtn').onclick = openRecords; $('troBtn').onclick = () => openTrophies(toHub);
   $('editBtn').onclick = () => openCreator(false); $('quickBtn').onclick = () => openQuick(SAVE.active, toHub);
   $('menuBtn').onclick = toMenu;
+}
+function openRankings() {
+  const W = PR.world, ranks = playerRanks(PR);
+  $('offers').innerHTML = `<div class="kicker">${WEIGHTS[PR.w][0]}</div><h1>Rankings</h1>
+    ${BODIES.map((b, i) => { const champ = W.champs[b.id] === 'player' ? null : byId(W, W.champs[b.id]); const list = rankList(W, i).filter(f => f.id !== W.champs[b.id]).slice(0, 5); if (ranks[i] && ranks[i] <= 5 && W.champs[b.id] !== 'player') list.splice(ranks[i] - 1, 0, { name: 'You', rec: PR.pro, you: true }); list.length = Math.min(list.length, 5);
+      return `<h3 style="color:${hex(b.col)}">${b.short} · ${esc(b.name)}</h3><table><tbody><tr><td>Champion</td><td>${champ ? `${esc(champ.name)} (${recStr(champ.rec)})` : W.champs[b.id] === 'player' ? '<b>You</b>' : 'Vacant'}</td></tr>${list.map((f, k) => `<tr><td>${k + 1}</td><td>${f.you ? '<b class="gold">You</b>' : esc(f.name)} (${recStr(f.rec)})</td></tr>`).join('')}${W.champs[b.id] === 'player' || (ranks[i] && ranks[i] <= 5) ? '' : `<tr><td>You</td><td>${ranks[i] ? '#' + ranks[i] : 'Unranked'}</td></tr>`}</tbody></table>`; }).join('')}
+    <button id="rkBack" style="margin-top:8px">Back</button>`;
+  showOnly('offers'); $('rkBack').onclick = () => { renderHub(); showOnly('hub'); };
 }
 
 /* ================= creator ================= */
@@ -1464,16 +1768,26 @@ function renderCreator() {
     ${isNew ? `<p>Body choices change how you fight: reach decides who lands first, height and weight class trade speed for power.</p>` : ''}
     <label for="fName">Name</label><input type="text" id="fName" maxlength="24" value="${esc(d.name)}" placeholder="Your fighter's name">
     <label for="fNick">Nickname</label><input type="text" id="fNick" maxlength="24" value="${esc(d.nick)}" placeholder="Optional">
+    ${isNew ? `<label for="fAge" id="lAge">Age: ${d.age ?? 20}</label><input type="range" id="fAge" min="18" max="28" value="${d.age ?? 20}"><p class="note">Younger fighters improve faster; from about 30 the body starts to slow down.</p>` : ''}
     ${isNew ? `<label for="fW">Weight class</label><select id="fW">${WEIGHTS.map((w, i) => `<option value="${i}"${i === d.w ? ' selected' : ''}>${w[0]} (${w[1]})</option>`).join('')}</select>
     <label for="fH" id="lH">Height: ${d.h} cm (${ftIn(d.h)})</label><input type="range" id="fH" min="${lo}" max="${hi}" value="${d.h}">
     <label for="fR" id="lR">Reach: ${d.reach} cm, ${d.reach - d.h >= 0 ? '+' : ''}${d.reach - d.h} cm on your height</label><input type="range" id="fR" min="${d.h - 8}" max="${d.h + 14}" value="${d.reach}">
     <label>Build</label><div class="seg">${BUILDS.map((b, i) => `<button data-b="${i}" aria-pressed="${d.build === i}">${b}</button>`).join('')}</div>
+    <label>Stance</label><div class="seg"><button data-stance="0" aria-pressed="${!d.southpaw}">Orthodox</button><button data-stance="1" aria-pressed="${!!d.southpaw}">Southpaw</button></div>
     <p class="note">${['Lean: quicker and fitter, hits a little lighter.', 'Athletic: balanced.', 'Stocky: hits harder and takes a punch, tires sooner.'][d.build]}</p>` :
     `<p class="note">${WEIGHTS[d.w][0]} · ${d.h} cm · reach ${d.reach} cm · ${BUILDS[d.build]}. Body is set once your career starts.</p>`}
     <label>Skin tone</label><div class="row">${sw('skin', SKINS)}</div>
     <label>Trunks</label><div class="row">${sw('trunks', KIT)}</div>
     <label>Gloves</label><div class="row">${sw('gloves', KIT)}</div>
     <label>Waistband</label><div class="row">${sw('trim', KIT)}</div>
+    <label>Shoes</label><div class="row">${SHOES.map((c, i) => `<button class="sw" style="background:${hex(c)}" data-x="shoes" data-v="${c}" aria-pressed="${(d.shoes ?? SHOES[0]) === c}" aria-label="Shoe colour ${i + 1}"></button>`).join('')}</div>
+    <label>Hair</label><div class="row">${HAIRS.map((c, i) => `<button class="sw" style="background:${hex(c)}" data-x="hair" data-v="${c}" aria-pressed="${(d.hair ?? HAIRS[0]) === c}" aria-label="Hair colour ${i + 1}"></button>`).join('')}</div>
+    <label for="fFw">Face width</label><input type="range" id="fFw" min="92" max="108" value="${Math.round(((d.face || {}).w || 1) * 100)}">
+    <label for="fFh">Face length</label><input type="range" id="fFh" min="92" max="108" value="${Math.round(((d.face || {}).h || 1) * 100)}">
+    <label for="fFj">Jaw</label><input type="range" id="fFj" min="92" max="108" value="${Math.round(((d.face || {}).jaw || 1) * 100)}">
+    <label>Tattoo</label><div class="seg"><button data-tat="0" aria-pressed="${!d.tattoo}">None</button><button data-tat="1" aria-pressed="${d.tattoo === 1}">Shoulder</button><button data-tat="2" aria-pressed="${d.tattoo === 2}">Both arms</button></div>
+    <label>Fighting style</label><div class="seg">${PSTYLES.map(([k, n]) => `<button data-ps="${k}" aria-pressed="${(d.pstyle || '') === k}">${n}</button>`).join('')}</div><p class="note">${PSTYLES.find(x => x[0] === (d.pstyle || ''))[2]}</p>
+    <label>Ring-walk music</label><div class="seg">${['Slow burn', 'Hype', 'Old school'].map((n, i) => `<button data-wt="${i}" aria-pressed="${(d.walkTheme || 0) === i}">${n}</button>`).join('')}</div>
     ${isNew ? `<h3>Attributes · ${d.pts} point${d.pts === 1 ? '' : 's'} to spend</h3>${statBars(d.stats, true)}<p class="note">Everything starts at 45. Training raises them over your career; at creation nothing goes above 65.</p>` : ''}
     <div class="seg" style="margin-top:16px"><button class="go" id="saveF">${isNew ? 'Start career' : 'Save'}</button><button id="cancelF">Cancel</button></div>
     <p class="note" id="fErr"></p>`;
@@ -1488,115 +1802,32 @@ function renderCreator() {
       const r = $('fR'); r.min = d.h - 8; r.max = d.h + 14; r.value = d.reach; P.look(d);
     };
     $('fH').oninput = e => { const r = d.reach - d.h; d.h = +e.target.value; d.reach = d.h + r; bodyLabels(); };
+    if ($('fAge')) $('fAge').oninput = e => { d.age = +e.target.value; $('lAge').textContent = `Age: ${d.age}`; };
     $('fR').oninput = e => { d.reach = +e.target.value; bodyLabels(); };
     for (const b of c.querySelectorAll('[data-b]')) b.onclick = () => { d.build = +b.dataset.b; renderCreator(); };
+    for (const b of c.querySelectorAll('[data-stance]')) b.onclick = () => { d.southpaw = b.dataset.stance === '1'; renderCreator(); };
     for (const b of c.querySelectorAll('[data-s]')) b.onclick = () => {
       const k = b.dataset.s, dd = +b.dataset.d;
       if (dd > 0 && d.pts > 0 && d.stats[k] < 65) { d.stats[k]++; d.pts--; } else if (dd < 0 && d.stats[k] > 45) { d.stats[k]--; d.pts++; }
       renderCreator();
     };
   }
-  for (const b of c.querySelectorAll('.sw')) b.onclick = () => { d[b.dataset.k] = +b.dataset.i; renderCreator(); };
+  for (const b of c.querySelectorAll('.sw')) b.onclick = () => { if (b.dataset.x) d[b.dataset.x] = +b.dataset.v; else d[b.dataset.k] = +b.dataset.i; renderCreator(); };
+  for (const [id, k] of [['fFw', 'w'], ['fFh', 'h'], ['fFj', 'jaw']]) $(id).oninput = e => { d.face = Object.assign({ w: 1, h: 1, jaw: 1 }, d.face); d.face[k] = +e.target.value / 100; P.look(d); };
+  for (const b of c.querySelectorAll('[data-tat]')) b.onclick = () => { d.tattoo = +b.dataset.tat; renderCreator(); };
+  for (const b of c.querySelectorAll('[data-ps]')) b.onclick = () => { d.pstyle = b.dataset.ps || null; renderCreator(); };
+  for (const b of c.querySelectorAll('[data-wt]')) b.onclick = () => { d.walkTheme = +b.dataset.wt; audioInit(); walkMusic(true, d.walkTheme); setTimeout(() => walkMusic(false), 2600); renderCreator(); };
   $('saveF').onclick = () => {
     if (!d.name.trim()) { $('fErr').textContent = 'Give your fighter a name first.'; $('fName').focus(); return; }
     const wasNew = d.isNew; delete d.isNew; d.name = d.name.trim(); d.nick = d.nick.trim();
-    if (wasNew) { d.created = true; scheduleNext(d); }
+    if (wasNew) { d.created = true; d.ageWeek = d.week; scheduleNext(d); }
     PR = fixProfile(d); persist(); toHub();
   };
   if ($('cancelF')) $('cancelF').onclick = () => { if (CREATOR_BACK) CREATOR_BACK(); else toHub(); };
   P.look(d);
 }
 
-/* ================= training ================= */
-const TRAIN = [
-  { id: 'mitts', name: 'Mitt work', desc: 'Throw the combos your trainer calls, on rhythm. Trains speed and power. You play this one.' },
-  { id: 'bag', name: 'Heavy bag', desc: 'Rounds on the bag. Builds power.', gains: { power: [2, 4] } },
-  { id: 'road', name: 'Roadwork', desc: 'Early-morning runs. Builds cardio.', gains: { cardio: [2, 4] } },
-  { id: 'spar', name: 'Sparring', desc: 'Hard rounds with a training partner. Toughens your chin, sharpens your speed.', gains: { chin: [1, 3], speed: [0, 2] } }
-];
-function gain(stat, amt) { const cur = PR.stats[stat]; const g = Math.max(0, Math.round(amt * (1.25 - cur / 100))); PR.stats[stat] = Math.min(99, cur + g); return g; }
-function openTrainMenu() {
-  MODE = 'hub';
-  $('trainMenu').innerHTML = `<div class="kicker">Week ${PR.week} · ${PR.fightIn} week${PR.fightIn > 1 ? 's' : ''} until fight night</div><h1>Training</h1><p>One session a week. Gains shrink as a stat gets higher.</p>
-    ${TRAIN.map(t => `<button class="wide" data-t="${t.id}" style="margin:8px 0"><span>${t.name}</span><small>${t.desc}</small></button>`).join('')}
-    <button id="tBack" style="margin-top:8px">Back</button>`;
-  showOnly('trainMenu');
-  for (const b of $('trainMenu').querySelectorAll('[data-t]')) b.onclick = () => runTraining(b.dataset.t);
-  $('tBack').onclick = () => { renderHub(); showOnly('hub'); };
-}
-function finishWeek(lines, title, got = []) {
-  PR.fightIn = Math.max(0, PR.fightIn - 1); PR.week++; persist();
-  $('trainResult').innerHTML = `<h2>${esc(title)}</h2>${lines.join('')}${trophyLines(got)}<p class="note">${PR.fightIn ? `${PR.fightIn} week${PR.fightIn > 1 ? 's' : ''} until you fight ${esc(PR.next.name)}.` : `Fight week. Time to face ${esc(PR.next.name)}.`}</p><button class="go" id="trDone">Back to the gym</button>`;
-  showOnly('trainResult'); $('trDone').onclick = toHub; $('trDone').focus();
-}
-function runTraining(id) {
-  const t = TRAIN.find(x => x.id === id);
-  if (id === 'mitts') return startMitts();
-  const lines = Object.entries(t.gains).map(([k, [a, b]]) => { const g = gain(k, rand(a, b)); return `<p>${STAT_KEYS.find(s => s[0] === k)[1]}: <span class="gain">+${g}</span> → ${PR.stats[k]}</p>`; });
-  finishWeek(lines, `${t.name} done`);
-}
-const COMBOS = [[1], [1, 1], [1, 2], [1, 2], [1, 1, 2], [1, 2, 3], [3, 2], [2, 3, 2], [1, 6, 3], [1, 2, 3, 2], [6, 3, 2], [1, 2, 6, 3]];
-const NUM = { 1: 'jab', 2: 'cross', 3: 'hook', 6: 'upper' }, ACTNUM = { jab: 1, cross: 2, hook: 3, upper: 6 };
-const TR = {};
-function trainerSetup(dist) {
-  O.root.visible = true; O.look({ h: 176, reach: 178, build: 2, skin: 1, trunks: 2, gloves: 2, trim: 2, mittColor: 0xc9a46a, shoes: 0x222222 });
-  O.stats({ stats: { power: 30, speed: 40, chin: 50, cardio: 50 }, w: 4, build: 1 });
-  O.reset(new V3(0, 0, dist), Math.PI); O.mitt = true;
-  O.aimFor = p => O.gloves[p.d.hand === 'L' ? 'R' : 'L'].getWorldPosition(new V3());
-}
-function startMitts() {
-  MODE = 'train'; setScene('gym'); audioInit(); showOnly();
-  P.look(PR); P.stats(PR); P.mitt = false; P.reset(new V3(0, 0, -.45), 0); trainerSetup(.42);
-  const list = []; for (let i = 0; i < 10; i++) list.push(COMBOS[Math.min(COMBOS.length - 1, randInt(0, 3) + Math.floor(i * .9))]);
-  Object.assign(TR, { list, i: -1, seq: null, pos: 0, wait: 1.4, t: 0, last: 0, perfect: 0, good: 0, slow: 0, punches: 0, clean: 0, landed: 0, failed: false, done: false });
-  fightUI(true, `Throw what the trainer calls: ${K('jab')} = 1 jab · ${K('cross')} = 2 cross · ${K('hook')} = 3 hook · ${K('upper')} = 6 uppercut`);
-  $('call').classList.remove('hidden'); $('callNums').textContent = 'Ready'; $('callKeys').textContent = ''; $('callMeta').textContent = 'Mitt work · 10 combos';
-}
-function renderCall(badAt) {
-  $('callNums').innerHTML = TR.seq.map((n, i) => `<span class="${i < TR.pos ? 'done' : i === badAt ? 'bad' : ''}">${n}</span>`).join(' · ');
-  $('callKeys').textContent = TR.seq.map(n => K(NUM[n])).join(' · ');
-  $('callMeta').textContent = `Combo ${TR.i + 1} of ${TR.list.length}`;
-}
-function nextCombo() {
-  TR.i++; if (TR.i >= TR.list.length) return endMitts();
-  TR.seq = TR.list[TR.i]; TR.pos = 0; TR.failed = false; TR.t = 0; TR.last = 0; TR.wait = 0; renderCall();
-}
-function trainAction(a) {
-  const n = ACTNUM[a]; if (!n || !TR.seq || TR.wait > 0 || TR.done) return;
-  const now = TR.t, gap = now - TR.last;
-  const mitt = O.gloves[PUNCH[NUM[n]].hand === 'L' ? 'R' : 'L'].getWorldPosition(new V3());
-  if (n !== TR.seq[TR.pos]) { TR.failed = true; renderCall(TR.pos); popText('Wrong punch', mitt, '#ff6b6b'); TR.wait = .9; return; }
-  P.startPunch(NUM[n], false); TR.punches++;
-  const grade = TR.pos === 0 ? (gap < .9 ? 2 : gap < 1.4 ? 1 : 0) : (gap < .45 ? 2 : gap < .7 ? 1 : 0);
-  if (grade === 2) TR.perfect++; else if (grade === 1) TR.good++; else TR.slow++;
-  popText(['Slow', 'Good', 'Perfect'][grade], mitt, ['#ff9b6b', '#f2efe8', '#e8b931'][grade]);
-  TR.last = now; TR.pos++; renderCall();
-  if (TR.pos >= TR.seq.length) { TR.clean++; TR.wait = .9; }
-}
-function mittLanding(onLand) {
-  const p = P.punch;
-  if (p && !p.hit && ((p.phase === 1 && p.k > .55) || (p.phase === 2 && p.k < .2))) {
-    const side = p.d.hand === 'L' ? 'R' : 'L', g = P.gloves[p.d.hand].getWorldPosition(new V3()), m = O.gloves[side].getWorldPosition(new V3());
-    if (g.distanceTo(m) < .2 * P.s) { p.hit = true; sfx.pad(); O.mittKick[side] = .07; burst(m, new V3(0, .4, 0), 4); onLand(p); }
-  }
-}
-function updateMitts(dt) {
-  TR.t += dt;
-  if (TR.wait > 0) { TR.wait -= dt; if (TR.wait <= 0) nextCombo(); }
-  else if (TR.seq && !TR.done && TR.t - TR.last > (TR.pos === 0 ? 2.6 : 1.4)) { TR.failed = true; renderCall(TR.pos); TR.wait = .9; }
-  mittLanding(() => TR.landed++);
-}
-function endMitts() {
-  TR.done = true; $('call').classList.add('hidden'); fightUI(false);
-  const rhythm = TR.punches ? (TR.perfect + TR.good * .5) / TR.punches : 0, combos = TR.clean / TR.list.length, landed = TR.punches ? TR.landed / TR.punches : 0;
-  const gs = gain('speed', 1 + 4 * rhythm), gp = gain('power', 1 + 3 * combos * landed);
-  const got = checkTrophies({ mitts: true, perfectAll: TR.punches > 0 && TR.perfect === TR.punches && TR.clean === TR.list.length });
-  finishWeek([
-    `<table><tbody><tr><td>Combos completed</td><td>${TR.clean} of ${TR.list.length}</td></tr><tr><td>On rhythm (perfect / good / slow)</td><td>${TR.perfect} / ${TR.good} / ${TR.slow}</td></tr><tr><td>Punches that hit the mitt</td><td>${TR.landed} of ${TR.punches}</td></tr></tbody></table>`,
-    `<p>Speed: <span class="gain">+${gs}</span> → ${PR.stats.speed}</p><p>Power: <span class="gain">+${gp}</span> → ${PR.stats.power}</p>`,
-    `<p class="note">${rhythm > .75 ? 'Your trainer nods. Sharp hands today.' : rhythm > .45 ? 'Decent session. Faster between punches next time.' : 'Your trainer wants the combos snapped together, not one punch at a time.'}</p>`
-  ], 'Mitt work done', got);
-}
+/*@include training*/
 
 /* ================= tutorial ================= */
 const TSTEPS = [
@@ -1694,6 +1925,8 @@ function updateTutorial(dt) {
   }
 }
 
+/*@include extras*/
+
 /* ================= main menu ================= */
 function toMenu() {
   hush(); MODE = 'menu'; QUICK = null; G.paused = false;
@@ -1703,12 +1936,14 @@ function toMenu() {
 }
 function renderMenu() {
   const pr = SAVE.slots[SAVE.active], used = SAVE.slots.filter(Boolean).length, earned = pr ? Object.keys(pr.trophies).length : 0;
-  $('menu').innerHTML = `<div class="kicker">Career prototype</div><h1>Boxing</h1><p>Build a boxer, train him, and take him from amateur bouts to a world ranking.</p>
+  $('menu').innerHTML = `<div class="kicker">Career prototype</div><h1>Boxing</h1><p>Build a boxer, train him, and take him from amateur bouts to world titles and the Hall of Fame.</p>
     <div class="stack">
-    ${pr ? `<button class="go wide" id="mContinue"><span>Continue career</span><small>${esc(pr.name)} · ${esc(recLine(pr))} · week ${pr.week}</small></button>`
+    ${pr && pr.retired ? `<button class="wide" id="mSlots2"><span>${esc(pr.name)} has retired</span><small>${pr.retired.hof ? 'Hall of Famer' : 'Career over'} · ${esc(recLine(pr))} · pick a slot for a new career</small></button>` : pr ? `<button class="go wide" id="mContinue"><span>Continue career</span><small>${esc(pr.name)} · ${esc(recLine(pr))} · week ${pr.week}</small></button>`
       : `<button class="go wide" id="mNew"><span>Start a career</span><small>Build your boxer</small></button>`}
     <button class="wide" id="mSlots"><span>Career slots</span><small>${used} of 3 in use</small></button>
     <button class="wide" id="mQuick"><span>Quick fight</span><small>No record on the line</small></button>
+    <button class="wide" id="mTour"><span>Tournament</span><small>${SAVE.tourney && !SAVE.tourney.out && SAVE.tourney.round < 3 ? `In progress: round ${SAVE.tourney.round + 1} of 3` : "Eight fighters, three wins for the trophy"}</small></button>
+    <button class="wide" id="mDaily"><span>Daily challenge</span><small>Same opponent for everyone today</small></button>
     <button class="wide" id="mTrophy"><span>Trophy room</span><small>${pr ? `${earned} of ${TROPHIES.length} earned` : 'Start a career to earn trophies'}</small></button>
     <button class="wide" id="mTut"${!SAVE.tutDone ? ' style="border-color:var(--gold)"' : ''}><span>Tutorial</span><small>${SAVE.tutDone ? 'Every punch, the block and the slip' : 'New here? Start with this'}</small></button>
     <button class="wide" id="mSet"><span>Settings</span><small>Controls, camera, audio</small></button>
@@ -1716,8 +1951,9 @@ function renderMenu() {
     ${DESK.canInstall ? `<div class="card"><div class="kicker">Play it like a game</div><p class="note">Install this as its own app. It gets a window and an icon, and updates itself whenever a new version is published.</p><button class="go" id="installBtn">Install as app</button><p class="note" id="installMsg"></p></div>` : ''}
     <p class="note" style="margin-top:12px">Quick fights: ${recStr(SAVE.qf)}${SAVE.qf.d ? '' : ''} · saved to ${Save.where}</p>`;
   if ($('mContinue')) $('mContinue').onclick = toHub;
+  if ($('mSlots2')) $('mSlots2').onclick = openSlots;
   if ($('mNew')) $('mNew').onclick = () => { PR = newProfile(); openCreator(true, toMenu); };
-  $('mSlots').onclick = openSlots; $('mQuick').onclick = () => openQuick(null, toMenu);
+  $('mSlots').onclick = openSlots; $('mQuick').onclick = () => openQuick(null, toMenu); $('mTour').onclick = () => openTourney(false); $('mDaily').onclick = openDaily;
   $('mTrophy').onclick = () => { if (pr) openTrophies(toMenu); else $('mTrophy').querySelector('small').textContent = 'Start a career first: trophies belong to a fighter'; };
   $('mTut').onclick = startTutorial; $('mSet').onclick = () => openSettings(toMenu);
   if ($('installBtn')) $('installBtn').onclick = async () => {
@@ -1727,7 +1963,7 @@ function renderMenu() {
       if (r === 'installed') DESK.canInstall = false;
     } catch (e) { $('installMsg').textContent = "Installing didn't start: " + e.message; }
   };
-  ($('mContinue') || $('mNew')).focus();
+  ($('mContinue') || $('mNew') || $('mSlots2')).focus();
 }
 
 /* ================= career slots ================= */
@@ -1751,7 +1987,7 @@ function renderSlots(confirmAt) {
 
 /* ================= quick fight ================= */
 const QDIFF = [['Novice', .15], ['Contender', .5], ['Champion', .85], ['Legend', 1]];
-const QS = { fighter: -1, diff: 1, style: -1, rounds: 3, len: 90 };
+const QS = { fighter: -1, diff: 1, style: -1, rounds: 3, len: 90, legend: -1 };
 let QBACK = null;
 function openQuick(pref, back) {
   MODE = 'menu'; if (back) QBACK = back; if (!QBACK) QBACK = toMenu;
@@ -1767,15 +2003,17 @@ function renderQuick() {
     <p class="note">${WEIGHTS[f.w][0]} · power ${f.stats.power} · speed ${f.stats.speed} · chin ${f.stats.chin} · cardio ${f.stats.cardio}</p>
     <label>Opponent level</label><div class="seg">${seg('diff', QDIFF.map(([l], i) => [l, i]))}</div>
     <label>Opponent style</label><div class="seg">${seg('style', [['Random', -1], ...STYLES.map((s, i) => [s.name, i])])}</div>
+    <label for="qL">Or face a legend</label><select id="qL"><option value="-1">No, a regular opponent</option>${LEGENDS.map((L, i) => `<option value="${i}"${QS.legend === i ? ' selected' : ''}${legendUnlocked(L) ? '' : ' disabled'}>${esc(L.name)}${legendUnlocked(L) ? '' : ` (locked: earn ${TROPHIES.find(t => t.id === L.need).name})`}</option>`).join('')}</select>
     <label>Rounds</label><div class="seg">${seg('rounds', [3, 4, 6, 8, 10, 12].map(n => [String(n), n]))}</div>
     <label>Round length</label><div class="seg">${seg('len', [60, 90, 120, 180].map(s => [fmtLen(s), s]))}</div>
     <div class="seg" style="margin-top:16px"><button class="go" id="qGo">Fight</button><button id="qBack">Back</button></div>`;
+  $('qL').onchange = e => { QS.legend = +e.target.value; };
   $('qF').onchange = e => { QS.fighter = +e.target.value; P.look(qsFighter()); renderQuick(); };
   for (const b of $('quick').querySelectorAll('[data-q]')) b.onclick = () => { QS[b.dataset.q] = +b.dataset.v; renderQuick(); };
   $('qGo').onclick = () => {
-    const me = qsFighter(), opp = makeOpp(QDIFF[QS.diff][1], me.w, me.trunks);
-    if (QS.style >= 0) opp.style = QS.style;
-    opp.rec = { w: randInt(3, 10 + QS.diff * 10), l: randInt(0, 5) };
+    const me = qsFighter(), opp = QS.legend >= 0 ? legendOpp(LEGENDS[QS.legend], me.w) : makeOpp(QDIFF[QS.diff][1], me.w, me.trunks);
+    if (QS.style >= 0 && !opp.legend) opp.style = QS.style;
+    if (!opp.legend) opp.rec = { w: randInt(3, 10 + QS.diff * 10), l: randInt(0, 5) };
     QUICK = { opp, cfg: { fighter: me, rounds: QS.rounds, roundLen: QS.len } };
     startFight(opp, QUICK.cfg);
   };
@@ -1793,7 +2031,7 @@ function openRecords() {
   const p = PR, t = p.totals, s = streaks(p.history), acc = t.thrown ? Math.round(t.landed / t.thrown * 100) + '%' : '–';
   const row = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
   $('records').innerHTML = `<div class="kicker">${esc(p.name)} · ${WEIGHTS[p.w][0]}</div><h1>Records</h1>
-    <h3>Records</h3><table><tbody>${row('Professional', `${recStr(p.pro)}${p.pro.ko ? `, ${p.pro.ko} by KO` : ''}`)}${row('Amateur', recStr(p.am))}${row('Knockout rate (pro)', p.pro.w ? Math.round(p.pro.ko / p.pro.w * 100) + '%' : '–')}${row('Current win streak', s.cur)}${row('Best win streak', s.best)}${row('Ranking', p.rank ? `#${p.rank}` : p.stage === 'pro' ? 'Unranked' : 'Amateur')}</tbody></table>
+    <h3>Records</h3><table><tbody>${row('Professional', `${recStr(p.pro)}${p.pro.ko ? `, ${p.pro.ko} by KO` : ''}`)}${row('Amateur', recStr(p.am))}${p.stage === 'pro' ? row('World title wins', p.titleWins || 0) + row('Career earnings', money(p.earnings || 0)) + row('Age', ageOf(p)) : ''}${row('Knockout rate (pro)', p.pro.w ? Math.round(p.pro.ko / p.pro.w * 100) + '%' : '–')}${row('Current win streak', s.cur)}${row('Best win streak', s.best)}${row('Ranking', p.rank ? `#${p.rank}` : p.stage === 'pro' ? 'Unranked' : 'Amateur')}</tbody></table>
     <h3>Career numbers</h3><table><tbody>${row('Bouts', t.fights)}${row('Rounds boxed', t.rounds)}${row('Punches landed', `${t.landed} of ${t.thrown} (${acc})`)}${row('Power punches landed', t.power)}${row('Knockdowns scored', t.kdFor)}${row('Times knocked down', t.kdAgainst)}</tbody></table>
     <h3>Fight log</h3>${p.history.length ? `<div class="log"><table><thead><tr><th>Week</th><th>Opponent</th><th>Result</th></tr></thead><tbody>${p.history.map(h => `<tr><td>${h.wk}</td><td>${esc(h.opp)}${h.orec ? ` <span class="note">(${esc(h.orec)})</span>` : ''}</td><td>${h.res} ${esc(h.how || '')}${h.rnd ? `, rd ${h.rnd}` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<p class="note">No fights yet.</p>'}
     <p class="note">Quick fights (all fighters): ${recStr(SAVE.qf)}</p>
@@ -1813,7 +2051,11 @@ const TROPHIES = [
   { id: 'ranked', name: 'Ranked', desc: 'Break into the top 30', tier: 'silver' },
   { id: 'top10', name: 'Top ten', desc: 'Reach the top 10', tier: 'gold' },
   { id: 'no1', name: 'Number one contender', desc: 'Reach number 1', tier: 'gold' },
-  { id: 'unbeaten10', name: 'Unbeaten in ten', desc: 'Start your pro career 10-0', tier: 'gold' }
+  { id: 'unbeaten10', name: 'Unbeaten in ten', desc: 'Start your pro career 10-0', tier: 'gold' },
+  { id: 'champion', name: 'World champion', desc: 'Win a world title', tier: 'gold' },
+  { id: 'unified', name: 'Unified', desc: 'Hold two world titles at once', tier: 'gold' },
+  { id: 'rival', name: 'Score settled', desc: 'Beat a rival in a rematch', tier: 'silver' },
+  { id: 'hof', name: 'Hall of Fame', desc: 'Retire and be inducted into the Hall of Fame', tier: 'gold' }
 ];
 function checkTrophies(c) {
   const got = [], a = id => { if (!PR.trophies[id]) { PR.trophies[id] = { wk: PR.week }; got.push(TROPHIES.find(t => t.id === id)); } };
@@ -1821,8 +2063,10 @@ function checkTrophies(c) {
     a('debut'); if (c.won) a('firstwin'); if (c.won && (c.how === 'KO' || c.how === 'TKO')) a('firstko'); if (c.gotUp) a('getup');
     if (PR.stage === 'pro') a('amateur5'); if (PR.rank) a('ranked'); if (PR.rank && PR.rank <= 10) a('top10'); if (PR.rank === 1) a('no1');
     if (PR.pro.w >= 10 && PR.pro.l === 0 && PR.pro.d === 0) a('unbeaten10');
+    if (PR.titleWins) a('champion'); if (Object.keys(PR.belts || {}).length >= 2) a('unified'); if (PR.rivalsBeaten) a('rival');
   }
   if (c.mitts && c.perfectAll) a('mitts');
+  if (c.hof) a('hof');
   return got;
 }
 const trophyLines = got => got.map(t => `<p class="gain">Trophy earned: ${esc(t.name)}. ${esc(t.desc)}.</p>`).join('');
@@ -1845,7 +2089,7 @@ function renderSettings() {
   if (sTab === 'controls') body = `<p class="note">Click a key, then press the new one. Esc cancels. Arrow keys always move too, and Esc pauses a fight.</p>` +
     ACTIONS.map(([a, l]) => `<div class="bind"><span>${l}</span><button data-bind="${a}">${esc(rebinding && rebinding.a === a ? 'Press a key…' : keyLabel(SET.keys[a]))}</button></div>`).join('') +
     `<button id="sReset" style="margin-top:10px">Reset to defaults</button><p class="note touchonly">On a phone, the on-screen buttons stay the same.</p>`;
-  if (sTab === 'camera') body = `<label>Default fight camera</label><div class="seg">${seg('cam.view', [['Behind your fighter', 0], ['Broadcast side view', 1]])}</div><p class="note">You can still switch mid-fight with ${esc(K('cam'))}.</p>
+  if (sTab === 'camera') body = `<label>Default fight camera</label><div class="seg">${seg('cam.view', [['Behind your fighter', 0], ['Broadcast side view', 1], ['First person', 2]])}</div><p class="note">You can still switch mid-fight with ${esc(K('cam'))}.</p>
     <label>Camera shake on big punches</label><div class="seg">${seg('cam.shake', [['On', true], ['Off', false]])}</div>
     <label>Field of view</label><div class="seg">${seg('cam.wide', [['Normal', false], ['Wide', true]])}</div>`;
   if (sTab === 'audio') body = [['master', 'Master volume'], ['fx', 'Punches and bell'], ['crowd', 'Crowd']].map(([k, l]) => `<label for="v_${k}">${l}</label><div class="range-row"><input type="range" id="v_${k}" min="0" max="100" value="${SET.audio[k]}"><b id="vv_${k}">${SET.audio[k]}</b></div>`).join('') + `<label>Ring announcer voice</label><div class="seg">${seg('audio.voice', [['On', true], ['Off', false]])}</div>
@@ -1892,7 +2136,7 @@ function hud() {
 }
 const camPos = new V3(3, 2, 4), camLook = new V3(0, 1.2, 0);
 function updateCamera(dt, t) {
-  let pos, look; const narrow = innerWidth < 700, side = !narrow;
+  let pos, look, fp = false; const narrow = innerWidth < 700, side = !narrow;
   if (MODE === 'hub' || MODE === 'load' || MODE === 'menu') {
     const a = .55 + Math.sin(t * .1) * .12; const r = narrow ? 4.6 : 3.0;
     pos = new V3(Math.sin(a) * r, narrow ? 1.2 : 1.55, Math.cos(a) * r); look = new V3(side ? -.75 : 0, narrow ? .05 : 1.15, 0);
@@ -1901,6 +2145,9 @@ function updateCamera(dt, t) {
     pos = new V3(Math.sin(a) * r, narrow ? 1.2 : 1.45, Math.cos(a) * r); look = new V3(side ? -.55 : 0, narrow ? .05 : 1.05, 0);
   } else if (MODE === 'trophy') {
     pos = narrow ? new V3(-.2, 1.35, .1) : new V3(-2.1, 1.5, .8); look = narrow ? new V3(-4.85, .75, .1) : new V3(-4.85, 1.38, .8);
+  } else if (MODE === 'train' && ['bag', 'speed', 'rope', 'road'].includes(TR.kind)) {
+    const C = { bag: [[1.75, 1.55, -1.05], [0, 1.2, .35]], speed: [[1.25, 1.8, -.75], [0, 1.65, .3]], rope: [[2.7, 1.35, 1.7], [0, .9, 0]], road: [[2.6, 1.25, .9], [0, 1.0, 0]] }[TR.kind];
+    const sway = Math.sin(t * .3) * .15; pos = new V3(C[0][0] + sway, C[0][1], C[0][2]); look = new V3(...C[1]);
   } else if (MODE === 'train' || MODE === 'tutorial') {
     pos = new V3(2.4, 1.65, .4); look = new V3(0, 1.3, 0);
   } else if (G.state === 'intro') {
@@ -1909,11 +2156,17 @@ function updateCamera(dt, t) {
     else if (s === 'blue' || s === 'red') {
       const f = s === 'blue' ? O : P, d = f.fwd(), side = f.right();
       pos = f.pos.clone().addScaledVector(d, 2.1 - it * .12).addScaledVector(side, -.55).setY(1.55 + it * .02); look = f.headPos().addScaledVector(side, -.15); look.y -= .12;
-    } else { pos = new V3(2.5 - it * .1, 1.15, -.2); look = new V3(0, 1.35, 0); }
+    } else if (s === 'faceoff') { pos = new V3(2.05 - it * .07, 1.58, .08); look = new V3(0, 1.52, 0); }
+    else { pos = new V3(2.5 - it * .1, 1.15, -.2); look = new V3(0, 1.35, 0); }
+  } else if (REPLAY.play) {
+    const mid = P.root.position.clone().add(O.root.position).multiplyScalar(.5), a = 1.2 + REPLAY.play.t * .006;
+    pos = mid.clone().add(new V3(Math.cos(a) * 2.6, 1.25, Math.sin(a) * 2.6)); look = mid.clone().setY(1.2);
   } else if (G.state === 'over' && G.winner) {
     const f = G.winner, a = T0 * .22; pos = f.pos.clone().add(new V3(Math.cos(a) * 2.3, 1.55, Math.sin(a) * 2.3)); look = f.headPos(); look.y -= .2;
   } else if (P.down || O.down) {
     const f = P.down ? P : O, a = T0 * .3; pos = f.pos.clone().add(new V3(Math.cos(a) * 3.8, 2.3, Math.sin(a) * 3.8)); look = f.pos.clone().setY(.5);
+  } else if (G.cam === 2 && MODE === 'fight' && (G.state === 'fight' || G.state === 'break')) {
+    pos = P.headPos().addScaledVector(P.fwd(), .1); pos.y += .035; look = O.headPos().lerp(O.bodyPos(), .3); fp = true;
   } else if (G.cam === 1) {
     const mid = P.pos.clone().add(O.pos).multiplyScalar(.5), ax = O.pos.clone().sub(P.pos).setY(0).normalize();
     pos = mid.clone().addScaledVector(new V3(ax.z, 0, -ax.x), 3.4).setY(1.75); look = mid.clone().setY(1.15);
@@ -1921,23 +2174,85 @@ function updateCamera(dt, t) {
     pos = P.pos.clone().addScaledVector(P.right(), 1.05).addScaledVector(P.fwd(), -2.05).setY(2.15);
     look = P.headPos().lerp(O.headPos(), .78); look.y -= .3;
   }
-  if (MODE === 'fight' && G.state === 'fight') {
+  if (PHOTO.on) { [pos, look] = photoCam(); fp = false; G.camCut = true; }
+  else if (window.__camOverride) { const o = window.__camOverride(); pos = o[0]; look = o[1]; fp = false; G.camCut = true; }
+  if (MODE === 'fight' && G.state === 'fight' && !fp) {
     pos.add(new V3(Math.sin(t * 1.3) * .035, Math.sin(t * 1.7) * .02, Math.cos(t * 1.1) * .035));
     if (G.zoom > .01) { pos.lerp(look, G.zoom * .3); }
   }
   G.zoom = (G.zoom || 0) * Math.exp(-dt * 3);
-  const k = G.camCut ? 1 : 1 - Math.exp(-dt * (MODE === 'menu' && t < 4 ? 1.1 : 5)); G.camCut = false;
+  const k = G.camCut || fp ? 1 : 1 - Math.exp(-dt * (MODE === 'menu' && t < 4 ? 1.1 : 5)); G.camCut = false;
+  if (P) P.headMesh.visible = !fp;
+  const fov = (innerWidth / innerHeight < .8 ? 62 : 50) + (SET && SET.cam.wide ? 10 : 0) + (fp ? 22 : 0); if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  const fx = fp ? Math.min(6, (P.stun > 0 ? 3 : 0) + Math.max(0, 32 - P.head) * .15) : 0; renderer.domElement.style.filter = fx > .2 ? `blur(${fx.toFixed(1)}px)` : '';
+  if (fp) { const hit = Math.min(1, (G.fpHit || 0) + Math.max(0, 40 - P.head) / 60), sL = P.swell.L, sR = P.swell.R; $('fpv').style.opacity = 1; $('fpv').style.background = `radial-gradient(ellipse at center,transparent 45%,rgba(120,0,0,${(hit * .6).toFixed(2)}) 100%),linear-gradient(90deg,rgba(0,0,0,${(.9 * sL).toFixed(2)}) 0%,transparent ${(8 + 34 * sL).toFixed(0)}%),linear-gradient(270deg,rgba(0,0,0,${(.9 * sR).toFixed(2)}) 0%,transparent ${(8 + 34 * sR).toFixed(0)}%)${P.cut ? `,linear-gradient(180deg,rgba(150,0,0,${Math.min(.5, P.cut.sev * .35).toFixed(2)}) 0%,transparent 30%)` : ''}`; } else $('fpv').style.opacity = 0; G.fpHit = (G.fpHit || 0) * Math.exp(-dt * 4);
   camPos.lerp(pos, k); camLook.lerp(look, k);
   const shake = SET && !SET.cam.shake ? 0 : G.shake;
   camera.position.copy(camPos).add(new V3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).multiplyScalar(shake)); camera.lookAt(camLook);
+  if (fp) camera.rotateZ(-(P.roll || 0) * .6 + P.hs.r * .35);
   G.shake *= Math.exp(-dt * 10);
 }
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = (w / h < .8 ? 62 : 50) + (SET && SET.cam.wide ? 10 : 0); camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 
 /* ================= loop ================= */
+/* ================= replays ================= */
+/* The last few seconds of every fighter's pose are kept; a knockout or stoppage plays back in slow motion
+   from a moving camera before the result. */
+const REPLAY = { buf: [], max: 300, play: null };
+function snapFighter(f) {
+  const bones = f.boneList || (f.boneList = Object.values(f.B)), q = new Float32Array(bones.length * 4);
+  bones.forEach((b, i) => { q[i * 4] = b.quaternion.x; q[i * 4 + 1] = b.quaternion.y; q[i * 4 + 2] = b.quaternion.z; q[i * 4 + 3] = b.quaternion.w; });
+  const h = f.B.Hips.position; return { q, hx: h.x, hy: h.y, hz: h.z, x: f.root.position.x, y: f.root.position.y, z: f.root.position.z, rx: f.root.rotation.x, ry: f.root.rotation.y };
+}
+function applySnap(f, s) {
+  f.boneList.forEach((b, i) => b.quaternion.set(s.q[i * 4], s.q[i * 4 + 1], s.q[i * 4 + 2], s.q[i * 4 + 3]));
+  f.B.Hips.position.set(s.hx, s.hy, s.hz); f.root.position.set(s.x, s.y, s.z); f.root.rotation.set(s.rx, s.ry, 0); f.root.updateMatrixWorld(true);
+}
+function recordFrame() {
+  if (G.sim) return;
+  REPLAY.buf.push({ P: snapFighter(P), O: snapFighter(O), R: REF && REF.root.visible ? snapFighter(REF) : null });
+  if (REPLAY.buf.length > REPLAY.max) REPLAY.buf.shift();
+}
+function startReplay(focus) {
+  if (G.sim || window.__noReplay || REPLAY.buf.length < 40) return false;
+  REPLAY.play = { frames: REPLAY.buf.slice(-220), i: 0, focus, t: 0 }; REPLAY.buf = [];
+  $('replayTag').classList.remove('hidden'); return true;
+}
+function updateReplay(dt) {
+  const R = REPLAY.play; R.t += dt * 24;   // about 40% speed
+  const fr = R.frames[Math.min(R.frames.length - 1, Math.floor(R.t))];
+  applySnap(P, fr.P); applySnap(O, fr.O); if (fr.R && REF) applySnap(REF, fr.R);
+  if (R.t >= R.frames.length + 20) { REPLAY.play = null; $('replayTag').classList.add('hidden'); if (R.done) R.done(); }
+}
+function startClinch(by) {
+  if (G.clinch || G.state !== 'fight' || P.down || O.down || MODE !== 'fight') return;
+  if (P.pos.distanceTo(O.pos) > .82) { if (by.isPlayer) popText('Too far to clinch', P.headPos().add(new V3(0, .3, 0)), '#ff9b6b'); return; }
+  G.clinch = { t: 0, by, len: rand(1.3, 2.1) };
+  for (const f of [P, O]) { f.punch = null; f.queue = []; f.slip = null; f.rollD = null; }
+  if (!G.sim) popText(by.isPlayer ? 'Clinch' : 'He ties you up', P.headPos().add(new V3(0, .35, 0)), '#f2efe8');
+}
+function updateClinch(dt) {
+  const c = G.clinch; c.t += dt;
+  const mid = P.pos.clone().add(O.pos).multiplyScalar(.5), ax = O.pos.clone().sub(P.pos).setY(0).normalize();
+  P.pos.lerp(mid.clone().addScaledVector(ax, -.23), Math.min(1, dt * 6)); O.pos.lerp(mid.clone().addScaledVector(ax, .23), Math.min(1, dt * 6));
+  for (const [f, o] of [[P, O], [O, P]]) {
+    f.inp.mx = f.inp.mz = 0; f.inp.block = false;
+    f.handT = { L: o.B.UpperArmR.getWorldPosition(new V3()).add(new V3(0, -.04, 0)), R: o.B.UpperArmL.getWorldPosition(new V3()).add(new V3(0, -.08, 0)) };
+    f.stam = Math.min(f.stamMax, f.stam + dt * (f === c.by ? 6 : 3));
+  }
+  if (c.t > c.len || P.down || O.down || G.state !== 'fight') {
+    G.clinch = null; P.handT = O.handT = null;
+    if (REF && REF.root.visible && !P.down && !O.down) { REFS.breakT = .9; refSay('Break!'); }
+    P.push.addScaledVector(ax, -1.6); O.push.addScaledVector(ax, 1.6);
+  }
+}
 function fightStep(dt) {
+  recordFrame();
+  if (G.eight || G.foulPause > 0) { if (G.eight) updateEight(dt); else { G.foulPause -= dt; for (const f of [P, O]) { f.inp.mx = f.inp.mz = 0; f.inp.block = false; } } G.time += dt; P.update(dt, O, G.time); O.update(dt, P, G.time + 1.7); return; }
+  crowdTick(dt);
   playerInput(P); if (G.bot) G.bot(dt); ai(O, P, dt); G.time += dt;
+  if (G.clinch) updateClinch(dt);
   P.update(dt, O, G.time); O.update(dt, P, G.time + 1.7);
   const sep = O.pos.clone().sub(P.pos).setY(0), dist = sep.length();
   if (dist < .56 && !P.down && !O.down) { sep.normalize().multiplyScalar((.56 - dist) / 2); O.pos.add(sep); P.pos.sub(sep); }
@@ -1974,7 +2289,8 @@ function frame(now) {
   if (G.sim) return;
   const rdt = Math.min(.05, (now - last) / 1000); last = now; T0 += rdt;
   if (G.slowT > 0 && !G.paused) { G.slowT -= rdt; G.timeScale = .35; } else if (G.slowT <= 0) G.timeScale = 1;
-  const dt = rdt * (MODE === 'fight' ? G.timeScale : 1);
+  if (G.hitStop > 0) G.hitStop -= rdt;
+  const dt = rdt * (MODE === 'fight' ? G.timeScale : 1) * (MODE === 'fight' && G.hitStop > 0 ? .06 : 1);
   if (P && O) {
     if (MODE === 'hub' || MODE === 'creator' || MODE === 'menu' || MODE === 'trophy') {
       P.inp.mx = P.inp.mz = 0; P.inp.block = false;
@@ -1983,19 +2299,18 @@ function frame(now) {
       P.stam = 100; P.update(dt, ghost, T0);
       updateDust(dt);
     } else if (MODE === 'train') {
-      P.inp.mx = P.inp.mz = 0; P.inp.block = false; O.inp.mx = O.inp.mz = 0; O.inp.block = false;
-      P.stam = Math.max(P.stam, 60);
-      P.update(dt, O, T0); O.update(dt, P, T0 + 1.3); if (!TR.done) updateMitts(dt); updateDust(dt);
+      if (!TR.done) updateDrill(dt); updateDust(dt);
     } else if (MODE === 'tutorial') {
       updateTutorial(dt); updateDust(dt);
     } else if (MODE === 'fight') {
       if (G.paused) { /* frozen */ }
       else if (G.state === 'intro') { updateIntro(dt); }
       else if (G.state === 'fight') {
-        fightStep(dt);
+        fightStep(dt); updateRef(dt);
         if (Math.random() < .02) __flash(.02); else if (Math.random() < .3) __flash(0);
       } else {
-        for (const f of [P, O]) { f.inp.mx = f.inp.mz = 0; f.inp.block = false; f.update(dt, f === P ? O : P, G.time += dt * .5); }
+        if (REPLAY.play) updateReplay(rdt);
+        else { for (const f of [P, O]) { f.inp.mx = f.inp.mz = 0; f.inp.block = false; f.update(dt, f === P ? O : P, G.time += dt * .5); } updateRef(dt); }
         if (G.state === 'break') { G.breakT -= rdt; if (G.breakT <= 0) nextRound(); }
       }
       if (msgTimer > 0 && !G.paused) { msgTimer -= rdt; if (msgTimer <= 0) showMsg('', ''); }
@@ -2015,14 +2330,14 @@ const raw = atob($('glbdata').textContent.trim()), buf = new Uint8Array(raw.leng
 for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
 const loader = new GLTFLoader();
 const parse = () => new Promise((res, rej) => loader.parse(buf.buffer.slice(0), '', res, rej));
-Promise.all([parse(), parse(), Save.load()]).then(([a, b, save]) => {
-  P = new Fighter(a, true); O = new Fighter(b, false); O.root.visible = false;
+Promise.all([parse(), parse(), parse(), Save.load()]).then(([a, b, c, save]) => {
+  P = new Fighter(a, true); O = new Fighter(b, false); O.root.visible = false; REF = makeRef(c);
   SAVE = save; SET = SAVE.settings; PR = SAVE.slots[SAVE.active]; resize();
   window.__game = { G, TR, TUT, held, simFight, startFight, toHub, toMenu, prefight, knockdown, onAction, makeOpp, startTutorial, openQuick, openSettings, openSlots, openRecords, openTrophies, nextTutStep,
-    get P() { return P; }, get O() { return O; }, get PR() { return PR; }, get MODE() { return MODE; }, get SAVE() { return SAVE; }, get SET() { return SET; } };
+    foul, standingEight, REFS, openTourney, openDaily, photoMode, scheduleNext, takeOffer, openOffers, openPromoters, openRankings, changeWeight, retire, careerWeek, recordResult, hireTrainer, renderHub, BODIES, get P() { return P; }, get REF() { return REF; }, V3, get O() { return O; }, get PR() { return PR; }, get MODE() { return MODE; }, get SAVE() { return SAVE; }, get SET() { return SET; } };
   camPos.set(.35, 1.45, .75); camLook.set(.05, 1.4, .1);
   kokoroStart(); toMenu(); $('menu').classList.add('first'); setTimeout(() => $('menu').classList.remove('first'), 2500); desktopSetup();
-}).catch(e => { $('loadTxt').textContent = 'The gym failed to load: ' + e.message; });
+}).catch(e => { $('loadTxt').textContent = 'The gym failed to load: ' + e.message; console.error(e.stack); });
 }
 </script>
 </body>

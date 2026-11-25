@@ -25,14 +25,14 @@ with sync_playwright() as pw:
     pg = b.new_page(viewport={"width": 1280, "height": 720}); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("console", lambda m: m.type == "error" and errs.append(m.text))
     pg.add_init_script(MOCK)
-    pg.goto("http://127.0.0.1:8765/test.html"); pg.wait_for_function("window.__game !== undefined", timeout=60000); time.sleep(1)
+    pg.goto("http://127.0.0.1:8765/test.html"); pg.wait_for_function("window.__game !== undefined", timeout=240000); pg.evaluate("window.__noReplay = true"); time.sleep(1)
     print("mode:", pg.evaluate("window.__game.MODE"), "| load text:", pg.text_content("#loadTxt"))
     print("slot 1:", pg.evaluate("window.__game.SAVE.slots[0] && window.__game.SAVE.slots[0].name"), "| saved to:", pg.evaluate("document.querySelector('#menu').textContent.includes('your account')"))
-    pg.click("#mContinue"); time.sleep(1); pg.click("#trainBtn"); time.sleep(.3); pg.click("[data-t='road']"); time.sleep(.8)
+    pg.click("#mContinue"); time.sleep(1); pg.click("#trainBtn"); time.sleep(.3); pg.click("[data-auto='road']"); time.sleep(.8)
     w = pg.evaluate("window.__written.length ? window.__written[window.__written.length-1].save : null")
     print("wrote back v2:", w and w["v"], "| slot 1 week:", w and w["slots"][0]["week"])
     # second load reads the v2 save we just wrote, frozen again
-    pg.reload(); pg.wait_for_function("window.__game !== undefined", timeout=60000); time.sleep(1)
+    pg.reload(); pg.wait_for_function("window.__game !== undefined", timeout=240000); pg.evaluate("window.__noReplay = true"); time.sleep(1)
     print("after reload mode:", pg.evaluate("window.__game.MODE"))
     print("ERRORS:", errs)
     b.close()

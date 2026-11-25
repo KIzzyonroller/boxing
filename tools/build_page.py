@@ -4,6 +4,9 @@ test.html loads it from node_modules so headless tests run offline."""
 import base64, os
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src = open(os.path.join(root, "game", "index.template.html"), encoding="utf-8").read()
+# source modules: /*@include name*/ pulls in game/name.part.js
+import re
+src = re.sub(r"/\*@include (\w+)\*/", lambda m: open(os.path.join(root, "game", m.group(1) + ".part.js"), encoding="utf-8").read(), src)
 glb = base64.b64encode(open(os.path.join(root, "assets", "boxer.glb"), "rb").read()).decode()
 page = src.replace("__GLB__", glb)
 os.makedirs(os.path.join(root, "dist"), exist_ok=True)

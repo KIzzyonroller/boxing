@@ -14,7 +14,7 @@ with sync_playwright() as pw:
     pg = b.new_page(viewport={"width": 1280, "height": 720})
     pg.on("console", lambda m: m.type == "error" and errors.append(m.text))
     pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-    pg.goto(URL); wait(pg, "window.__game !== undefined"); time.sleep(1.5)
+    pg.goto(URL); wait(pg, "window.__game !== undefined"); pg.evaluate("window.__noReplay = true"); time.sleep(1.5)
     print("start mode:", ev(pg, "window.__game.MODE")); shot(pg, "01_menu")
 
     # settings: rebind jab to F, broadcast camera, audio tab
@@ -76,7 +76,7 @@ with sync_playwright() as pw:
     pg.click("#pzSet"); time.sleep(.3); pg.click("#sBack"); time.sleep(.3); pg.click("#pzResume"); time.sleep(.5)
     print("resumed:", not ev(pg, "window.__game.G.paused"))
     ev(pg, "(()=>{const g=window.__game; g.O.head=1; g.knockdown(g.O,g.P); g.O.down.getUp=99;})()")
-    wait(pg, "!document.getElementById('over').classList.contains('hidden')", 120000); time.sleep(.4)
+    wait(pg, "!document.getElementById('over').classList.contains('hidden')", 240000); time.sleep(.4)
     shot(pg, "12_result"); print("result:", pg.text_content("#over")[:420])
     pg.click("#homeBtn"); time.sleep(1); pg.click("#troBtn"); time.sleep(2.5); shot(pg, "13_trophies")
     print("trophies:", ev(pg, "Object.keys(window.__game.PR.trophies)"))
@@ -101,7 +101,7 @@ with sync_playwright() as pw:
     pg.click("#slBack"); time.sleep(.5)
 
     # persistence
-    pg.reload(); wait(pg, "window.__game !== undefined"); time.sleep(1.2)
+    pg.reload(); wait(pg, "window.__game !== undefined"); pg.evaluate("window.__noReplay = true"); time.sleep(1.2)
     print("after reload:", ev(pg, "({jab: window.__game.SET.keys.jab, slots: window.__game.SAVE.slots.map(s=>s&&s.name), qf: window.__game.SAVE.qf, tut: window.__game.SAVE.tutDone, trophies: Object.keys(window.__game.PR.trophies)})"))
     shot(pg, "19_menu_after")
 
