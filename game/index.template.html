@@ -714,6 +714,28 @@ const Save = {
   }
 };
 
+/* ================= desktop app ================= */
+const DESK = { d: null, canInstall: false };
+function drawIcon() {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, 0, 256); bg.addColorStop(0, '#b3121c'); bg.addColorStop(1, '#5c070c'); g.fillStyle = bg; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(132, 222, 70, 12, 0, 0, 7); g.fill();
+  g.fillStyle = '#e8b931'; g.strokeStyle = '#7a5a10'; g.lineWidth = 6;
+  g.beginPath(); g.moveTo(70, 150); g.bezierCurveTo(50, 60, 120, 30, 170, 50); g.bezierCurveTo(215, 68, 214, 128, 196, 158); g.lineTo(180, 168); g.lineTo(84, 168); g.closePath(); g.fill(); g.stroke();
+  g.beginPath(); g.ellipse(78, 122, 22, 34, -.35, 0, 7); g.fill(); g.stroke();
+  g.fillStyle = '#f2efe8'; g.beginPath(); g.roundRect(84, 166, 98, 40, 8); g.fill(); g.strokeStyle = '#9a958a'; g.stroke();
+  g.strokeStyle = 'rgba(122,90,16,.7)'; g.lineWidth = 5; g.beginPath(); g.moveTo(112, 70); g.bezierCurveTo(140, 62, 170, 72, 186, 96); g.stroke();
+  return c.toDataURL('image/png');
+}
+async function desktopSetup() {
+  try {
+    const use = window.claude && window.claude.use; if (!use) return;
+    const d = await use('desktop'); if (!d) return;
+    if (d.app && d.app.dock) { d.app.dock.setIcon(drawIcon()).catch(() => { }); return; }
+    if (d.install && (await d.install.state()) === 'available') { DESK.d = d; DESK.canInstall = true; if (MODE === 'hub') renderHub(); }
+  } catch (e) { }
+}
+
 /* ================= game state ================= */
 let MODE = 'load', PR = null, P, O, QUICK = null;
 const G = { state: 'idle', round: 1, rounds: 3, roundLen: 90, clock: 90, ai: aiFor({ style: 0, level: .5 }), timeScale: 1, slowT: 0, shake: 0, cam: 0, time: 0, cards: [[], [], []], judgesBias: [0, 0, 0] };
@@ -992,7 +1014,15 @@ function renderHub() {
     </div>
     <div class="seg" style="margin-top:6px"><button id="quickBtn">Quick fight</button><button id="editBtn">Edit fighter</button><button id="histBtn">Fight history</button></div>
     <div id="hubExtra"></div>
+    ${DESK.canInstall ? `<div class="card"><div class="kicker">Play it like a game</div><p class="note">Install this as its own app on your computer. It gets a window and an icon, and updates itself whenever a new version is published.</p><button class="go" id="installBtn">Install as app</button><p class="note" id="installMsg"></p></div>` : ''}
     <p class="note" style="margin-top:14px">Career saved to ${Save.where}. <button id="resetBtn" style="min-height:32px;font-size:14px;padding:0 10px">Start over</button></p>`;
+  if ($('installBtn')) $('installBtn').onclick = async () => {
+    try {
+      const r = await DESK.d.install.request();
+      $('installMsg').textContent = r === 'installed' ? 'Installing. The game will open in its own window; after that, launch it from the Start menu.' : r === 'cancelled' ? 'No problem, you can install it any time.' : 'Installing isn\'t possible here. Use Install as app in the artifact menu of the Claude desktop app.';
+      if (r === 'installed') DESK.canInstall = false;
+    } catch (e) { $('installMsg').textContent = 'Installing didn\'t start: ' + e.message; }
+  };
   if (fightReady) $('fightBtn').onclick = prefight; else $('trainBtn').onclick = openTrainMenu;
   $('quickBtn').onclick = () => {
     $('hubExtra').innerHTML = `<h3>Quick fight</h3><p class="note">Three rounds against a random ${WEIGHTS[PR.w][0].toLowerCase()}. Doesn't count toward your record.</p><div class="seg"><button data-q=".15">Novice</button><button data-q=".5">Contender</button><button data-q=".85">Champion</button></div>`;
@@ -1248,6 +1278,7 @@ Promise.all([parse(), parse(), Save.load()]).then(([a, b, saved]) => {
   P.look(PR); P.reset(new V3(0, 0, 0), .3);
   window.__game = { G, get P() { return P; }, get O() { return O; }, get PR() { return PR; }, get MODE() { return MODE; }, TR, startFight, toHub, prefight, knockdown, onPress, makeOpp, setPR: p => { PR = p; } };
   if (PR.created) toHub(); else openCreator(true);
+  desktopSetup();
 }).catch(e => { $('loadTxt').textContent = 'The gym failed to load: ' + e.message; });
 }
 </script>
