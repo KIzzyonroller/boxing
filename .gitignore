@@ -1,0 +1,7 @@
+node_modules/
+dist/
+test.html
+shots/
+*.blend
+*.blend1
+__pycache__/
