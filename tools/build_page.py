@@ -8,6 +8,6 @@ glb = base64.b64encode(open(os.path.join(root, "assets", "boxer.glb"), "rb").rea
 page = src.replace("__GLB__", glb)
 os.makedirs(os.path.join(root, "dist"), exist_ok=True)
 open(os.path.join(root, "dist", "index.html"), "w", encoding="utf-8").write(page)
-test = page.replace("https://cdn.jsdelivr.net/npm/three@0.160.0/", "/node_modules/three/")
+test = page.replace("https://cdn.jsdelivr.net/npm/three@0.160.0/", "/node_modules/three/").replace("const VOX_BASE = '', VOX_OFF = false;", "const VOX_BASE = 'dist/', VOX_OFF = !location.search.includes('vox');")
 open(os.path.join(root, "test.html"), "w", encoding="utf-8").write(test)
 print("built dist/index.html,", len(page), "bytes")

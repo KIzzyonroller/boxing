@@ -814,7 +814,7 @@ function recordResult(pr, won, draw, how, extra) {
 
 /* ================= save ================= */
 const DEFAULT_KEYS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', jab: 'KeyJ', cross: 'KeyK', hook: 'KeyU', upper: 'KeyI', body: 'ShiftLeft', block: 'Space', slipL: 'KeyQ', slipR: 'KeyE', cam: 'KeyC' };
-function defaultSettings() { return { keys: { ...DEFAULT_KEYS }, cam: { view: 0, shake: true, wide: false }, audio: { master: 80, fx: 90, crowd: 70, voice: true, comm: true }, careerRoundLen: 90 }; }
+function defaultSettings() { return { keys: { ...DEFAULT_KEYS }, cam: { view: 0, shake: true, wide: false }, audio: { master: 80, fx: 90, crowd: 70, voice: true, comm: true, engine: 'jarvis' }, careerRoundLen: 90 }; }
 function newSave() { return { v: 2, slots: [null, null, null], active: 0, settings: defaultSettings(), qf: { w: 0, l: 0, d: 0 }, tutDone: false }; }
 function fixProfile(p) {
   p.totals = Object.assign({ fights: 0, rounds: 0, thrown: 0, landed: 0, power: 0, kdFor: 0, kdAgainst: 0 }, p.totals || {});
@@ -1083,25 +1083,95 @@ function updateCount(f, other, dt) {
 }
 
 /* ================= announcers ================= */
-const VOX = { t: null, tried: false };
-async function voxInit() { if (VOX.tried) return; VOX.tried = true; try { const use = window.claude && window.claude.use; if (use) VOX.t = await use('tts'); } catch (e) { VOX.t = null; } }
+/* The ring announcer and commentator speak with Kokoro, the same neural voice model Jarvis uses
+   (Lewis for the ring announcer, George for commentary). It runs in a worker beside the page: voxworker.js
+   plus the model in vox/. If it can't load, the platform voice and then the browser's voice take over. */
+const VOX_BASE = '', VOX_OFF = false;
+const VOX = { t: null, tried: false, k: null, kState: 'off', kPct: 0, jobs: new Map(), id: 0, cache: new Map(), playing: new Set(), gen: 0 };
+const KVOICE = { ring: { voice: 'bm_lewis', speed: .9 }, comm: { voice: 'bm_george', speed: 1.06 } };
+async function voxInit() { kokoroStart(); if (VOX.tried) return; VOX.tried = true; try { const use = window.claude && window.claude.use; if (use) VOX.t = await use('tts'); } catch (e) { VOX.t = null; } }
+function kokoroStart() {
+  if (VOX.k || VOX_OFF || !window.Worker || !SET || !SET.audio.voice || SET.audio.engine === 'standard') return;
+  try {
+    const w = VOX.k = new Worker(VOX_BASE + 'voxworker.js', { type: 'module' }); VOX.kState = 'loading';
+    w.onmessage = e => {
+      const m = e.data;
+      if (m.type === 'progress') VOX.kPct = m.loaded / m.total;
+      else if (m.type === 'ready') { VOX.kState = 'ready'; VOX.kPct = 1; }
+      else if (m.type === 'error') kokoroFail();
+      else if (m.type === 'audio') { const j = VOX.jobs.get(m.id); VOX.jobs.delete(m.id); if (j) m.error ? j.rej(m.error) : j.res(m.pcm); }
+    };
+    w.onerror = kokoroFail;
+    w.postMessage({ type: 'init', cfg: { model: [0, 1, 2, 3, 4, 5, 6].map(i => `vox/kokoro.${i}.json`), bytes: 92361271, voices: { bm_lewis: 'vox/bm_lewis.json', bm_george: 'vox/bm_george.json' } } });
+  } catch (e) { kokoroFail(); }
+}
+function kokoroFail() { VOX.kState = 'failed'; for (const j of VOX.jobs.values()) j.rej('voice model unavailable'); VOX.jobs.clear(); VOX.cache.clear(); }
+const kokoroOn = () => VOX.kState === 'ready' && SET.audio.engine !== 'standard';
+const sentences = t => t.split(/(?<=[.!?])\s+/).filter(Boolean);
+function prepare(text, who) {
+  if (VOX.kState === 'off' || VOX.kState === 'failed' || G.sim) return null;
+  const key = who + '|' + text; if (VOX.cache.has(key)) return VOX.cache.get(key);
+  const id = ++VOX.id, v = KVOICE[who === 'ring' ? 'ring' : 'comm'];
+  const pr = new Promise((res, rej) => VOX.jobs.set(id, { res, rej }));
+  pr.catch(() => VOX.cache.delete(key));
+  VOX.k.postMessage({ type: 'speak', id, text, voice: v.voice, speed: v.speed });
+  VOX.cache.set(key, pr); if (VOX.cache.size > 120) VOX.cache.delete(VOX.cache.keys().next().value);
+  return pr;
+}
+const prepareLine = (text, who) => sentences(text).map(t => prepare(t, who));
+function hallVerb() {
+  if (AU.verb || !AU.ctx) return AU.verb; const c = AU.ctx, n = c.sampleRate * 1.8, ir = c.createBuffer(2, n, c.sampleRate);
+  for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2); }
+  const cv = c.createConvolver(); cv.buffer = ir; const wet = c.createGain(); wet.gain.value = .22; cv.connect(wet); wet.connect(AU.master);
+  return AU.verb = cv;
+}
+function playPcm(pcm, who) {
+  return new Promise(res => {
+    if (!AU.ctx) return res();
+    const c = AU.ctx, b = c.createBuffer(1, pcm.length, 24000); b.getChannelData(0).set(pcm);
+    const src = c.createBufferSource(); src.buffer = b; const g = c.createGain(); g.gain.value = who === 'ring' ? 1.15 : .95;
+    src.connect(g); g.connect(AU.master); if (who === 'ring') { const v = hallVerb(); v && g.connect(v); }
+    VOX.playing.add(src); src.onended = () => { VOX.playing.delete(src); res(); }; src.start();
+  });
+}
+const within = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+async function kokoroSay(text, who) {
+  const gen = ++VOX.gen, parts = prepareLine(text, who);
+  for (let i = 0; i < parts.length; i++) {
+    const pcm = await within(parts[i], who === 'ring' ? 12000 : (i ? 6000 : 1800)).catch(() => null);
+    if (gen !== VOX.gen) return;                 // hushed or replaced
+    if (!pcm) return;                            // too slow: the caption carries it
+    await playPcm(pcm, who);
+    if (gen !== VOX.gen) return;
+  }
+}
 function caption(who, text, secs) {
   const c = $('caption'); c.innerHTML = `<b>${esc(who)}</b>${esc(text)}`; c.classList.remove('hidden');
   clearTimeout(caption.tm); caption.tm = setTimeout(() => c.classList.add('hidden'), (secs || Math.max(2.8, text.length * .07)) * 1000);
 }
+function voxStatus() {
+  if (SET.audio.engine === 'standard') return 'Using the standard voice.';
+  return { off: 'The Jarvis voice loads when the game starts (about 105 MB the first time).', loading: `Downloading the Jarvis voice: ${Math.round(VOX.kPct * 100)}%. The standard voice fills in until it's ready.`, ready: 'Jarvis voice ready: Lewis announces, George commentates.', failed: "The Jarvis voice couldn't load here, so the standard voice is used." }[VOX.kState];
+}
+setInterval(() => { const n = document.getElementById('sVoxNote'); if (n) n.textContent = voxStatus(); }, 700);
 function say(text, who = 'ring') {
   if (G.sim) return Promise.resolve();
+  if (who !== 'ring' && VOX.playing.size && VOX.who === 'ring') return Promise.resolve();   // never talk over the ring announcer
   caption(who === 'ring' ? 'Ring announcer' : 'Commentary', text);
   const fallback = () => new Promise(r => setTimeout(r, text.length * 70));
   if (!SET.audio.voice || (who !== 'ring' && !SET.audio.comm) || SET.audio.master <= 0) return fallback();
+  if (kokoroOn()) { VOX.who = who; for (const s of VOX.playing) try { s.stop(); } catch (e) { } return kokoroSay(text, who); }
   if (VOX.t) return VOX.t.speak(text, { voice: who === 'ring' ? 'rounded' : 'buttery', rate: who === 'ring' ? .92 : 1.12, language: 'en' }).catch(fallback);
   if (window.speechSynthesis) return new Promise(res => {
     try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = who === 'ring' ? .92 : 1.1; u.pitch = who === 'ring' ? .7 : 1; u.volume = SET.audio.master / 100; u.onend = u.onerror = () => res(); speechSynthesis.speak(u); setTimeout(res, text.length * 110 + 1500); } catch (e) { res(); }
   });
   return fallback();
 }
-function hush() { try { VOX.t && VOX.t.stop(); } catch (e) { } try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) { } $('caption').classList.add('hidden'); }
-const COMM = { t: -99, tiredP: false, tiredO: false };
+function hush() {
+  VOX.gen++; for (const s of VOX.playing) try { s.stop(); } catch (e) { } VOX.playing.clear();
+  try { VOX.t && VOX.t.stop(); } catch (e) { } try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) { } $('caption').classList.add('hidden');
+}
+const COMM = { t: -99, tiredP: false, tiredO: false, next: {} };
 const surname = n => (n || 'You').split(' ').pop();
 function comment(kind, x = {}) {
   if (G.sim || MODE !== 'fight') return;
@@ -1121,7 +1191,20 @@ function comment(kind, x = {}) {
     kd: [`Down goes ${x.name}!`, `${x.name} is down!`, `He drops him! ${x.name} is on the canvas!`],
     up: [`${x.name} beats the count!`, `He's up. But is he all there?`]
   };
-  say(x.text || pick(L[kind]), 'comm');
+  let text = x.text;
+  if (!text) { const key = kind + (x.name || ''); text = COMM.next[key] || pick(L[kind]); COMM.next[key] = pick(L[kind]); prepareLine(COMM.next[key], 'comm'); }
+  say(text, 'comm');
+}
+function commentLines(kind, name) {   // same lines as comment(); used to warm the voice up before they're needed
+  const pn = surname(P.name), on = surname(O.name), n = name || '';
+  return ({ bigP: [`What a shot from ${pn}!`], bigO: [`${on} connects! ${pn} has to be careful.`], ctrO: [`Countered! ${on} was waiting for that.`], ctrP: [`Beautiful counter from ${pn}!`],
+    miss: [`${pn} is loading up and finding nothing.`], tiredP: [`${pn} looks exhausted. Those hands are dropping.`], tiredO: [`${on} is breathing heavy. The work is paying off.`],
+    body: [`Good work to the body from ${pn}.`], kd: [`Down goes ${n}!`], up: [`${n} beats the count!`] })[kind][0];
+}
+function warmCommentary() {
+  COMM.next = {};
+  for (const k of ['bigP', 'bigO', 'ctrO', 'kd', 'up', 'tiredP', 'tiredO', 'ctrP', 'body', 'miss'])
+    for (const n of (k === 'kd' || k === 'up') ? [surname(P.name), surname(O.name)] : ['']) { const t = commentLines(k, n); COMM.next[k + n] = t; if (kokoroOn()) prepareLine(t, 'comm'); }
 }
 /* ================= fight intro ================= */
 const INTRO = { i: -1, t: 0, lines: [], spoken: false, minT: 0, maxT: 0, shot: 'wide' };
@@ -1134,10 +1217,11 @@ function startIntro() {
   INTRO.lines = [
     { cam: 'wide', roar: .12, min: 4, text: QUICK ? `Ladies and gentlemen, welcome to fight night! This exhibition bout is scheduled for ${G.rounds} rounds in the ${wc} division.` : amateur ? `Ladies and gentlemen, our next bout is a ${G.rounds}-round amateur contest in the ${wc} division.` : `Ladies and gentlemen... it's fight night! ${G.rounds} rounds of professional boxing in the ${wc} division!` },
     { cam: 'blue', card: 'O', roar: .07, min: 4, text: `Introducing first, in the blue corner. A ${STYLES[opp.style].name.toLowerCase()} with a record of ${recWords(opp.rec)}, standing ${heightWords(opp.h)}... ${opp.name}!` },
-    { cam: 'red', card: 'P', roar: .2, min: 4, text: `And his opponent, in the red corner. ${myRec ? `With a record of ${recWords(myRec)}, ` : ''}standing ${heightWords(me.h)}${me.nick ? `, they call him ${me.nick}` : ''}... ${P.name}!` },
+    { cam: 'red', card: 'P', roar: .2, min: 4, text: `And his opponent, in the red corner. ${myRec ? `With a record of ${recWords(myRec)}, standing` : 'Standing'} ${heightWords(me.h)}${me.nick ? `, they call him ${me.nick}` : ''}... ${P.name}!` },
     { cam: 'center', touch: true, roar: .14, min: 3.2, text: `Touch gloves, and protect yourselves at all times. Let's get it on!` }
   ];
   INTRO.i = -1; INTRO.t = 0; G.state = 'intro'; G.camCut = true;
+  if (kokoroOn()) { INTRO.lines.forEach(L => prepareLine(L.text, 'ring')); warmCommentary(); } else COMM.next = {};
   $('hud').classList.add('hidden'); $('hint').classList.add('hidden'); $('pauseBtn').classList.add('hidden'); $('skipBtn').classList.remove('hidden');
   P.reset(new V3(0, 0, -1.9), 0); O.reset(new V3(0, 0, 1.9), Math.PI);
 }
@@ -1152,10 +1236,11 @@ function lowerThird(who) {
 function nextIntro() {
   INTRO.i++; const L = INTRO.lines[INTRO.i];
   if (!L) return beginRound1();
-  INTRO.shot = L.cam; G.camCut = true; INTRO.t = 0; INTRO.spoken = false; INTRO.minT = L.min; INTRO.maxT = Math.max(L.min, L.text.length * .085 + 1.5);
+  INTRO.shot = L.cam; G.camCut = true; INTRO.t = 0; INTRO.spoken = false; INTRO.minT = L.min; INTRO.maxT = Math.max(L.min, L.text.length * .085 + 1.5) + (kokoroOn() ? 14 : 0);
   lowerThird(L.card || null); if (L.roar) sfx.roar(L.roar);
   if (INTRO.i === 0) sfx.bell(1);
-  say(L.text, 'ring').then(() => { INTRO.spoken = true; });
+  const gen = VOX.gen + 1;
+  say(L.text, 'ring').then(() => { if (VOX.gen <= gen + 1) INTRO.spoken = true; });
 }
 function updateIntro(dt) {
   INTRO.t += dt;
@@ -1168,7 +1253,7 @@ function updateIntro(dt) {
 function skipIntro() { if (G.state !== 'intro') return; hush(); INTRO.i = INTRO.lines.length; beginRound1(); }
 function beginRound1() {
   if (G.state !== 'intro') return;
-  lowerThird(null); $('skipBtn').classList.add('hidden');
+  lowerThird(null); $('skipBtn').classList.add('hidden'); if (!kokoroOn()) warmCommentary();
   placeCorners(); G.state = 'fight'; camPos.set(0, 6.5, -4.5);
   fightUI(true, hintText());
   sfx.bell(1); sfx.roar(.06); showMsg('Round 1', 'Box!', 1.4);
@@ -1764,13 +1849,15 @@ function renderSettings() {
     <label>Camera shake on big punches</label><div class="seg">${seg('cam.shake', [['On', true], ['Off', false]])}</div>
     <label>Field of view</label><div class="seg">${seg('cam.wide', [['Normal', false], ['Wide', true]])}</div>`;
   if (sTab === 'audio') body = [['master', 'Master volume'], ['fx', 'Punches and bell'], ['crowd', 'Crowd']].map(([k, l]) => `<label for="v_${k}">${l}</label><div class="range-row"><input type="range" id="v_${k}" min="0" max="100" value="${SET.audio[k]}"><b id="vv_${k}">${SET.audio[k]}</b></div>`).join('') + `<label>Ring announcer voice</label><div class="seg">${seg('audio.voice', [['On', true], ['Off', false]])}</div>
+    <label>Voice</label><div class="seg">${seg('audio.engine', [['Jarvis voice (Kokoro)', 'jarvis'], ['Standard', 'standard']])}</div>
+    <p class="note" id="sVoxNote">${voxStatus()}</p>
     <label>Live commentary voice</label><div class="seg">${seg('audio.comm', [['On', true], ['Off', false]])}</div><p class="note">Captions always show what's said.</p>
     <button id="sTest" style="margin-top:12px">Test sound</button>`;
   if (sTab === 'game') body = `<label>Round length in your career</label><div class="seg">${seg('careerRoundLen', [60, 90, 120, 180].map(s => [fmtLen(s), s]))}</div><p class="note">Real professional rounds are 3:00. Longer rounds make stamina matter more. Quick fights set their own length.</p>`;
   $('settings').innerHTML = `<h1>Settings</h1><div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" aria-pressed="${sTab === k}">${l}</button>`).join('')}</div>${body}<div class="seg" style="margin-top:16px"><button class="go" id="sBack">Done</button></div>`;
   const q = s => $('settings').querySelectorAll(s);
   for (const b of q('[data-tab]')) b.onclick = () => { sTab = b.dataset.tab; if (sTab === 'audio') audioInit(); renderSettings(); };
-  for (const b of q('[data-set]')) b.onclick = () => { setPath(b.dataset.set, JSON.parse(b.dataset.v)); Save.save(); resize(); renderSettings(); };
+  for (const b of q('[data-set]')) b.onclick = () => { setPath(b.dataset.set, JSON.parse(b.dataset.v)); Save.save(); resize(); kokoroStart(); renderSettings(); };
   for (const b of q('[data-bind]')) b.onclick = () => {
     const a = b.dataset.bind;
     rebinding = { a, cancel() { rebinding = null; renderSettings(); }, set(code) {
@@ -1785,7 +1872,7 @@ function renderSettings() {
     $('v_' + k).oninput = e => { SET.audio[k] = +e.target.value; $('vv_' + k).textContent = SET.audio[k]; applyAudio(); };
     $('v_' + k).onchange = () => Save.save();
   }
-  if ($('sTest')) $('sTest').onclick = () => { audioInit(); sfx.hit(9); setTimeout(() => sfx.bell(1), 250); sfx.roar(.15); setTimeout(() => sfx.roar(0), 1200); };
+  if ($('sTest')) $('sTest').onclick = () => { audioInit(); sfx.hit(9); setTimeout(() => sfx.bell(1), 250); sfx.roar(.15); setTimeout(() => sfx.roar(0), 1200); setTimeout(() => say('Ladies and gentlemen, this is your sound check.', 'ring'), 600); };
   $('sBack').onclick = () => { rebinding = null; const b = SBACK; b(); };
 }
 function getPath(p) { return p.split('.').reduce((o, k) => o[k], SET); }
@@ -1934,7 +2021,7 @@ Promise.all([parse(), parse(), Save.load()]).then(([a, b, save]) => {
   window.__game = { G, TR, TUT, held, simFight, startFight, toHub, toMenu, prefight, knockdown, onAction, makeOpp, startTutorial, openQuick, openSettings, openSlots, openRecords, openTrophies, nextTutStep,
     get P() { return P; }, get O() { return O; }, get PR() { return PR; }, get MODE() { return MODE; }, get SAVE() { return SAVE; }, get SET() { return SET; } };
   camPos.set(.35, 1.45, .75); camLook.set(.05, 1.4, .1);
-  toMenu(); $('menu').classList.add('first'); setTimeout(() => $('menu').classList.remove('first'), 2500); desktopSetup();
+  kokoroStart(); toMenu(); $('menu').classList.add('first'); setTimeout(() => $('menu').classList.remove('first'), 2500); desktopSetup();
 }).catch(e => { $('loadTxt').textContent = 'The gym failed to load: ' + e.message; });
 }
 </script>
