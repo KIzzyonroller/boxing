@@ -63,16 +63,16 @@ function cutmanStart() {
 }
 
 /* ---- crowd: chants on big moments, boos when nothing happens ---- */
-const CROWD = { burst: [], idle: 0, chantT: 0 };
+const CROWD = { burst: [], idle: 0, chantT: 0, excite: 0 };
 function crowdTick(dt) {
   if (G.sim || !AU.ctx) return;
   CROWD.burst = CROWD.burst.filter(t => G.time - t < 4);
   const busy = (P.punch || O.punch) ? 1 : 0; CROWD.idle = busy ? 0 : CROWD.idle + dt;
   CROWD.chantT -= dt;
   if (CROWD.burst.length >= 3 && CROWD.chantT <= 0) { CROWD.chantT = 9; CROWD.burst = []; chant(); }
-  if (CROWD.idle > 9 && CROWD.chantT <= 0) { CROWD.chantT = 12; boo(); comment('round', { text: 'The crowd wants more action.' }); }
+  if (CROWD.idle > 9 && CROWD.chantT <= 0) { CROWD.chantT = 12; boo(); comment('idle'); }
 }
-function chant() { for (let i = 0; i < 6; i++) setTimeout(() => { sfx.roar(i % 2 ? .07 : .2); }, i * 330); setTimeout(() => sfx.roar(.06), 2200); }
+function chant() { CROWD.excite = Math.max(CROWD.excite || 0, .8); for (let i = 0; i < 6; i++) setTimeout(() => { sfx.roar(i % 2 ? .07 : .2); }, i * 330); setTimeout(() => sfx.roar(.06), 2200); }
 function boo() { if (!AU.ctx) return; const c = AU.ctx, o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.setValueAtTime(140, c.currentTime); o.frequency.linearRampToValueAtTime(110, c.currentTime + 1.6); f.type = 'lowpass'; f.frequency.value = 500; g.gain.setValueAtTime(0, c.currentTime); g.gain.linearRampToValueAtTime(.06 * SET.audio.crowd / 100, c.currentTime + .3); g.gain.linearRampToValueAtTime(0, c.currentTime + 1.8); o.connect(f).connect(g).connect(AU.master); o.start(); o.stop(c.currentTime + 1.9); }
 
 /* ---- photo mode ---- */

@@ -151,7 +151,8 @@ button.offer small{display:block;text-align:left;margin-top:3px;line-height:1.35
 .pad .act{grid-template-columns:repeat(3,64px)}
 .pad button{min-height:52px;padding:0;font-size:15px;background:rgba(10,12,18,.6);touch-action:none}
 .pad button.on{background:var(--gold);color:#111}
-.hint{position:fixed;left:0;right:0;bottom:8px;text-align:center;font:500 14px "Barlow Condensed",sans-serif;color:var(--dim);pointer-events:none}
+.hint{position:fixed;left:50%;transform:translateX(-50%);bottom:8px;max-width:min(980px,94vw);text-align:center;font:500 14px/1.45 "Barlow Condensed",sans-serif;color:var(--ink);background:rgba(8,9,13,.72);padding:6px 14px;border-radius:6px;pointer-events:none}
+.hint.mini{color:var(--dim);background:rgba(8,9,13,.45);font-size:13px}
 .mash{position:fixed;left:50%;top:62%;transform:translateX(-50%);width:min(320px,80vw);text-align:center;font:600 18px "Barlow Condensed",sans-serif}
 .mash .bar{height:10px;margin-top:6px}
 .confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
@@ -242,6 +243,10 @@ button.offer small{display:block;text-align:left;margin-top:3px;line-height:1.35
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 {
 const V3 = THREE.Vector3, Q = THREE.Quaternion, E = THREE.Euler;
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x)), lerp = (a, b, t) => a + (b - a) * t;
@@ -319,16 +324,44 @@ const RING = 3.1;
   const seats = [];
   for (let s = 0; s < 4; s++) for (let r = 0; r < 7; r++) { const d = 5.4 + r * .95, y = -.6 + r * .55; for (let x = -d + .3; x < d - .3; x += .58) if (Math.random() < .88) seats.push({ s, x: x + rand(-.08, .08), d, y }); }
   seats.sort((a, b) => a.d - b.d + rand(-.3, .3));
-  const cm = new THREE.MeshStandardMaterial({ roughness: 1 });
+  const cm = new THREE.MeshStandardMaterial({ roughness: .95 });
+  // every spectator sways on their own beat; when the crowd is excited they jump, arms go up
+  const crowdU = window.__crowdU = { uTime: { value: 0 }, uExcite: { value: 0 } };
+  const crowdShader = (arms) => sh => {
+    Object.assign(sh.uniforms, crowdU);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uTime; uniform float uExcite;').replace('#include <begin_vertex>', `#include <begin_vertex>
+      vec3 ip = vec3(instanceMatrix[3]); float ph = fract(sin(dot(ip.xz, vec2(12.9898, 78.233))) * 43758.5453);
+      float calm = sin(uTime * (1.4 + ph * 1.6) + ph * 6.28) * .025;
+      float hype = uExcite * max(0., sin(uTime * (6. + ph * 3.) + ph * 9.)) * (.1 + ph * .12);
+      transformed.y += calm + hype; transformed.x += sin(uTime * .9 + ph * 20.) * .02;
+      ${arms ? 'transformed.y += (clamp(uExcite * 1.6 - ph * .6, 0., 1.) - 1.) * .55;' : ''}`);
+  };
+  cm.onBeforeCompile = crowdShader(false); cm.customProgramCacheKey = () => 'crowd';
+  const am = new THREE.MeshStandardMaterial({ roughness: .95 }); am.onBeforeCompile = crowdShader(true); am.customProgramCacheKey = () => 'crowd-arms';
   const bodies = new THREE.InstancedMesh(new THREE.CapsuleGeometry(.2, .45, 3, 8), cm, seats.length), heads = new THREE.InstancedMesh(new THREE.SphereGeometry(.12, 10, 8), cm, seats.length);
+  const armGeo = (() => { const g1 = new THREE.CapsuleGeometry(.05, .42, 2, 6), g2 = g1.clone(); g1.rotateZ(.35); g1.translate(-.2, .28, 0); g2.rotateZ(-.35); g2.translate(.2, .28, 0);
+    const pos = [...g1.attributes.position.array, ...g2.attributes.position.array], nor = [...g1.attributes.normal.array, ...g2.attributes.normal.array], n1 = g1.attributes.position.count;
+    const idx = [...g1.index.array, ...Array.from(g2.index.array, v => v + n1)], g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setIndex(idx); return g; })();
+  const arms = new THREE.InstancedMesh(armGeo, am, seats.length);
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
   seats.forEach((p, i) => {
     const a = p.s * Math.PI / 2, wx = p.x * Math.cos(a) + p.d * Math.sin(a), wz = -p.x * Math.sin(a) + p.d * Math.cos(a);
     m4.makeTranslation(wx, p.y + .4, wz); bodies.setMatrixAt(i, m4); m4.makeTranslation(wx, p.y + .86, wz); heads.setMatrixAt(i, m4);
-    col.setHSL(Math.random(), rand(.1, .4), rand(.06, .17)); bodies.setColorAt(i, col); col.setHSL(rand(.04, .09), .4, rand(.08, .3)); heads.setColorAt(i, col);
+    const r = Math.random(); if (r < .12) col.set(0xd8d6d0).multiplyScalar(rand(.35, .6)); else if (r < .22) col.set(pick([0xb81d24, 0x2148a8])).multiplyScalar(rand(.4, .7)); else col.setHSL(Math.random(), rand(.15, .55), rand(.07, .22));
+    bodies.setColorAt(i, col); arms.setColorAt(i, col); col.setHSL(rand(.04, .09), rand(.3, .5), rand(.1, .38)); heads.setColorAt(i, col);
+    m4.makeTranslation(wx, p.y + .78, wz); arms.setMatrixAt(i, m4);
   });
-  arena.add(bodies, heads);
-  window.__crowd = f => { bodies.count = heads.count = Math.max(1, Math.round(seats.length * f)); };
+  arena.add(bodies, heads, arms);
+  window.__crowd = f => { bodies.count = heads.count = arms.count = Math.max(1, Math.round(seats.length * f)); };
+  // ringside: the judges' and press table along one side
+  const tbl = new THREE.Mesh(new THREE.BoxGeometry(5.2, .75, .7), new THREE.MeshStandardMaterial({ color: 0x15161b, roughness: .6 })); tbl.position.set(0, -.25, RING + 1.55); arena.add(tbl);
+  const skirt = new THREE.Mesh(new THREE.PlaneGeometry(5.2, .7), new THREE.MeshStandardMaterial({ color: 0x8a1018, roughness: .5, emissive: 0x220306 })); skirt.position.set(0, -.25, RING + 1.19); skirt.rotation.y = Math.PI; arena.add(skirt);
+  for (let i = 0; i < 7; i++) {
+    const x = -2.2 + i * .73, scr = new THREE.Mesh(new THREE.BoxGeometry(.34, .22, .02), new THREE.MeshBasicMaterial({ color: 0x3a6fd0 })); scr.position.set(x, .27, RING + 1.42); scr.rotation.x = -.25; arena.add(scr);
+    const ppl = new THREE.Mesh(new THREE.CapsuleGeometry(.19, .4, 3, 8), new THREE.MeshStandardMaterial({ color: pick([0x22252c, 0x3a3d46, 0x1a1c22]), roughness: .9 })); ppl.position.set(x, .25, RING + 1.95); arena.add(ppl);
+    const hd = new THREE.Mesh(new THREE.SphereGeometry(.11, 10, 8), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(rand(.04, .09), .4, rand(.12, .35)) })); hd.position.set(x, .7, RING + 1.95); arena.add(hd);
+  }
   const N = 90, pos = new Float32Array(N * 3), fcol = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) { const p = pick(seats), a = p.s * Math.PI / 2; pos[i * 3] = p.x * Math.cos(a) + (p.d - .3) * Math.sin(a); pos[i * 3 + 1] = p.y + 1.0; pos[i * 3 + 2] = -p.x * Math.sin(a) + (p.d - .3) * Math.cos(a); }
   const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); fg.setAttribute('color', new THREE.BufferAttribute(fcol, 3));
@@ -566,7 +599,7 @@ const STANCE = -0.42, PIV = new V3(0, 0.98, 0);
 const GUARD = { L: new V3(0.12, 1.44, 0.30), R: new V3(-0.10, 1.42, 0.20) };
 const GUARD_HI = { L: new V3(0.085, 1.56, 0.25), R: new V3(-0.075, 1.56, 0.22) };
 const GUARD_LOW = { L: new V3(0.2, 1.2, 0.26), R: new V3(-0.16, 1.22, 0.16) };
-const GUARD_REF = { L: new V3(0.24, 1.02, 0.12), R: new V3(-0.24, 1.02, 0.12) };
+const GUARD_REF = { L: new V3(0.2, 0.92, 0.1), R: new V3(-0.2, 0.92, 0.1) };
 const GUARD_MITT = { L: new V3(0.2, 1.5, 0.36), R: new V3(-0.2, 1.5, 0.36) };
 const FEET = { L: new V3(0.13, 0.09, 0.21), R: new V3(-0.17, 0.09, -0.21) };
 // southpaw: everything mirrored left to right, lead and rear hands swapped
@@ -915,8 +948,8 @@ function recordResult(pr, won, draw, how, extra) {
 /*@include career*/
 
 /* ================= save ================= */
-const DEFAULT_KEYS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', jab: 'KeyJ', cross: 'KeyK', hook: 'KeyU', upper: 'KeyI', lupper: 'KeyO', over: 'KeyL', roll: 'KeyR', feint: 'KeyF', pull: 'KeyX', clinch: 'KeyG', taunt: 'KeyT', pivot: 'KeyV', body: 'ShiftLeft', block: 'Space', slipL: 'KeyQ', slipR: 'KeyE', cam: 'KeyC' };
-function defaultSettings() { return { keys: { ...DEFAULT_KEYS }, cam: { view: 0, shake: true, wide: false }, audio: { master: 80, fx: 90, crowd: 70, voice: true, comm: true, engine: 'jarvis' }, careerRoundLen: 90 }; }
+const DEFAULT_KEYS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', jab: 'KeyJ', cross: 'KeyK', hook: 'KeyU', upper: 'KeyI', lupper: 'KeyO', over: 'KeyL', roll: 'KeyR', feint: 'KeyF', pull: 'KeyX', clinch: 'KeyG', taunt: 'KeyT', pivot: 'KeyV', help: 'KeyH', body: 'ShiftLeft', block: 'Space', slipL: 'KeyQ', slipR: 'KeyE', cam: 'KeyC' };
+function defaultSettings() { return { keys: { ...DEFAULT_KEYS }, cam: { view: 0, shake: true, wide: false, ref: true }, gfx: 'high', audio: { master: 80, fx: 90, crowd: 70, voice: true, comm: true, engine: 'jarvis' }, careerRoundLen: 90 }; }
 function newSave() { return { v: 2, slots: [null, null, null], active: 0, settings: defaultSettings(), qf: { w: 0, l: 0, d: 0 }, tutDone: false }; }
 function fixProfile(p) {
   p.totals = Object.assign({ fights: 0, rounds: 0, thrown: 0, landed: 0, power: 0, kdFor: 0, kdAgainst: 0 }, p.totals || {});
@@ -999,10 +1032,13 @@ function fightUI(on, hint) {
   $('hud').classList.toggle('hidden', !on || MODE !== 'fight');
   $('pauseBtn').classList.toggle('hidden', !on || MODE !== 'fight');
   document.body.classList.toggle('fighting', on);
-  $('hint').classList.toggle('hidden', !on); if (hint != null) $('hint').textContent = hint;
+  $('hint').classList.toggle('hidden', !on); if (hint != null) { $('hint').textContent = hint; $('hint').dataset.full = hint; $('hint').classList.remove('mini'); }
+  clearTimeout(fightUI.tm);
+  // in fights the full key list folds away after a few seconds; H brings it back
+  if (on && MODE === 'fight') fightUI.tm = setTimeout(() => { const h = $('hint'); h.classList.add('mini'); h.textContent = `Hold ${K('help')} for controls`; }, 9000);
 }
 function persist() { if (PR && SAVE) SAVE.slots[SAVE.active] = PR; Save.save(); }
-function stockFighter() { return fixProfile({ created: true, name: 'Stock boxer', nick: '', w: 4, h: 180, reach: 183, build: 1, skin: 3, trunks: 0, gloves: 0, trim: 3, stats: { power: 50, speed: 50, chin: 50, cardio: 50 }, am: { w: 0, l: 0 }, pro: { w: 0, l: 0, d: 0, ko: 0 }, stage: 'amateur', rank: null, week: 1, rounds: 3, history: [] }); }
+function stockFighter() { return fixProfile({ created: true, name: 'Danny Cole', nick: '', w: 4, h: 180, reach: 183, build: 1, skin: 3, trunks: 0, gloves: 0, trim: 3, stats: { power: 50, speed: 50, chin: 50, cardio: 50 }, am: { w: 0, l: 0 }, pro: { w: 0, l: 0, d: 0, ko: 0 }, stage: 'amateur', rank: null, week: 1, rounds: 3, history: [] }); }
 const recLine = p => p.stage === 'pro' ? `pro ${recStr(p.pro)}${p.pro.ko ? ` (${p.pro.ko} KO)` : ''}` : `amateur ${recStr(p.am)}`;
 
 /* ================= AI ================= */
@@ -1019,7 +1055,7 @@ function ai(me, op, dt) {
   const dist = me.pos.distanceTo(op.pos);
   if (op.feint && !op.feint.seen) { op.feint.seen = true; if (Math.random() < .75 - D.reflex * .25) { A.blockT = .45; if (Math.random() < .4) me.doSlip(Math.random() < .5 ? 1 : -1); } }
   if (!G.clinch && dist < .7 && (me.head < 35 || me.trait === 'dirty') && Math.random() < dt * (me.trait === 'dirty' ? .5 : .8)) startClinch(me);
-  if (me.trait === 'cocky' && !me.punch && !me.taunt && Math.random() < dt * .12) me.taunt = 1;
+  if (me.trait === 'cocky' && !me.punch && !me.taunt && Math.random() < dt * .12) { me.taunt = 1; comment('tauntO'); }
   if ((G.oppDesc && (G.oppDesc.style === 0 || G.oppDesc.style === 4)) && Math.max(Math.abs(op.pos.x), Math.abs(op.pos.z)) > RING - .9) A.cut = Math.sign(op.vel.dot(me.right()) || 1); else A.cut = 0;   // cut off the ring
   if (op.punch && !op.punch.seen) { op.punch.seen = true; A.react = { t: rand(.08, .2) / D.reflex * (1 - read * .6), p: op.punch }; }
   if (A.react) {
@@ -1055,12 +1091,15 @@ function ai(me, op, dt) {
   const opTired = op.stam < 30 || op.head < 40;
   const ideal = me.head < 35 || me.stam < 20 ? 1.35 : opTired ? D.ideal - .08 : me.stam > 45 ? D.ideal : D.ideal + .12;
   me.inp.mz = clamp((dist - ideal) * 3, -1, 1);
-  A.latT -= dt; if (A.latT <= 0) { A.latT = rand(1.2, 3); A.lat = Math.random() < .5 ? -1 : 1; if (Math.random() < .35) A.lat = 0; }
-  me.inp.mx = A.cut ? A.cut * .9 : A.lat * .55;
+  // in-and-out footwork: rush in to throw, then step back out (boxers and counterpunchers), so exchanges come in bursts
+  A.rush = Math.max(0, (A.rush || 0) - dt); A.back = Math.max(0, (A.back || 0) - dt);
+  if (A.rush > 0) me.inp.mz = 1; else if (A.back > 0) me.inp.mz = -1;
+  A.latT -= dt; if (A.latT <= 0) { A.latT = rand(.7, 1.9); A.lat = Math.random() < .5 ? -1 : 1; if (Math.random() < .2) A.lat = 0; }
+  me.inp.mx = A.cut ? A.cut * .9 : A.lat * (.6 + Math.sin(G.time * 2.3 + me.s * 9) * .15);
   if (Math.max(Math.abs(me.pos.x), Math.abs(me.pos.z)) > RING - .7) me.inp.mx = A.lat || 1;
   A.t -= dt;
   if (A.t <= 0 && !me.punch && !me.inp.block) {
-    A.t = rand(.35, 1.0) / (D.aggr + .2) * (opTired ? .6 : 1);
+    A.t = rand(.3, .85) / (D.aggr + .2) * (opTired ? .6 : 1) * (me.stam < 40 ? 1.5 : 1);   // pace himself when tired
     if (dist < .98 && me.stam > 12 && Math.random() < D.aggr + (opTired ? .3 : 0)) {
       const combos = [['jab'], ['jab'], ['jab', 'cross'], ['jab', 'jab', 'cross'], ['cross', 'hook'], ['jab', 'cross', 'hook'], ['hook'], ['upper', 'hook'], ['cross'], ['jab', 'over'], ['lupper', 'cross'], ['jab', 'cross', 'lupper'], ['over', 'hook']];
       const S = STYLES[G.oppDesc ? G.oppDesc.style : 0];
@@ -1068,12 +1107,14 @@ function ai(me, op, dt) {
       if (op.blocking) c = Math.random() < .5 ? ['upper', 'hook'] : ['jab', 'hook'];
       const body = Math.random() < (op.blocking ? .45 : .2);
       c.forEach((t, i) => i === 0 ? me.startPunch(t, body) : me.queue.push([t, body && Math.random() < .4]));
-    } else if (dist > 1.1 && Math.random() < .3) me.inp.mz = 1;
+      if (Math.random() < (G.oppDesc && (G.oppDesc.style === 1 || G.oppDesc.style === 2) ? .75 : .35)) { A.back = .35 + c.length * .12; A.blockT = Math.max(A.blockT, .25); }   // step out with the hands up
+    } else if (dist > 1.02 && dist < 1.5 && me.stam > 35 && !op.punch && op.stam > 0 && Math.random() < D.aggr * .3) { A.rush = .28; A.blockT = .2; if (Math.random() < .5) me.startPunch('jab', false); }   // lunge in behind a jab, guard up on the way
+    else if (dist > 1.1 && Math.random() < .3) me.inp.mz = 1;
   }
 }
 
 /* ================= input ================= */
-const ACTIONS = [['up', 'Move forward'], ['down', 'Move back'], ['left', 'Move left'], ['right', 'Move right'], ['jab', 'Jab (1)'], ['cross', 'Cross (2)'], ['hook', 'Lead hook (3)'], ['upper', 'Rear uppercut (6)'], ['lupper', 'Lead uppercut (5)'], ['over', 'Overhand right'], ['roll', 'Roll under hooks'], ['feint', 'Feint'], ['pull', 'Pull back'], ['clinch', 'Clinch (when close)'], ['pivot', 'Pivot off the ropes'], ['taunt', 'Taunt'], ['body', 'Body shots (hold while punching)'], ['block', 'Block (hold)'], ['slipL', 'Slip left'], ['slipR', 'Slip right'], ['cam', 'Switch camera']];
+const ACTIONS = [['up', 'Move forward'], ['down', 'Move back'], ['left', 'Move left'], ['right', 'Move right'], ['jab', 'Jab (1)'], ['cross', 'Cross (2)'], ['hook', 'Lead hook (3)'], ['upper', 'Rear uppercut (6)'], ['lupper', 'Lead uppercut (5)'], ['over', 'Overhand right'], ['roll', 'Roll under hooks'], ['feint', 'Feint'], ['pull', 'Pull back'], ['clinch', 'Clinch (when close)'], ['pivot', 'Pivot off the ropes'], ['taunt', 'Taunt'], ['help', 'Show controls (hold)'], ['body', 'Body shots (hold while punching)'], ['block', 'Block (hold)'], ['slipL', 'Slip left'], ['slipR', 'Slip right'], ['cam', 'Switch camera']];
 const ARROWS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
 const NAMED = { Space: 'Space', ShiftLeft: 'Shift', ShiftRight: 'Right Shift', ControlLeft: 'Ctrl', ControlRight: 'Right Ctrl', AltLeft: 'Alt', AltRight: 'Right Alt', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Enter: 'Enter', Tab: 'Tab', Backquote: '`', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Minus: '-', Equal: '=', Backspace: 'Backspace', CapsLock: 'Caps Lock' };
 const held = {};
@@ -1095,7 +1136,7 @@ function onAction(a) {
   if (a === 'feint') P.doFeint();
   if (a === 'pull') P.doPull();
   if (a === 'clinch') { startClinch(P); if (G.clinch) { G.holds = (G.holds || 0) + 1; if (G.holds >= 4) { foul(P, 'holding'); G.holds = 0; } } }
-  if (a === 'taunt' && !P.punch) { P.taunt = .9; sfx.roar(.18); P.stam = Math.min(P.stamMax, P.stam + 5); CROWD.burst.push(G.time); }
+  if (a === 'taunt' && !P.punch) { comment('taunt'); P.taunt = .9; sfx.roar(.18); P.stam = Math.min(P.stamMax, P.stam + 5); CROWD.burst.push(G.time); }
   if (a === 'pivot') P.doPivot(held.left ? 1 : held.right ? -1 : (P.sp ? -1 : 1));
   if (a === 'cam') { G.cam = (G.cam + 1) % 3; showMsg('', ['Behind your fighter', 'Broadcast view', 'First person'][G.cam], .9); }
 }
@@ -1113,7 +1154,8 @@ addEventListener('keydown', e => {
   if (a && (MODE === 'fight' || MODE === 'train' || MODE === 'tutorial')) e.preventDefault();
   if (a) { if (!e.repeat) onAction(a); held[a] = true; }
 });
-addEventListener('keyup', e => { const a = actionOf(e.code); if (a) held[a] = false; });
+addEventListener('keyup', e => { const a = actionOf(e.code); if (a) held[a] = false; if (a === 'help' && MODE === 'fight') { const h = $('hint'); h.classList.add('mini'); h.textContent = `Hold ${K('help')} for controls`; } });
+addEventListener('keydown', e => { if (actionOf(e.code) === 'help' && MODE === 'fight' && !e.repeat) { const h = $('hint'); h.classList.remove('mini'); h.textContent = h.dataset.full || ''; } });
 addEventListener('blur', () => { for (const k in held) held[k] = false; });
 for (const b of document.querySelectorAll('.pad button')) {
   const a = b.dataset.a;
@@ -1165,7 +1207,7 @@ function checkHit(a, d) {
   if (d.isPlayer) G.fpHit = Math.min(1, (G.fpHit || 0) + dmg / 14);
   if (taunted && a.isPlayer) popText('Caught him showboating', tgt, '#e8b931');
   if (p.body && Math.random() < (a.trait === 'dirty' ? .06 : a.isPlayer ? .004 : .008)) foul(a, 'low blows');
-  if (dmg >= 11) CROWD.burst.push(G.time);
+  if (dmg >= 11) { CROWD.burst.push(G.time); CROWD.excite = Math.min(1, (CROWD.excite || 0) + .35); }
   if (!QUICK && PR && PR.stage === 'amateur' && !G.spar && dmg >= 11 && d.head > 0 && d.head < 25 && !d.down) standingEight(d);
   if (REFS.ref && REFS.ref.stopEarly && !G.spar && !d.down && d.head > 0 && d.head < 10 && d.buckle > 0 && G.state === 'fight') { REFS.waveT = 2.5; endFight(a, 'TKO', `The referee stepped in to save ${d.isPlayer ? 'you' : surname(d.name)}`); }
   const big = dmg >= 11;
@@ -1182,7 +1224,7 @@ function checkHit(a, d) {
     const side = (p.d.hand === 'L') !== !!a.sp ? 'R' : 'L'; d.swell[side] = Math.min(1, d.swell[side] + real * .012);
     if (!G.spar && (p.d.path === 'hook' || p.d.path === 'over') && dmg > 9 && Math.random() < .05 + (d.cut ? .3 : 0)) {
       d.cut = d.cut || { side, sev: 0 }; d.cut.sev += .25 + dmg * .015;
-      if (!G.sim) { popText(d.cut.sev > .3 ? 'Cut worsens' : 'Cut!', d.headPos(), '#ff4050'); if (d.cut.sev <= .3) comment('round', { text: `${surname(d.name)} is cut over the ${d.cut.side === 'L' ? 'left' : 'right'} eye!` }); }
+      if (!G.sim) { popText(d.cut.sev > .3 ? 'Cut worsens' : 'Cut!', d.headPos(), '#ff4050'); if (d.cut.sev <= .3) comment('cut', { f: d }); }
       if (d.cut.sev >= 1.3) setTimeout(() => endFight(a, 'TKO', `The doctor stopped it: ${d.isPlayer ? 'your' : surname(d.name) + "'s"} cut was too bad to continue`), 400);
     }
     if (big && d.head < 48) { d.buckle = Math.max(d.buckle, .5 + (48 - d.head) / 40); if (d.isPlayer) popText('Legs gone', d.headPos(), '#ff6b6b'); }
@@ -1192,6 +1234,7 @@ function checkHit(a, d) {
   sfx.hit(dmg); G.shake = Math.max(G.shake, big ? .05 : .018);
   if (counter && big && a.isPlayer) popText('Counter!', tgt); else if (big && a.isPlayer) popText(p.d.name, tgt);
   if (big) { sfx.roar(.14); setTimeout(() => sfx.roar(.05), 700); __flash(.15); G.zoom = .35; G.hitStop = .055 + Math.min(.06, dmg * .003); }
+  noteLanded(a);
   if (big) comment(a.isPlayer ? (counter ? 'ctrP' : 'bigP') : (counter ? 'ctrO' : 'bigO'), { punch: p.d.name.toLowerCase() });
   else if (p.body && a.isPlayer && d.body < 60) comment('body');
   let kd = d.head <= 0 || d.body <= 0;
@@ -1205,7 +1248,7 @@ function knockdown(d, a) {
   G.slowT = .9; sfx.roar(.22); __flash(.3);
   if (d.kdRound >= 3) d.down.final = 'TKO';
   else if (!d.isPlayer) { const pKO = clamp(.08 + .22 * (d.kdFight - 1) + d.totalHeadDmg / 350 + (d.head < -15 ? .25 : 0), 0, .92); d.down.getUp = Math.random() < pKO ? 99 : randInt(4, 8); }
-  showMsg(d.down.final ? '' : 'Down!', ''); G.zoom = .5; comment('kd', { name: surname(d.name) });
+  showMsg(d.down.final ? '' : 'Down!', ''); G.zoom = .5; CROWD.excite = 1; comment('kd', { f: d });
 }
 function mash() { const d = P.down; if (!d || d.rising != null || d.final) return; d.mash++; }
 function updateCount(f, other, dt) {
@@ -1220,7 +1263,7 @@ function updateCount(f, other, dt) {
   const up = f.isPlayer ? d.mash >= d.need : d.count >= d.getUp;
   if (up && d.count < 10) {
     d.rising = 0; f.head = Math.max(f.head, clamp(28 + rand(0, 14) - f.kdFight * 4, 12, 45)); f.body = Math.max(f.body, 25); f.stam = Math.max(f.stam, 30);
-    setTimeout(() => showMsg('', ''), 600); comment('up', { name: surname(f.name) });
+    setTimeout(() => showMsg('', ''), 600); comment('up', { f });
   } else if (d.count >= 10) endFight(other, 'KO', `${f.isPlayer ? 'You were' : f.name + ' was'} counted out in round ${G.round}`);
 }
 
@@ -1233,7 +1276,7 @@ const REFS = { close: 0, breakT: 0, side: 1, sideT: 0, countArm: 0, waveT: 0 };
 const COUNTW = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 function makeRef(gltf) {
   const r = new Fighter(gltf, false); r.name = 'Referee'; r.isRef = true;
-  r.look({ h: 179, reach: 179, build: 1, skin: 2, trunks: 0, gloves: 0, trim: 0, shoes: 0x0d0d0f });
+  r.look({ h: 177, reach: 176, build: 0, w: 2, skin: 2, trunks: 0, gloves: 0, trim: 0, shoes: 0x0d0d0f, hair: 0x8a8a86, face: { w: 1.02, h: 1, jaw: .97 } });
   r.gloves.L.visible = r.gloves.R.visible = false;
   for (const n of ['Trunks', 'Waistband']) r.mats[n] && r.mats[n].color.set(0x121216);
   let skin = null; r.model.traverse(m => { if (m.isSkinnedMesh && m.material.name === 'Skin') skin = m; });
@@ -1247,10 +1290,12 @@ function makeRef(gltf) {
     const m = new THREE.SkinnedMesh(skin.geometry, mat); m.bind(skin.skeleton, skin.bindMatrix); m.frustumCulled = false; m.castShadow = true; skin.parent.add(m);
   };
   if (skin) {
-    layer(0xf2f1ec, 'y > 0.98 && y < 1.5 && (ax < 0.17 || (y > 1.24 && ax < 0.3))', '0.008');   // short-sleeved shirt
-    layer(0x141418, 'y > 0.16 && y < 1.06 && ax < 0.19', '0.006');                              // trousers
+    layer(0xf2f1ec, 'y > 0.955 && y < 1.47', '0.009');               // long-sleeved shirt down to the wrists
+    layer(0x141418, 'y > 0.16 && y < 1.03 && ax < 0.2', '0.007');    // trousers
   }
-  const tie = new THREE.Mesh(new THREE.BoxGeometry(.07, .03, .02), new THREE.MeshStandardMaterial({ color: 0x0b0b0d })); r.B.Chest.add(tie); tie.position.set(0, .2, .1);
+  const tieM = new THREE.MeshStandardMaterial({ color: 0x0b0b0d, roughness: .4 });
+  for (const sx of [-1, 1]) { const w = new THREE.Mesh(new THREE.ConeGeometry(.028, .06, 4), tieM); w.rotation.z = sx * Math.PI / 2; w.position.set(sx * .03, .2, .12); r.B.Chest.add(w); }
+  r.refMats = []; r.model.traverse(m => { if (m.isMesh && m.material) { const ms = Array.isArray(m.material) ? m.material : [m.material]; for (const x of ms) if (!r.refMats.includes(x)) r.refMats.push(x); } });
   r.root.visible = false; return r;
 }
 function refStart() {
@@ -1262,8 +1307,29 @@ function updateRef(dt) {
   const R = REF; if (!R || !R.root.visible) return;
   const mid = P.pos.clone().add(O.pos).multiplyScalar(.5), ax = O.pos.clone().sub(P.pos).setY(0), L = ax.length(); ax.normalize();
   const perp = new V3(ax.z, 0, -ax.x);
-  REFS.sideT -= dt; if (REFS.sideT <= 0) { REFS.sideT = 1.5; const toCam = camPos.clone().sub(mid).setY(0); REFS.side = perp.dot(toCam) > 0 ? -1 : 1; }
-  let want = mid.clone().addScaledVector(perp, REFS.side * 1.3), face = mid;
+  REFS.sideT -= dt; if (REFS.sideT <= 0) { REFS.sideT = 1.5; const toCam = camPos.clone().sub(mid).setY(0); REFS.side = perp.dot(R.pos.clone().sub(mid)) >= 0 ? 1 : -1; }
+  // every half second he picks the best spot on a ring around the action: inside the ropes, clear of both
+  // fighters, well off the line from the camera to them, and not far from where he already is
+  REFS.pickT = (REFS.pickT || 0) - dt;
+  if (REFS.pickT <= 0 || !REFS.spot) {
+    // score spots by where they would appear on screen: well clear of both fighters sideways, never in front
+    REFS.pickT = .4; let best = null, bestS = -1e9;
+    const m0 = mid.clone().setY(0), sp = f => f.clone().setY(1.25).project(camera), pP = sp(P.pos), pO = sp(O.pos);
+    const dMid = camera.position.distanceTo(mid.clone().setY(1.2));
+    for (let k = 0; k < 20; k++) {
+      const a = k / 20 * Math.PI * 2;
+      for (const rad of [1.4, 1.8, 2.3]) {
+        const c = m0.clone().add(new V3(Math.cos(a) * rad, 0, Math.sin(a) * rad));
+        const edge = RING - .45 - Math.max(Math.abs(c.x), Math.abs(c.z));
+        const clear = Math.min(c.distanceTo(P.pos.clone().setY(0)), c.distanceTo(O.pos.clone().setY(0)));
+        const pc = sp(c), dx = Math.min(Math.abs(pc.x - pP.x), Math.abs(pc.x - pO.x)), front = camera.position.distanceTo(c.clone().setY(1.2)) < dMid;
+        const sc = Math.min(edge, 0) * 14 + Math.min(clear, 1.6) * 2 + Math.min(dx, .7) * 9 - (dx < .3 ? 5 : 0) - (front ? 5 : 0) - c.distanceTo(R.pos.clone().setY(0)) * .4;
+        if (sc > bestS) { bestS = sc; best = c; }
+      }
+    }
+    REFS.spot = best;
+  }
+  let want = REFS.spot.clone(), face = mid;
   const downF = P.down ? P : O.down ? O : null;
   R.handT = null;
   if (G.state === 'over' && G.winner) {
@@ -1279,19 +1345,27 @@ function updateRef(dt) {
     R.handT = { L: R.W(R.T(new V3(.05 + w, 1.35, .45))), R: R.W(R.T(new V3(-.05 - w, 1.35, .45))) };
   } else if (G.state === 'fight') {
     // smothered at close range for too long: step in and break them
-    REFS.close = L < .6 * (P.s + O.s) / 2 && !P.stun && !O.stun ? REFS.close + dt : Math.max(0, REFS.close - dt * 2);
-    if (REFS.close > (REFS.ref ? REFS.ref.breakT : 1.6) && REFS.breakT <= 0) { REFS.breakT = 1.1; REFS.close = 0; refSay('Break!'); for (const f of [P, O]) { f.punch = null; f.queue = []; } }
+    REFS.close = L < .5 * (P.s + O.s) / 2 && !P.stun && !O.stun && !P.punch && !O.punch ? REFS.close + dt : Math.max(0, REFS.close - dt * 2);   // only a real stall, not infighting
+    if (REFS.close > (REFS.ref ? REFS.ref.breakT : 1.6) + 1.5 && REFS.breakT <= 0) { REFS.breakT = 1.1; REFS.close = 0; refSay('Break!'); for (const f of [P, O]) { f.punch = null; f.queue = []; } }
     if (REFS.breakT > 0) {
-      REFS.breakT -= dt; want = mid.clone().addScaledVector(perp, REFS.side * .35);
+      REFS.breakT -= dt; want = mid.clone().addScaledVector(perp, (REFS.spot && perp.dot(REFS.spot.clone().sub(mid)) < 0 ? -1 : 1) * .5);
       P.push.addScaledVector(ax, -dt * 4.5); O.push.addScaledVector(ax, dt * 4.5);
       R.handT = { L: R.W(R.T(new V3(.3, 1.3, .55))), R: R.W(R.T(new V3(-.3, 1.3, .55))) };
     }
   } else if (G.state === 'intro') { want = new V3(-1.35, 0, 0); face = new V3(0, 0, 0); }
   want.x = clamp(want.x, -RING + .4, RING - .4); want.z = clamp(want.z, -RING + .4, RING - .4);
-  for (const f of [P, O]) { const away = R.pos.clone().sub(f.pos).setY(0); if (away.length() < .55) want.addScaledVector(away.normalize(), .4); }
+  if (!(REFS.breakT > 0)) for (const f of [P, O]) { const off = R.pos.clone().sub(f.pos).setY(0), d = off.length(); if (d < 1.05) want.addScaledVector(off.normalize(), (1.05 - d) * 2.2); }   // walk around them, not through
   const to = want.sub(R.pos).setY(0), fw = face.clone().sub(R.pos).setY(0).normalize(), rt = new V3(-fw.z, 0, fw.x);
   R.inp.mz = clamp(to.dot(fw) * 3, -1, 1); R.inp.mx = clamp(-to.dot(rt) * 3, -1, 1); R.inp.block = false; R.stam = 100;
   R.update(dt, { pos: face }, T0 + 2.6);
+  const chest = R.pos.clone().setY(1.3), seg = mid.clone().setY(1.3).sub(camPos), u = clamp(chest.clone().sub(camPos).dot(seg) / seg.lengthSq(), 0, 1);
+  const inFront = u < .97 && chest.distanceTo(camPos.clone().addScaledVector(seg, u)) < .75;
+  const pr = chest.clone().project(camera), ov = f => { const q = f.pos.clone().setY(1.3).project(camera); return Math.abs(q.x - pr.x) < .2 && Math.abs(q.y - pr.y) < .5; };
+  const inWay = MODE === 'fight' && G.state === 'fight' && !P.down && !O.down && (inFront || ov(P) || ov(O));   // always visible while counting
+  const hide = SET.cam.ref === false || G.cam === 2;
+  REFS.fade = lerp(REFS.fade ?? 1, hide || inWay ? 0 : 1, Math.min(1, dt * 10));
+  R.model.visible = REFS.fade > .03;
+  for (const m of R.refMats || []) { m.transparent = REFS.fade < .99; m.opacity = REFS.fade; m.depthWrite = REFS.fade > .5; }
 }
 
 /* ================= announcers ================= */
@@ -1388,41 +1462,82 @@ function hush() {
   VOX.gen++; VOX.ringBusy = 0; for (const s of VOX.playing) try { s.stop(); } catch (e) { } VOX.playing.clear();
   try { VOX.t && VOX.t.stop(); } catch (e) { } try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) { } $('caption').classList.add('hidden');
 }
-const COMM = { t: -99, tiredP: false, tiredO: false, next: {} };
-const surname = n => (n || 'You').split(' ').pop();
+const COMM = { t: -99, tiredP: false, tiredO: false, next: {}, used: new Set(), tally: [0, 0], combo: { P: [], O: [] }, last: '' };
+/* how the commentators refer to a fighter: his nickname if he has one, otherwise his surname */
+function callName(f) {
+  if (!f) return 'him';
+  if (f.nick) return f.nick.replace(/^the /i, 'The ');
+  const w = (f.name || '').trim().split(/\s+/).filter(Boolean);
+  if (!w.length) return f.isPlayer ? 'our man' : 'his opponent';
+  const last = w[w.length - 1];
+  return /^[A-Z]/.test(last) ? last : w[0];
+}
+const surname = n => { const w = (n || '').trim().split(/\s+/); const l = w[w.length - 1] || 'him'; return /^[A-Z]/.test(l) ? l : w[0]; };
+const lenWords = s => ({ 60: 'one minute', 90: 'ninety seconds', 120: 'two minutes', 150: 'two and a half minutes', 180: 'three minutes' })[s] || `${Math.round(s / 60)} minutes`;
+function commentLinesFor(kind, x = {}) {
+  const pn = callName(P), on = callName(O), n = x.f ? callName(x.f) : '', pu = x.punch || 'shot';
+  return ({
+    bigP: [`What a shot from ${pn}!`, `${pn} lands clean, and ${on} felt that one.`, `Big ${pu} from ${pn}!`, `${on}'s legs did a little dance there.`, `That one rattled ${on}.`, `Flush! ${pn} found the target.`],
+    bigO: [`${on} connects! ${pn} has to be careful.`, `Heavy ${pu} from ${on}.`, `${pn} walked right into that one.`, `${on} snaps the head back.`, `Big shot from ${on}. ${pn} needs to tighten up.`],
+    ctrO: [`Countered! ${on} was waiting for that.`, `${pn} keeps getting caught on the way back.`, `${on} times him perfectly.`, `That's what ${on} does. He makes you pay for leading.`],
+    ctrP: [`Beautiful counter from ${pn}!`, `${pn} makes him pay for that miss.`, `Slip and rip! Lovely work from ${pn}.`],
+    comboP: [`${pn} lets his hands go!`, `A lovely combination from ${pn}.`, `${pn} is putting his punches together now.`],
+    comboO: [`${on} is busy, he's out-working ${pn} here.`, `${on} strings a combination together.`],
+    miss: [`${pn} is swinging wildly, and every miss costs energy.`, `${pn} is loading up and finding nothing.`, `Air shots from ${pn}. That's tiring.`],
+    tiredP: [`${pn} looks exhausted. Those hands are dropping.`, `${pn} is running on fumes.`, `${pn}'s mouth is open. He's breathing hard.`],
+    tiredO: [`${on} is breathing heavy. The work is paying off.`, `${on} is slowing down.`, `${on} is tired, you can see it in his feet.`],
+    body: [`Good work to the body from ${pn}.`, `Those body shots add up over a fight.`, `${pn} is investing downstairs.`, `That one to the ribs hurt.`],
+    kd: [`Down goes ${n}!`, `${n} is down!`, `He drops him! ${n} is on the canvas!`, `Oh! ${n} goes down!`],
+    up: [`${n} beats the count!`, `He's up. But is he all there?`, `${n} is up, and he wants more.`],
+    cut: [`${n} is cut! Blood coming from over the eye.`, `There's a cut on ${n} now. The corner will have work to do.`],
+    idle: [`The crowd wants more action.`, `Somebody needs to let their hands go.`, `A bit of a lull here. Both men catching their breath.`],
+    taunt: [`${pn} is showboating! The crowd loves it.`, `Hands down from ${pn}. Dangerous game.`],
+    tauntO: [`${on} drops his hands and invites him in.`, `${on} is taunting. He's enjoying himself.`]
+  })[kind] || [];
+}
+function pickLine(kind, x) {
+  const L = commentLinesFor(kind, x); if (!L.length) return null;
+  const fresh = L.filter(t => !COMM.used.has(t)); const t = pick(fresh.length ? fresh : L); COMM.used.add(t); return t;
+}
+const COMM_PRI = { kd: 3, up: 3, cut: 3, round: 3, bigP: 2, bigO: 2, ctrP: 2, ctrO: 2, comboP: 1, comboO: 1 };
 function comment(kind, x = {}) {
   if (G.sim || G.spar || MODE !== 'fight' || (G.state !== 'fight' && kind !== 'round')) return;
-  const big = ['kd', 'up', 'round'].includes(kind);
-  if (!big && (G.time - COMM.t < 6 || Math.random() < .3)) return;
-  COMM.t = G.time;
-  const pn = surname(P.name), on = surname(O.name);
-  const L = {
-    bigP: [`What a shot from ${pn}!`, `${pn} lands clean, and ${on} felt that one.`, `Big ${x.punch} from ${pn}!`],
-    bigO: [`${on} connects! ${pn} has to be careful.`, `Heavy ${x.punch} from ${on}.`, `${pn} walked right into that one.`],
-    ctrO: [`Countered! ${on} was waiting for that.`, `${pn} keeps getting caught on the way back.`, `${on} times him perfectly.`],
-    ctrP: [`Beautiful counter from ${pn}!`, `${pn} makes him pay for that miss.`],
-    miss: [`${pn} is swinging wildly, and every miss costs energy.`, `${pn} is loading up and finding nothing.`],
-    tiredP: [`${pn} looks exhausted. Those hands are dropping.`, `${pn} is running on fumes.`],
-    tiredO: [`${on} is breathing heavy. The work is paying off.`, `${on} is slowing down.`],
-    body: [`Good work to the body from ${pn}.`, `Those body shots add up over a fight.`],
-    kd: [`Down goes ${x.name}!`, `${x.name} is down!`, `He drops him! ${x.name} is on the canvas!`],
-    up: [`${x.name} beats the count!`, `He's up. But is he all there?`]
-  };
-  let text = x.text;
-  if (!text) { const key = kind + (x.name || ''); text = COMM.next[key] || pick(L[kind]); COMM.next[key] = pick(L[kind]); prepareLine(COMM.next[key], 'comm'); }
+  const pri = COMM_PRI[kind] || 0, gap = G.time - COMM.t;
+  if (pri < 3 && (gap < (pri === 2 ? 4.5 : 8) || Math.random() < (pri === 2 ? .2 : .35))) return;
+  const key = kind + (x.f ? callName(x.f) : '');
+  let text = x.text || (COMM.next[key] && !COMM.used.has(COMM.next[key]) ? (COMM.used.add(COMM.next[key]), COMM.next[key]) : pickLine(kind, x));
+  if (!text || text === COMM.last) return;
+  COMM.t = G.time; COMM.last = text;
+  if (!x.text) { const nx = commentLinesFor(kind, x).find(t => !COMM.used.has(t)); if (nx) { COMM.next[key] = nx; prepareLine(nx, 'comm'); } }
   say(text, 'comm');
 }
-function commentLines(kind, name) {   // same lines as comment(); used to warm the voice up before they're needed
-  const pn = surname(P.name), on = surname(O.name), n = name || '';
-  return ({ bigP: [`What a shot from ${pn}!`], bigO: [`${on} connects! ${pn} has to be careful.`], ctrO: [`Countered! ${on} was waiting for that.`], ctrP: [`Beautiful counter from ${pn}!`],
-    miss: [`${pn} is loading up and finding nothing.`], tiredP: [`${pn} looks exhausted. Those hands are dropping.`], tiredO: [`${on} is breathing heavy. The work is paying off.`],
-    body: [`Good work to the body from ${pn}.`], kd: [`Down goes ${n}!`], up: [`${n} beats the count!`] })[kind][0];
+/* a fighter landing three or more in two seconds is a combination worth calling */
+function noteLanded(a) { const k = a.isPlayer ? 'P' : 'O', q = COMM.combo[k]; q.push(G.time); while (q.length && G.time - q[0] > 2) q.shift(); if (q.length >= 3) { q.length = 0; comment(a.isPlayer ? 'comboP' : 'comboO'); } }
+function commentRoundEnd() {
+  const r = P.stats_[P.stats_.length - 1], s = O.stats_[O.stats_.length - 1], pn = callName(P), on = callName(O);
+  const pw = r.dmg > s.dmg * 1.3 + 3, ow = s.dmg > r.dmg * 1.3 + 3; if (pw) COMM.tally[0]++; else if (ow) COMM.tally[1]++;
+  const [a, b] = COMM.tally, lead = a === b ? 'I have it even so far.' : `I have ${a > b ? pn : on} ahead, ${words(Math.max(a, b))} rounds to ${words(Math.min(a, b))}.`;
+  const verdict = r.kd || s.kd ? `${s.kd > r.kd ? pn : on} scored a knockdown, so that's a ten-eight round.` : pw ? pick([`A good round for ${pn}.`, `${pn} edged that one with the cleaner work.`]) : ow ? pick([`${on} takes that one, I think.`, `That round goes to ${on}.`]) : 'A close round, hard to score.';
+  comment('round', { text: `That's the end of round ${words(G.round)}. ${verdict} ${G.round > 1 ? lead : ''}`.trim() });
+}
+function commentRoundStart() {
+  const pn = callName(P), on = callName(O);
+  if (G.round === G.rounds) comment('round', { text: `Final round. ${lenWords(G.roundLen)} left for ${pn} and ${on}.${COMM.tally[0] < COMM.tally[1] ? ` ${pn} probably needs a knockout.` : ''}` });
+  else comment('round', { text: pick([`Round ${words(G.round)}.`, `Here we go, round ${words(G.round)}.`, `Round ${words(G.round)} is under way.`]) });
+}
+function commentOpening() {
+  const o = G.oppDesc || {}, on = callName(O), pn = callName(P);
+  const styleLine = [`${on} likes to come forward and put on pressure.`, `${on} likes to box from range, behind the jab.`, `${on} is a counterpuncher. He waits for you to lead.`, `${on} is a big puncher who loads up on every shot.`, `${on} swarms. Non-stop pressure up close.`][o.style || 0];
+  const notes = [o.rec ? `${on} comes in at ${recWords(o.rec)}.` : '', styleLine, o.southpaw ? `And he's a southpaw, so ${pn} needs to watch that left hand.` : '', o.trait ? `${TRAITS[o.trait].tell}` : ''].filter(Boolean).join(' ');
+  setTimeout(() => comment('round', { text: notes }), 4500);
 }
 function warmCommentary() {
-  COMM.next = {};
+  COMM.next = {}; COMM.used = new Set(); COMM.tally = [0, 0]; COMM.combo = { P: [], O: [] }; COMM.last = '';
   if (kokoroOn()) { COUNTW.slice(1).forEach(w => prepareLine(w + '!', 'ref')); prepareLine('Break!', 'ref'); }
-  for (const k of ['bigP', 'bigO', 'ctrO', 'kd', 'up', 'tiredP', 'tiredO', 'ctrP', 'body', 'miss'])
-    for (const n of (k === 'kd' || k === 'up') ? [surname(P.name), surname(O.name)] : ['']) { const t = commentLines(k, n); COMM.next[k + n] = t; if (kokoroOn()) prepareLine(t, 'comm'); }
+  for (const k of ['bigP', 'bigO', 'ctrO', 'kd', 'up', 'ctrP', 'comboP', 'tiredP', 'tiredO', 'body', 'miss'])
+    for (const f of (k === 'kd' || k === 'up') ? [P, O] : [null]) {
+      const t = commentLinesFor(k, { f })[0]; if (!t) continue; COMM.next[k + (f ? callName(f) : '')] = t; if (kokoroOn()) prepareLine(t, 'comm');
+    }
 }
 /* ================= venues ================= */
 const VENUES = [
@@ -1517,7 +1632,7 @@ function beginRound1() {
   placeCorners(); P.stamMax = P.stam = G.stamCap || 100;
   if (QUICK && QUICK.daily && QUICK.daily.mod.hurt) { P.head = 55; P.headCap = 70; } G.state = 'fight'; camPos.set(0, 6.5, -4.5);
   fightUI(true, hintText());
-  sfx.bell(1); sfx.roar(.06); showMsg('Round 1', 'Box!', 1.4);
+  sfx.bell(1); sfx.roar(.06); showMsg('Round 1', 'Box!', 1.4); if (!G.spar) commentOpening();
 }
 $('skipBtn').onclick = skipIntro;
 
@@ -1545,8 +1660,7 @@ function statsTable(rows) {
 const sum = (arr, k) => arr.reduce((s, x) => s + x[k], 0);
 function endRound() {
   G.state = 'break'; sfx.bell(1); scoreRound();
-  { const a = P.st.dmg, b = O.st.dmg, pn = surname(P.name), on = surname(O.name);
-    comment('round', { text: `That's the end of round ${words(G.round)}. ${a > b * 1.3 + 3 ? `A good round for ${pn}.` : b > a * 1.3 + 3 ? `${on} takes that one, I think.` : 'A close round, hard to score.'}` }); }
+  commentRoundEnd();
   const a = P.st, b = O.st;
   $('brk').innerHTML = `<h2>End of round ${G.round}</h2><p>The judges' cards stay sealed until the end.</p>` +
     statsTable([['Punches landed', `${a.landed} of ${a.thrown}`, `${b.landed} of ${b.thrown}`], ['Power punches landed', a.power, b.power], ['Knockdowns scored', b.kd, a.kd]]) +
@@ -1576,7 +1690,7 @@ function nextRound() {
     f.body = Math.min(100, keep.body + 15); f.kdFight = keep.kdFight; f.totalHeadDmg = keep.tot; f.swell = { L: keep.swell.L * .85, R: keep.swell.R * .85 }; f.sweat = keep.sweat * .7; f.cut = keep.cut; if (f.cut) f.cut.sev *= .8;   // the corner works on it
   }
   O.ai = null; G.state = 'fight'; sfx.bell(1); showMsg(`Round ${G.round}`, '', 1.2); camPos.set(0, 6.5, -4.5);
-  comment('round', { text: G.round === G.rounds ? `Final round. ${surname(P.name)} and ${surname(O.name)}, three minutes from the finish.`.replace('three minutes', fmtLen(G.roundLen).replace(':00', ' minutes').replace('1 minutes', 'one minute')) : `Round ${words(G.round)}.` });
+  commentRoundStart();
 }
 function endFight(winner, how, detail) {
   if (G.state === 'over') return;
@@ -1999,7 +2113,7 @@ function renderQuick() {
   const seg = (key, opts) => opts.map(([label, v]) => `<button data-q="${key}" data-v="${v}" aria-pressed="${QS[key] === v}">${label}</button>`).join('');
   const f = qsFighter();
   $('quick').innerHTML = `<div class="kicker">Exhibition</div><h1>Quick fight</h1><p>Doesn't touch any career. Your quick-fight record is ${recStr(SAVE.qf)}.</p>
-    <label for="qF">Your fighter</label><select id="qF"><option value="-1"${QS.fighter < 0 ? ' selected' : ''}>Stock boxer (all 50s)</option>${SAVE.slots.map((p, i) => p ? `<option value="${i}"${QS.fighter === i ? ' selected' : ''}>${esc(p.name)} · ${WEIGHTS[p.w][0]}</option>` : '').join('')}</select>
+    <label for="qF">Your fighter</label><select id="qF"><option value="-1"${QS.fighter < 0 ? ' selected' : ''}>Danny Cole, a stock boxer (all 50s)</option>${SAVE.slots.map((p, i) => p ? `<option value="${i}"${QS.fighter === i ? ' selected' : ''}>${esc(p.name)} · ${WEIGHTS[p.w][0]}</option>` : '').join('')}</select>
     <p class="note">${WEIGHTS[f.w][0]} · power ${f.stats.power} · speed ${f.stats.speed} · chin ${f.stats.chin} · cardio ${f.stats.cardio}</p>
     <label>Opponent level</label><div class="seg">${seg('diff', QDIFF.map(([l], i) => [l, i]))}</div>
     <label>Opponent style</label><div class="seg">${seg('style', [['Random', -1], ...STYLES.map((s, i) => [s.name, i])])}</div>
@@ -2089,7 +2203,7 @@ function renderSettings() {
   if (sTab === 'controls') body = `<p class="note">Click a key, then press the new one. Esc cancels. Arrow keys always move too, and Esc pauses a fight.</p>` +
     ACTIONS.map(([a, l]) => `<div class="bind"><span>${l}</span><button data-bind="${a}">${esc(rebinding && rebinding.a === a ? 'Press a key…' : keyLabel(SET.keys[a]))}</button></div>`).join('') +
     `<button id="sReset" style="margin-top:10px">Reset to defaults</button><p class="note touchonly">On a phone, the on-screen buttons stay the same.</p>`;
-  if (sTab === 'camera') body = `<label>Default fight camera</label><div class="seg">${seg('cam.view', [['Behind your fighter', 0], ['Broadcast side view', 1], ['First person', 2]])}</div><p class="note">You can still switch mid-fight with ${esc(K('cam'))}.</p>
+  if (sTab === 'camera') body = `<label>Graphics</label><div class="seg">${seg('gfx', [['High (glow and effects)', 'high'], ['Fast', 'low']])}</div><label>Referee in the ring</label><div class="seg">${seg('cam.ref', [['Shown', true], ['Hidden (he still counts and breaks clinches)', false]])}</div><label>Default fight camera</label><div class="seg">${seg('cam.view', [['Behind your fighter', 0], ['Broadcast side view', 1], ['First person', 2]])}</div><p class="note">You can still switch mid-fight with ${esc(K('cam'))}.</p>
     <label>Camera shake on big punches</label><div class="seg">${seg('cam.shake', [['On', true], ['Off', false]])}</div>
     <label>Field of view</label><div class="seg">${seg('cam.wide', [['Normal', false], ['Wide', true]])}</div>`;
   if (sTab === 'audio') body = [['master', 'Master volume'], ['fx', 'Punches and bell'], ['crowd', 'Crowd']].map(([k, l]) => `<label for="v_${k}">${l}</label><div class="range-row"><input type="range" id="v_${k}" min="0" max="100" value="${SET.audio[k]}"><b id="vv_${k}">${SET.audio[k]}</b></div>`).join('') + `<label>Ring announcer voice</label><div class="seg">${seg('audio.voice', [['On', true], ['Off', false]])}</div>
@@ -2192,8 +2306,15 @@ function updateCamera(dt, t) {
   if (fp) camera.rotateZ(-(P.roll || 0) * .6 + P.hs.r * .35);
   G.shake *= Math.exp(-dt * 10);
 }
-function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = (w / h < .8 ? 62 : 50) + (SET && SET.cam.wide ? 10 : 0); camera.updateProjectionMatrix(); }
-addEventListener('resize', resize); resize();
+let composer = null, bloom = null;
+function setupPost() {
+  try {
+    composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
+    bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .2, .35, .92); composer.addPass(bloom); composer.addPass(new OutputPass());
+  } catch (e) { composer = null; }
+}
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); if (composer) composer.setSize(w, h); camera.aspect = w / h; camera.fov = (w / h < .8 ? 62 : 50) + (SET && SET.cam.wide ? 10 : 0); camera.updateProjectionMatrix(); }
+setupPost(); addEventListener('resize', resize); resize();
 
 /* ================= loop ================= */
 /* ================= replays ================= */
@@ -2316,11 +2437,13 @@ function frame(now) {
       if (msgTimer > 0 && !G.paused) { msgTimer -= rdt; if (msgTimer <= 0) showMsg('', ''); }
       hud();
       updateShowLights(T0, G.state === 'intro' || G.state === 'over' ? 1 : G.state === 'break' ? .6 : .12);
+      CROWD.excite = Math.max(G.state === 'intro' ? .4 : G.state === 'over' ? .85 : 0, (CROWD.excite || 0) - rdt * .3);
     }
   }
   if (!G.paused) updateSpray(dt);
   updateCamera(rdt, T0);
-  renderer.render(scene, camera);
+  if (window.__crowdU) { window.__crowdU.uTime.value = T0; window.__crowdU.uExcite.value = CROWD.excite || 0; }
+  if (composer && SET && SET.gfx !== 'low' && !PHOTO.on) composer.render(); else renderer.render(scene, camera);
 }
 setScene('gym');
 requestAnimationFrame(frame);

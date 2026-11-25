@@ -70,7 +70,7 @@ with sync_playwright() as pw:
     ev("window.__noAI = true"); ev(f"(() => {{ const g = {G}; g.O.pos.copy(g.P.pos).add(new g.P.pos.constructor(0,0,.5)); }})()")
     t0 = time.time(); broke = False
     while time.time() - t0 < 40:
-        ev(f"(() => {{ const g = {G}; const d = g.O.pos.clone().sub(g.P.pos); if (d.length() > .5) g.O.pos.copy(g.P.pos).addScaledVector(d.normalize(), .48); }})()")
+        ev(f"(() => {{ const g = {G}; const d = g.O.pos.clone().sub(g.P.pos); if (d.length() > .5) g.O.pos.copy(g.P.pos).addScaledVector(d.normalize(), .4); }})()")
         if pg.text_content("#caption").find("Break") >= 0 or ev("document.body.innerText.includes('Break!')"): broke = True; break
         time.sleep(.1)
     check("referee breaks a clinch", broke); time.sleep(.3); pg.screenshot(path=f"{S}/e_break.png"); ev("window.__noAI = false")
