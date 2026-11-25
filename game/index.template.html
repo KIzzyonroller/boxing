@@ -768,13 +768,14 @@ const Save = {
         if (id) {
           this.ref = db.doc('data/users/' + id + '/career');
           const snap = await Promise.race([this.ref.get(), new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 9000))]);
-          if (snap && snap.exists) { const d = snap.data(); data = d.save || d.profile || null; }
+          // the database hands back frozen objects: copy before upgrading or changing them
+          if (snap && snap.exists) { const d = snap.data(); data = d.save || d.profile || null; if (data) data = JSON.parse(JSON.stringify(data)); }
           this.where = 'your account';
         }
       }
     } catch (e) { this.ref = null; }
     if (!data) { try { const s = localStorage.getItem('boxing-save-v2') || localStorage.getItem('boxing-career-v1'); if (s) data = JSON.parse(s); } catch (e) { } }
-    return normalizeSave(data);
+    try { return normalizeSave(data); } catch (e) { console.error('Save could not be read, starting fresh in memory', e); this.ref = null; return newSave(); }
   },
   save() {
     if (!SAVE) return;
