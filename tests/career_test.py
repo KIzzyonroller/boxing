@@ -50,7 +50,7 @@ with sync_playwright() as pw:
         pg.click("#trainBtn"); time.sleep(.3); pg.click(f"[data-t='{t}']"); time.sleep(.4); pg.click("#trDone"); time.sleep(.6)
     print("before fight:", state(pg)); shot(pg, "c6_hub_fightnight")
     pg.click("#fightBtn"); time.sleep(.6); shot(pg, "c7_prefight")
-    pg.click("#walkBtn"); time.sleep(3); shot(pg, "c8_fight")
+    pg.click("#walkBtn"); time.sleep(1.5); pg.keyboard.press("Space"); time.sleep(2); shot(pg, "c8_fight")
     pg.keyboard.down("KeyW"); time.sleep(.5); pg.keyboard.up("KeyW")
     for k in ["KeyJ", "KeyK", "KeyJ", "KeyU"]: pg.keyboard.press(k); time.sleep(.3)
     # force a KO win to test the result flow

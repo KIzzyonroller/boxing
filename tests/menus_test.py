@@ -70,7 +70,7 @@ with sync_playwright() as pw:
     pg.click("#mNew"); time.sleep(.6); pg.fill("#fName", "Kizzy Torres"); pg.click("#saveF"); time.sleep(1.5)
     shot(pg, "09_hub"); pg.click("#recBtn"); time.sleep(.4); shot(pg, "10_records"); pg.click("#rcBack"); time.sleep(.3)
     ev(pg, "(()=>{window.__game.PR.fightIn=0;})()"); ev(pg, "window.__game.toHub()"); time.sleep(.5)
-    pg.click("#fightBtn"); time.sleep(.4); pg.click("#walkBtn"); time.sleep(2.5)
+    pg.click("#fightBtn"); time.sleep(.4); pg.click("#walkBtn"); time.sleep(1.5); pg.keyboard.press("Space"); time.sleep(1.5)
     pg.keyboard.press("Escape"); time.sleep(.6); shot(pg, "11_pause")
     print("paused:", ev(pg, "window.__game.G.paused"))
     pg.click("#pzSet"); time.sleep(.3); pg.click("#sBack"); time.sleep(.3); pg.click("#pzResume"); time.sleep(.5)
@@ -86,7 +86,7 @@ with sync_playwright() as pw:
     # quick fight: Legend, 6 rounds, 1:00, leave via pause
     pg.click("#mQuick"); time.sleep(.5)
     pg.locator("[data-q='diff'][data-v='3']").click(); pg.locator("[data-q='rounds'][data-v='6']").click(); pg.locator("[data-q='len'][data-v='60']").click()
-    shot(pg, "15_quick"); pg.click("#qGo"); time.sleep(2.5)
+    shot(pg, "15_quick"); pg.click("#qGo"); time.sleep(1.5); pg.keyboard.press("Space"); time.sleep(1.5)
     print("quick cfg:", ev(pg, "({rounds: window.__game.G.rounds, len: window.__game.G.roundLen, opp: window.__game.O.name})"))
     shot(pg, "16_quick_fight")
     pg.click("#pauseBtn"); time.sleep(.4); pg.click("#pzQuit"); time.sleep(.2); pg.click("#pzYes")

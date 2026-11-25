@@ -4,7 +4,7 @@ with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"])
     pg = b.new_page(viewport={"width":960,"height":540})
     pg.goto("http://127.0.0.1:8765/test.html"); pg.wait_for_function("window.__game!==undefined", timeout=60000)
-    pg.click("#mQuick"); time.sleep(.5); pg.click("#qGo"); time.sleep(1.5); pg.evaluate("window.__noAI=true")
+    pg.click("#mQuick"); time.sleep(.5); pg.click("#qGo"); time.sleep(1.5); pg.keyboard.press("Space"); time.sleep(.5); pg.evaluate("window.__noAI=true")
     res={}
     for key,name,body in [("KeyJ","jab",False),("KeyK","cross",False),("KeyU","hook",False),("KeyI","upper",False),("KeyJ","jab-body",True),("KeyK","cross-body",True)]:
         row=[]
