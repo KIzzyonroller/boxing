@@ -14,6 +14,7 @@ with sync_playwright() as pw:
     pg.on("console", lambda m: m.type == "error" and errors.append(m.text))
     pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
     pg.goto(URL); pg.wait_for_function("window.__game !== undefined", timeout=60000); time.sleep(1.5)
+    pg.click("#mNew"); time.sleep(.6)
     shot(pg, "c0_creator")
     # try to start without a name -> error message
     pg.click("#saveF"); time.sleep(.3)
@@ -63,6 +64,6 @@ with sync_playwright() as pw:
     # phone
     m = b.new_page(viewport={"width": 390, "height": 760}, has_touch=True, is_mobile=True)
     m.goto(URL); m.wait_for_function("window.__game !== undefined", timeout=60000); time.sleep(1.5)
-    m.screenshot(path=f"{S}/c11_mobile_creator.png")
+    m.click("#mNew"); time.sleep(1.5); m.screenshot(path=f"{S}/c11_mobile_creator.png")
     b.close()
 print("ERRORS:", json.dumps(errors[:15], indent=1))

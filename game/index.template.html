@@ -82,6 +82,20 @@ th:first-child,td:first-child{text-align:left;color:var(--dim)}
 .call .nums span.bad{opacity:1;color:var(--red)}
 .call .keys{font-size:18px;color:var(--dim);font-weight:600;margin-top:6px}
 .call .meta{font-size:16px;color:var(--dim);margin-top:4px}
+.stack{display:grid;gap:8px}
+.side.right{left:auto;right:16px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px}
+.bind{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;margin:6px 0;font-size:15px}
+.bind button{min-height:38px}
+.troph{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.troph.locked{opacity:.45}
+.medal{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.coach{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);width:min(580px,calc(100vw - 24px));background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 20px;z-index:5}
+.coach h2{margin-bottom:6px}
+.prog{font:600 16px "Barlow Condensed",sans-serif;color:var(--gold)}
+.log{max-height:260px;overflow:auto}
+.range-row{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:10px;align-items:center}
+#pauseBtn{position:fixed;top:96px;left:50%;transform:translateX(-50%);min-height:36px;padding:0 14px;z-index:3;background:rgba(10,12,18,.7)}
 .hidden{display:none!important}
 .pad{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;gap:10px;padding:10px max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));pointer-events:none}
 .pad .grp{display:grid;gap:6px;pointer-events:auto}
@@ -96,9 +110,9 @@ th:first-child,td:first-child{text-align:left;color:var(--dim)}
 .note{font-size:14px;color:var(--dim)}
 .gain{color:#6fd39b;font-weight:600}
 .touchonly{display:none}
-@media (pointer:coarse){body.fighting .pad{display:flex}.hint{display:none}.touchonly{display:block}.kbonly{display:none}}
+@media (pointer:coarse){body.fighting .pad{display:flex}.hint{display:none}.touchonly{display:block}.kbonly{display:none}.coach{bottom:auto;top:10px}}
 @media (max-width:700px){
-  .side{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:58vh;padding:16px}
+  .side,.side.right{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:58vh;padding:16px}
   .nm{font-size:17px}.clock .tm{font-size:26px}.hud{gap:8px}
 }
 @media (prefers-reduced-motion:reduce){.pop{animation:none;opacity:0}}
@@ -139,6 +153,15 @@ th:first-child,td:first-child{text-align:left;color:var(--dim)}
 <aside class="side hidden" id="hub"></aside>
 <aside class="side hidden" id="creator"></aside>
 <aside class="side hidden" id="trainMenu"></aside>
+<aside class="side hidden" id="menu"></aside>
+<aside class="side hidden" id="slots"></aside>
+<aside class="side hidden" id="settings"></aside>
+<aside class="side hidden" id="quick"></aside>
+<aside class="side hidden" id="records"></aside>
+<aside class="side hidden" id="trophy"></aside>
+<div class="panel hidden" id="pause"></div>
+<div class="coach hidden" id="coach"></div>
+<button class="hidden" id="pauseBtn">Pause</button>
 <div class="panel hidden" id="trainResult"></div>
 <div class="panel hidden" id="prefight"></div>
 <div class="panel hidden" id="brk"></div>
@@ -146,13 +169,13 @@ th:first-child,td:first-child{text-align:left;color:var(--dim)}
 
 <div class="pad" id="pad">
   <div class="grp mv">
-    <span></span><button data-k="KeyW">▲</button><span></span>
-    <button data-k="KeyA">◀</button><button data-k="KeyS">▼</button><button data-k="KeyD">▶</button>
+    <span></span><button data-a="up">▲</button><span></span>
+    <button data-a="left">◀</button><button data-a="down">▼</button><button data-a="right">▶</button>
   </div>
   <div class="grp act">
-    <button data-k="KeyQ">Slip L</button><button data-k="Space">Block</button><button data-k="KeyE">Slip R</button>
-    <button data-k="KeyJ">1 Jab</button><button data-k="KeyK">2 Cross</button><button data-k="ShiftLeft">Body</button>
-    <button data-k="KeyU">3 Hook</button><button data-k="KeyI">6 Upper</button><button data-k="KeyC">Cam</button>
+    <button data-a="slipL">Slip L</button><button data-a="block">Block</button><button data-a="slipR">Slip R</button>
+    <button data-a="jab">1 Jab</button><button data-a="cross">2 Cross</button><button data-a="body">Body</button>
+    <button data-a="hook">3 Hook</button><button data-a="upper">6 Upper</button><button data-a="cam">Cam</button>
   </div>
 </div>
 
@@ -313,6 +336,26 @@ const dust = { g: null, v: [] };
   dust.g = new THREE.BufferGeometry(); dust.g.setAttribute('position', new THREE.BufferAttribute(dp, 3));
   gym.add(new THREE.Points(dust.g, new THREE.PointsMaterial({ size: .018, color: 0xffe6c0, transparent: true, opacity: .55, depthWrite: false })));
 }
+const shelfG = new THREE.Group(); gym.add(shelfG);
+{
+  const wood = new THREE.MeshStandardMaterial({ color: 0x3b2618, roughness: .7 });
+  for (const y of [1.1, 1.62]) { const s = new THREE.Mesh(new THREE.BoxGeometry(.32, .05, 3.0), wood); s.position.set(-4.82, y, .1); s.castShadow = true; s.receiveShadow = true; gym.add(s); }
+  for (const z of [-1.4, 1.6]) { const b = new THREE.Mesh(new THREE.BoxGeometry(.3, .62, .05), wood); b.position.set(-4.82, 1.36, z); gym.add(b); }
+  const sl = new THREE.PointLight(0xffd9a0, 4, 3.2, 2); sl.position.set(-4.2, 2.1, .1); gym.add(sl);
+}
+const cupGeo = new THREE.LatheGeometry([[0, 0], [.075, 0], [.075, .02], [.03, .03], [.02, .07], [.02, .11], [.035, .125], [.075, .15], [.085, .2], [.09, .26], [.084, .26], [.075, .2], [.065, .16], [.03, .135], [0, .13]].map(([x, y]) => new THREE.Vector2(x, y)), 28);
+const handleGeo = new THREE.TorusGeometry(.035, .008, 6, 14), baseGeo = new THREE.BoxGeometry(.13, .06, .13), baseM = new THREE.MeshStandardMaterial({ color: 0x1a1a1c, roughness: .4 });
+function buildShelf(trophies) {
+  while (shelfG.children.length) shelfG.remove(shelfG.children[0]);
+  TROPHIES.forEach((t, i) => {
+    if (!trophies || !trophies[t.id]) return;
+    const y = i < 5 ? 1.125 : 1.645, z = -1.1 + (i % 5) * .55;
+    const m = new THREE.MeshStandardMaterial({ color: TIER[t.tier], metalness: 1, roughness: .28 });
+    const cup = new THREE.Mesh(cupGeo, m); cup.position.set(-4.8, y + .06, z); cup.castShadow = true; shelfG.add(cup);
+    const base = new THREE.Mesh(baseGeo, baseM); base.position.set(-4.8, y + .03, z); shelfG.add(base);
+    for (const s of [-1, 1]) { const h = new THREE.Mesh(handleGeo, m); h.position.set(-4.8, y + .27, z + s * .09); h.rotation.y = Math.PI / 2; shelfG.add(h); }
+  });
+}
 function updateDust(dt) {
   const a = dust.g.attributes.position;
   for (let i = 0; i < dust.v.length; i++) {
@@ -360,19 +403,24 @@ function audioInit() {
     const len = c.sampleRate * 2, nb = c.createBuffer(1, len, c.sampleRate), d = nb.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     AU.noise = nb;
+    AU.master = c.createGain(); AU.master.connect(c.destination);
+    AU.fx = c.createGain(); AU.fx.connect(AU.master);
+    AU.crowdVol = c.createGain(); AU.crowdVol.connect(AU.master);
     const src = c.createBufferSource(); src.buffer = nb; src.loop = true;
     const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380;
     AU.crowd = c.createGain(); AU.crowd.gain.value = 0;
-    src.connect(lp).connect(AU.crowd).connect(c.destination); src.start();
+    src.connect(lp).connect(AU.crowd).connect(AU.crowdVol); src.start();
+    applyAudio();
   } catch (e) { AU.ctx = null; }
 }
+function applyAudio() { if (!AU.ctx || !SET) return; const a = SET.audio; AU.master.gain.value = a.master / 100; AU.fx.gain.value = a.fx / 100; AU.crowdVol.gain.value = a.crowd / 100 * 1.4; }
 function noiseHit(freq, q, dur, vol, type = 'lowpass') {
   const c = AU.ctx; if (!c) return;
   const s = c.createBufferSource(); s.buffer = AU.noise; s.playbackRate.value = rand(.9, 1.1);
   const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
   const g = c.createGain(), t = c.currentTime;
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
-  s.connect(f).connect(g).connect(c.destination); s.start(t, Math.random()); s.stop(t + dur + .05);
+  s.connect(f).connect(g).connect(AU.fx); s.start(t, Math.random()); s.stop(t + dur + .05);
 }
 function thump(vol) {
   const c = AU.ctx; if (!c) return;
@@ -380,7 +428,7 @@ function thump(vol) {
   const o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
   o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(45, t + .12);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + .16);
-  o.connect(g).connect(c.destination); o.start(t); o.stop(t + .2);
+  o.connect(g).connect(AU.fx); o.start(t); o.stop(t + .2);
 }
 const sfx = {
   hit: p => thump(clamp(.25 + p * .05, .25, .95)),
@@ -392,7 +440,7 @@ const sfx = {
     for (let k = 0; k < times; k++) for (const [f, v] of [[880, .22], [2210, .08], [3650, .04]]) {
       const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + k * .32;
       o.frequency.value = f; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0005, t + 1.6);
-      o.connect(g).connect(c.destination); o.start(t); o.stop(t + 1.7);
+      o.connect(g).connect(AU.fx); o.start(t); o.stop(t + 1.7);
     }
   },
   roar(level) { if (AU.crowd) AU.crowd.gain.setTargetAtTime(level, AU.ctx.currentTime, .15); }
@@ -510,6 +558,7 @@ class Fighter {
     this.pos.addScaledVector(this.vel, dt).addScaledVector(this.push, dt);
     this.push.multiplyScalar(Math.exp(-dt * 6));
     if (MODE === 'fight') { this.pos.x = clamp(this.pos.x, -RING + .35, RING - .35); this.pos.z = clamp(this.pos.z, -RING + .35, RING - .35); }
+    else if (MODE === 'tutorial') { this.pos.x = clamp(this.pos.x, -2.6, 2.6); this.pos.z = clamp(this.pos.z, -2.4, 2.2); }
     const p = this.punch;
     if (p) {
       p.t += dt;
@@ -518,14 +567,14 @@ class Fighter {
       else if (p.t < W + X) {
         if (p.phase === 0) { p.phase = 1; sfx.whiff(); }
         p.k = (p.t - W) / X;
-        if (!p.aim || p.k < .35) p.aim = opp.aimFor ? opp.aimFor(p) : (p.body ? opp.bodyPos() : opp.headPos());
+        if (!p.aim || (p.d.path !== 'straight' && p.k < .2)) p.aim = opp.aimFor ? opp.aimFor(p) : (p.body ? opp.bodyPos() : opp.headPos());
       } else if (p.t < W + X + R) { p.phase = 2; p.k = (p.t - W - X) / R; }
       else this.punch = null;
       if (this.punch && p.phase === 2 && p.k > .45 && this.queue.length) this.punch = null;
     }
     if (!this.punch && this.queue.length && !this.busy) { const [t, b] = this.queue.shift(); this.startPunch(t, b); }
     let slipEnv = 0;
-    if (this.slip) { const T = this.slip.t += dt; slipEnv = T < .12 ? easeOut(T / .12) : T < .26 ? 1 : 1 - easeIO((T - .26) / .16); if (T > .42) this.slip = null; }
+    if (this.slip) { const T = this.slip.t += dt; slipEnv = T < .12 ? easeOut(T / .12) : T < .32 ? 1 : 1 - easeIO((T - .32) / .16); if (T > .48) this.slip = null; }
     let tw = STANCE, lean = .06, roll = 0, crouch = -.05 + Math.sin(time * 11.3) * .011 * (this.punch || this.mitt ? 0 : 1);
     const off = new V3();
     if (p && this.punch) {
@@ -644,7 +693,7 @@ const LAST = ['Vega', 'Okafor', 'Reyes', 'Kowalski', 'Mendez', 'Hart', 'Silva', 
 function newProfile() {
   return { v: 1, created: false, name: '', nick: '', w: 4, h: 178, reach: 183, build: 1, skin: 2, trunks: 0, gloves: 0, trim: 3,
     stats: { power: 45, speed: 45, chin: 45, cardio: 45 }, pts: 20,
-    am: { w: 0, l: 0 }, pro: { w: 0, l: 0, d: 0, ko: 0 }, stage: 'amateur', rank: null, week: 1, fightIn: 3, rounds: 3, next: null, history: [], cam: 0 };
+    am: { w: 0, l: 0 }, pro: { w: 0, l: 0, d: 0, ko: 0 }, stage: 'amateur', rank: null, week: 1, fightIn: 3, rounds: 3, next: null, history: [], cam: 0, totals: { fights: 0, rounds: 0, thrown: 0, landed: 0, power: 0, kdFor: 0, kdAgainst: 0 }, trophies: {} };
 }
 function engineStats(d) {
   const s = d.stats, wm = d.w - 4, b = [{ p: -.04, s: .04, c: 0, ca: .04 }, { p: 0, s: 0, c: 0, ca: 0 }, { p: .05, s: -.04, c: .04, ca: -.04 }][d.build ?? 1];
@@ -666,10 +715,10 @@ function scheduleNext(pr) {
   o.rec = am ? { w: randInt(0, 3 + n), l: randInt(0, 3) } : { w: randInt(n + 1, n * 2 + 6), l: randInt(0, 3), d: Math.random() < .2 ? 1 : 0 };
   pr.next = o; pr.fightIn = am ? 3 : 4; pr.rounds = am ? 3 : (n < 3 ? 4 : 6);
 }
-function recordResult(pr, won, draw, how) {
+function recordResult(pr, won, draw, how, extra) {
   const am = pr.stage === 'amateur', o = pr.next, notes = [];
-  pr.history.unshift({ wk: pr.week, opp: o.name, res: draw ? 'D' : won ? 'W' : 'L', how, stage: pr.stage });
-  pr.history = pr.history.slice(0, 30);
+  pr.history.unshift(Object.assign({ wk: pr.week, opp: o.name, res: draw ? 'D' : won ? 'W' : 'L', how, stage: pr.stage }, extra || {}));
+  pr.history = pr.history.slice(0, 100);
   if (am) {
     won ? pr.am.w++ : pr.am.l++;
     if (pr.am.w >= 5) { pr.stage = 'pro'; notes.push('Five amateur wins. You have turned professional: longer fights, better opponents, a pro record from zero.'); }
@@ -687,6 +736,26 @@ function recordResult(pr, won, draw, how) {
 }
 
 /* ================= save ================= */
+const DEFAULT_KEYS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', jab: 'KeyJ', cross: 'KeyK', hook: 'KeyU', upper: 'KeyI', body: 'ShiftLeft', block: 'Space', slipL: 'KeyQ', slipR: 'KeyE', cam: 'KeyC' };
+function defaultSettings() { return { keys: { ...DEFAULT_KEYS }, cam: { view: 0, shake: true, wide: false }, audio: { master: 80, fx: 90, crowd: 70 }, careerRoundLen: 90 }; }
+function newSave() { return { v: 2, slots: [null, null, null], active: 0, settings: defaultSettings(), qf: { w: 0, l: 0, d: 0 }, tutDone: false }; }
+function fixProfile(p) {
+  p.totals = Object.assign({ fights: 0, rounds: 0, thrown: 0, landed: 0, power: 0, kdFor: 0, kdAgainst: 0 }, p.totals || {});
+  p.trophies = p.trophies || {}; p.history = p.history || [];
+  if (!p.next) scheduleNext(p);
+  return p;
+}
+function normalizeSave(data) {
+  let s;
+  if (data && data.v === 2 && Array.isArray(data.slots)) s = data;
+  else { s = newSave(); if (data && data.created) s.slots[0] = data; }
+  const st = s.settings || {}, d = defaultSettings();
+  s.settings = { keys: Object.assign(d.keys, st.keys || {}), cam: Object.assign(d.cam, st.cam || {}), audio: Object.assign(d.audio, st.audio || {}), careerRoundLen: st.careerRoundLen || 90 };
+  s.slots = [0, 1, 2].map(i => { const p = s.slots[i]; return p && p.created ? fixProfile(p) : null; });
+  s.qf = Object.assign({ w: 0, l: 0, d: 0 }, s.qf || {}); s.tutDone = !!s.tutDone;
+  if (!(s.active >= 0 && s.active < 3)) s.active = 0;
+  return s;
+}
 const Save = {
   ref: null, busy: Promise.resolve(), where: 'this browser',
   async load() {
@@ -699,18 +768,19 @@ const Save = {
         if (id) {
           this.ref = db.doc('data/users/' + id + '/career');
           const snap = await Promise.race([this.ref.get(), new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 9000))]);
-          if (snap && snap.exists) data = snap.data().profile;
+          if (snap && snap.exists) { const d = snap.data(); data = d.save || d.profile || null; }
           this.where = 'your account';
         }
       }
     } catch (e) { this.ref = null; }
-    if (!data) { try { const s = localStorage.getItem('boxing-career-v1'); if (s) data = JSON.parse(s); } catch (e) { } }
-    return data;
+    if (!data) { try { const s = localStorage.getItem('boxing-save-v2') || localStorage.getItem('boxing-career-v1'); if (s) data = JSON.parse(s); } catch (e) { } }
+    return normalizeSave(data);
   },
-  save(pr) {
-    const copy = JSON.parse(JSON.stringify(pr));
-    try { localStorage.setItem('boxing-career-v1', JSON.stringify(copy)); } catch (e) { }
-    if (this.ref) this.busy = this.busy.then(() => this.ref.set({ profile: copy, saved: new Date().toISOString() })).catch(() => { });
+  save() {
+    if (!SAVE) return;
+    const copy = JSON.parse(JSON.stringify(SAVE));
+    try { localStorage.setItem('boxing-save-v2', JSON.stringify(copy)); } catch (e) { }
+    if (this.ref) this.busy = this.busy.then(() => this.ref.set({ save: copy, saved: new Date().toISOString() })).catch(() => { });
   }
 };
 
@@ -732,25 +802,26 @@ async function desktopSetup() {
     const use = window.claude && window.claude.use; if (!use) return;
     const d = await use('desktop'); if (!d) return;
     if (d.app && d.app.dock) { d.app.dock.setIcon(drawIcon()).catch(() => { }); return; }
-    if (d.install && (await d.install.state()) === 'available') { DESK.d = d; DESK.canInstall = true; if (MODE === 'hub') renderHub(); }
+    if (d.install && (await d.install.state()) === 'available') { DESK.d = d; DESK.canInstall = true; if (MODE === 'menu' && !$('menu').classList.contains('hidden')) renderMenu(); }
   } catch (e) { }
 }
 
 /* ================= game state ================= */
-let MODE = 'load', PR = null, P, O, QUICK = null;
-const G = { state: 'idle', round: 1, rounds: 3, roundLen: 90, clock: 90, ai: aiFor({ style: 0, level: .5 }), timeScale: 1, slowT: 0, shake: 0, cam: 0, time: 0, cards: [[], [], []], judgesBias: [0, 0, 0] };
-const keys = {};
+let MODE = 'load', PR = null, P, O, QUICK = null, SAVE = null, SET = null;
+const G = { state: 'idle', round: 1, rounds: 3, roundLen: 90, clock: 90, ai: aiFor({ style: 0, level: .5 }), timeScale: 1, slowT: 0, shake: 0, cam: 0, time: 0, cards: [[], [], []], judgesBias: [0, 0, 0], paused: false };
 const ghost = { pos: new V3(.35, 0, 1.1), headPos: (v = new V3()) => v.set(.33, 1.62, 1.0), bodyPos: (v = new V3()) => v.set(.33, 1.2, 1.0) };
 const shadow = { t: 1.5 };
-
-function showOnly(...ids) {
-  for (const id of ['hub', 'creator', 'trainMenu', 'trainResult', 'prefight', 'brk', 'over', 'loading']) $(id).classList.toggle('hidden', !ids.includes(id));
-}
+const PANELS = ['menu', 'slots', 'hub', 'creator', 'trainMenu', 'trainResult', 'prefight', 'brk', 'over', 'loading', 'settings', 'quick', 'records', 'trophy', 'pause'];
+function showOnly(...ids) { for (const id of PANELS) $(id).classList.toggle('hidden', !ids.includes(id)); }
 function fightUI(on, hint) {
   $('hud').classList.toggle('hidden', !on || MODE !== 'fight');
+  $('pauseBtn').classList.toggle('hidden', !on || MODE !== 'fight');
   document.body.classList.toggle('fighting', on);
-  $('hint').classList.toggle('hidden', !on); if (hint) $('hint').textContent = hint;
+  $('hint').classList.toggle('hidden', !on); if (hint != null) $('hint').textContent = hint;
 }
+function persist() { if (PR && SAVE) SAVE.slots[SAVE.active] = PR; Save.save(); }
+function stockFighter() { return fixProfile({ created: true, name: 'Stock boxer', nick: '', w: 4, h: 180, reach: 183, build: 1, skin: 3, trunks: 0, gloves: 0, trim: 3, stats: { power: 50, speed: 50, chin: 50, cardio: 50 }, am: { w: 0, l: 0 }, pro: { w: 0, l: 0, d: 0, ko: 0 }, stage: 'amateur', rank: null, week: 1, rounds: 3, history: [] }); }
+const recLine = p => p.stage === 'pro' ? `pro ${recStr(p.pro)}${p.pro.ko ? ` (${p.pro.ko} KO)` : ''}` : `amateur ${recStr(p.am)}`;
 
 /* ================= AI ================= */
 function ai(me, op, dt) {
@@ -791,37 +862,46 @@ function ai(me, op, dt) {
 }
 
 /* ================= input ================= */
-function playerInput(me) {
-  const k = keys;
-  me.inp.mz = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
-  me.inp.mx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
-  me.inp.block = !!(k.Space || k.KeyL);
-}
-const KEYP = { KeyJ: 'jab', KeyK: 'cross', KeyU: 'hook', KeyI: 'upper' };
-function onPress(code) {
-  if (MODE === 'train') return trainPress(code);
-  if (MODE !== 'fight' || G.state !== 'fight') return;
-  if (P.down) { if (['Space', 'KeyJ', 'KeyK', 'tap'].includes(code)) mash(); return; }
-  const body = !!(keys.ShiftLeft || keys.ShiftRight);
-  if (KEYP[code]) P.startPunch(KEYP[code], body);
-  if (code === 'KeyQ') P.doSlip(1);
-  if (code === 'KeyE') P.doSlip(-1);
-  if (code === 'KeyC') { G.cam = 1 - G.cam; PR.cam = G.cam; }
+const ACTIONS = [['up', 'Move forward'], ['down', 'Move back'], ['left', 'Move left'], ['right', 'Move right'], ['jab', 'Jab (1)'], ['cross', 'Cross (2)'], ['hook', 'Lead hook (3)'], ['upper', 'Rear uppercut (6)'], ['body', 'Body shots (hold while punching)'], ['block', 'Block (hold)'], ['slipL', 'Slip left'], ['slipR', 'Slip right'], ['cam', 'Switch camera']];
+const ARROWS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+const NAMED = { Space: 'Space', ShiftLeft: 'Shift', ShiftRight: 'Right Shift', ControlLeft: 'Ctrl', ControlRight: 'Right Ctrl', AltLeft: 'Alt', AltRight: 'Right Alt', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Enter: 'Enter', Tab: 'Tab', Backquote: '`', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Minus: '-', Equal: '=', Backspace: 'Backspace', CapsLock: 'Caps Lock' };
+const held = {};
+let rebinding = null;
+function actionOf(code) { if (!SET) return null; for (const [a] of ACTIONS) if (SET.keys[a] === code) return a; return ARROWS[code] || null; }
+function keyLabel(code) { if (!code) return '?'; if (NAMED[code]) return NAMED[code]; if (code.startsWith('Key')) return code.slice(3); if (code.startsWith('Digit')) return code.slice(5); if (code.startsWith('Numpad')) return 'Num ' + code.slice(6); return code; }
+const K = a => keyLabel(SET.keys[a]);
+function playerInput(me) { me.inp.mz = (held.up ? 1 : 0) - (held.down ? 1 : 0); me.inp.mx = (held.right ? 1 : 0) - (held.left ? 1 : 0); me.inp.block = !!held.block; }
+const ACTP = { jab: 'jab', cross: 'cross', hook: 'hook', upper: 'upper' };
+function onAction(a) {
+  if (MODE === 'train') return trainAction(a);
+  if (MODE === 'tutorial') return tutAction(a);
+  if (MODE !== 'fight' || G.state !== 'fight' || G.paused) return;
+  if (P.down) { if (['block', 'jab', 'cross', 'tap'].includes(a)) mash(); return; }
+  if (ACTP[a]) P.startPunch(ACTP[a], !!held.body);
+  if (a === 'slipL') P.doSlip(1);
+  if (a === 'slipR') P.doSlip(-1);
+  if (a === 'cam') G.cam = 1 - G.cam;
 }
 addEventListener('keydown', e => {
+  if (rebinding) { e.preventDefault(); if (e.code === 'Escape') rebinding.cancel(); else rebinding.set(e.code); return; }
   const tag = e.target && e.target.tagName; if (tag === 'INPUT' || tag === 'SELECT') return;
-  if ((MODE === 'fight' || MODE === 'train') && (e.code === 'Space' || e.code.startsWith('Arrow'))) e.preventDefault();
-  if (!e.repeat) onPress(e.code);
-  keys[e.code] = true;
+  if (e.code === 'Escape') {
+    if (MODE === 'fight' && G.state === 'fight') { e.preventDefault(); togglePause(); return; }
+    if (MODE === 'tutorial') { exitTutorial(); return; }
+  }
+  const a = actionOf(e.code);
+  if (a && (MODE === 'fight' || MODE === 'train' || MODE === 'tutorial')) e.preventDefault();
+  if (a) { if (!e.repeat) onAction(a); held[a] = true; }
 });
-addEventListener('keyup', e => { keys[e.code] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+addEventListener('keyup', e => { const a = actionOf(e.code); if (a) held[a] = false; });
+addEventListener('blur', () => { for (const k in held) held[k] = false; });
 for (const b of document.querySelectorAll('.pad button')) {
-  const k = b.dataset.k;
-  b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); onPress(k); keys[k] = true; });
-  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { b.classList.remove('on'); keys[k] = false; });
+  const a = b.dataset.a;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); onAction(a); held[a] = true; });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { b.classList.remove('on'); held[a] = false; });
 }
-addEventListener('pointerdown', e => { if (MODE === 'fight' && G.state === 'fight' && P && P.down && !e.target.closest('button')) mash(); });
+addEventListener('pointerdown', e => { if (MODE === 'fight' && G.state === 'fight' && !G.paused && P && P.down && !e.target.closest('button')) mash(); });
+$('pauseBtn').onclick = () => { if (MODE === 'fight' && G.state === 'fight') togglePause(); };
 
 /* ================= hits ================= */
 function popText(txt, worldPos, color) {
@@ -916,13 +996,11 @@ function endRound() {
   const a = P.st, b = O.st;
   $('brk').innerHTML = `<h2>End of round ${G.round}</h2><p>The judges' cards stay sealed until the end.</p>` +
     statsTable([['Punches landed', `${a.landed} of ${a.thrown}`, `${b.landed} of ${b.thrown}`], ['Power punches landed', a.power, b.power], ['Knockdowns scored', b.kd, a.kd]]) +
-    `<p>Your corner: ${P.stam < 40 ? 'you are gassing. Throw less and make it count.' : O.body < 60 ? 'his body is hurting. Keep digging downstairs.' : STYLES[G.oppDesc.style].name === 'Counterpuncher' ? 'he waits to counter, so feint and double the jab before you commit.' : STYLES[G.oppDesc.style].name === 'Boxer' ? 'he wants range. Cut off the ring and work inside with hooks.' : 'he comes forward. Jab and slip, then counter as he steps in.'}</p>` +
+    `<p>Your corner: ${P.stam < 40 ? 'you are gassing. Throw less and make it count.' : O.body < 60 ? 'his body is hurting. Keep digging downstairs.' : G.oppDesc.style === 2 ? 'he waits to counter, so feint and double the jab before you commit.' : G.oppDesc.style === 1 ? 'he wants range. Cut off the ring and work inside with hooks.' : 'he comes forward. Jab and slip, then counter as he steps in.'}</p>` +
     `<button class="go" id="nextBtn">Round ${G.round + 1}</button>`;
   showOnly('brk'); $('nextBtn').onclick = nextRound; $('nextBtn').focus(); G.breakT = 20;
 }
-function placeCorners() {
-  P.reset(new V3(0, 0, -1.2), 0); O.reset(new V3(0, 0, 1.2), Math.PI);
-}
+function placeCorners() { P.reset(new V3(0, 0, -1.2), 0); O.reset(new V3(0, 0, 1.2), Math.PI); }
 function nextRound() {
   if (G.state !== 'break') return;
   showOnly(); G.round++; G.clock = G.roundLen;
@@ -937,8 +1015,9 @@ function nextRound() {
 }
 function endFight(winner, how, detail) {
   if (G.state === 'over') return;
-  G.state = 'over'; document.body.classList.remove('fighting'); sfx.bell(3); sfx.roar(.25); setTimeout(() => sfx.roar(.05), 2500);
-  showMsg('', '');
+  G.state = 'over'; G.paused = false; document.body.classList.remove('fighting'); $('pauseBtn').classList.add('hidden');
+  sfx.bell(3); sfx.roar(.25); setTimeout(() => sfx.roar(.05), 2500);
+  showMsg('', ''); showOnly();
   let won = winner === P, draw = false, head;
   if (how === 'DEC') {
     const tot = G.cards.map(c => [c.reduce((s, r) => s + r[0], 0), c.reduce((s, r) => s + r[1], 0)]);
@@ -952,33 +1031,58 @@ function endFight(winner, how, detail) {
   const all = [P.stats_, O.stats_];
   let html = `<h2>${esc(head)}</h2>${detail}` + statsTable([['Punches landed', `${sum(all[0], 'landed')} of ${sum(all[0], 'thrown')}`, `${sum(all[1], 'landed')} of ${sum(all[1], 'thrown')}`], ['Power punches landed', sum(all[0], 'power'), sum(all[1], 'power')], ['Knockdowns scored', sum(all[1], 'kd'), sum(all[0], 'kd')]]);
   if (!QUICK) {
-    const notes = recordResult(PR, won, draw, how);
-    Save.save(PR);
-    html += `<p>Record now: ${PR.stage === 'pro' ? 'pro ' + recStr(PR.pro) : 'amateur ' + recStr(PR.am)}.</p>` + notes.map(n => `<p class="gain">${esc(n)}</p>`).join('');
+    const pl = { thrown: sum(all[0], 'thrown'), landed: sum(all[0], 'landed'), power: sum(all[0], 'power'), kdFor: sum(all[1], 'kd'), kdAgainst: sum(all[0], 'kd') };
+    const t = PR.totals; t.fights++; t.rounds += G.round; for (const k in pl) t[k] += pl[k];
+    const notes = recordResult(PR, won, draw, how, { orec: recStr(G.oppDesc.rec), rnd: G.round, landed: pl.landed, thrown: pl.thrown });
+    const got = checkTrophies({ fight: true, won, how, gotUp: won && P.kdFight > 0 });
+    persist();
+    html += `<p>Record now: ${esc(recLine(PR))}.</p>` + notes.map(n => `<p class="gain">${esc(n)}</p>`).join('') + trophyLines(got);
     html += `<div class="seg"><button class="go" id="homeBtn">Back to the gym</button></div>`;
-  } else html += `<div class="seg"><button class="go" id="againBtn">Rematch</button><button id="homeBtn">Back to the gym</button></div>`;
+  } else {
+    SAVE.qf[draw ? 'd' : won ? 'w' : 'l']++; Save.save();
+    html += `<div class="seg"><button class="go" id="againBtn">Rematch</button><button id="setupBtn">New setup</button><button id="homeBtn">Main menu</button></div>`;
+  }
   setTimeout(() => {
     $('over').innerHTML = html; showOnly('over');
-    $('homeBtn').onclick = toHub; if ($('againBtn')) $('againBtn').onclick = () => startFight(QUICK);
-    $('homeBtn').focus();
-  }, how === 'DEC' ? 600 : 2200);
+    if (QUICK) { $('homeBtn').onclick = toMenu; $('againBtn').onclick = () => startFight(QUICK.opp, QUICK.cfg); $('setupBtn').onclick = () => openQuick(); }
+    else $('homeBtn').onclick = toHub;
+    $(QUICK ? 'againBtn' : 'homeBtn').focus();
+  }, how === 'DEC' || how === 'RTD' ? 600 : 2200);
 }
-function startFight(opp) {
-  MODE = 'fight'; setScene('arena'); audioInit(); showOnly();
-  G.oppDesc = opp; G.ai = aiFor(opp); G.rounds = QUICK ? 3 : PR.rounds; G.round = 1; G.clock = G.roundLen;
-  G.cards = [[], [], []]; G.judgesBias = [rand(-.15, .15), rand(-.15, .15), rand(-.15, .15)]; G.cam = PR.cam || 0;
-  P.mitt = false; O.mitt = false; O.aimFor = null; O.root.visible = true;
-  P.look(PR); P.stats(PR); P.name = PR.name || 'You';
+function hintText() { return `${K('jab')} jab · ${K('cross')} cross · ${K('hook')} hook · ${K('upper')} uppercut · hold ${K('body')} for the body · ${K('block')} block · ${K('slipL')} / ${K('slipR')} slip · ${K('up')}${K('left')}${K('down')}${K('right')} move · ${K('cam')} camera · Esc pause`; }
+function startFight(opp, cfg = {}) {
+  MODE = 'fight'; setScene('arena'); audioInit(); showOnly(); G.paused = false; $('coach').classList.add('hidden');
+  const me = cfg.fighter || PR;
+  G.oppDesc = opp; G.ai = aiFor(opp); G.rounds = cfg.rounds || PR.rounds; G.roundLen = cfg.roundLen || SET.careerRoundLen; G.round = 1; G.clock = G.roundLen;
+  G.cards = [[], [], []]; G.judgesBias = [rand(-.15, .15), rand(-.15, .15), rand(-.15, .15)]; G.cam = SET.cam.view;
+  P.mitt = false; O.mitt = false; O.aimFor = null; O.root.visible = true; P.root.visible = true;
+  P.look(me); P.stats(me); P.name = me.name || 'You';
   O.look(opp); O.stats(opp); O.name = opp.name; O.mats.Shoes && O.mats.Shoes.color.set(0xe0ddd6);
   placeCorners();
   $('pName').textContent = P.name; $('oName').textContent = O.name;
-  fightUI(true, 'J jab · K cross · U hook · I uppercut · hold Shift for the body · Space block · Q / E slip · WASD move · C camera');
+  fightUI(true, hintText());
   G.state = 'fight'; sfx.bell(1); sfx.roar(.05); showMsg('Round 1', 'Box!', 1.4);
+}
+function togglePause() {
+  if (G.paused) { G.paused = false; showOnly(); return; }
+  G.paused = true; for (const k in held) held[k] = false; showMsg('', ''); renderPause();
+}
+function renderPause() {
+  $('pause').innerHTML = `<h2>Paused</h2><p class="note">Round ${G.round} of ${G.rounds} · ${esc(P.name)} vs ${esc(O.name)}</p>
+    <div class="stack"><button class="go" id="pzResume">Resume</button><button id="pzSet">Settings</button><button id="pzQuit">${QUICK ? 'Leave the fight' : 'Retire on your stool'}</button></div><div id="pzExtra"></div>`;
+  showOnly('pause');
+  $('pzResume').onclick = togglePause; $('pzResume').focus();
+  $('pzSet').onclick = () => openSettings(renderPause);
+  $('pzQuit').onclick = () => {
+    $('pzExtra').innerHTML = `<div class="card"><p>${QUICK ? 'Leave this fight? It counts as a loss on your quick-fight record.' : 'Retire from this fight? It goes on your record as a loss by stoppage.'}</p><div class="confirm"><button class="go" id="pzYes">${QUICK ? 'Leave' : 'Retire'}</button><button id="pzNo">Keep fighting</button></div></div>`;
+    $('pzYes').onclick = () => { G.paused = false; endFight(O, 'RTD', 'You retired on your stool'); };
+    $('pzNo').onclick = () => { $('pzExtra').innerHTML = ''; };
+  };
 }
 function prefight() {
   const o = PR.next, me = PR;
   const row = (l, a, b) => `<tr><td>${esc(a)}</td><td>${l}</td><td>${esc(b)}</td></tr>`;
-  $('prefight').innerHTML = `<div class="kicker">Fight night · ${PR.stage === 'pro' ? 'professional' : 'amateur'} bout · ${PR.rounds} rounds</div><h2>${esc(me.name)} vs ${esc(o.name)}</h2>
+  $('prefight').innerHTML = `<div class="kicker">Fight night · ${PR.stage === 'pro' ? 'professional' : 'amateur'} bout · ${PR.rounds} rounds of ${fmtLen(SET.careerRoundLen)}</div><h2>${esc(me.name)} vs ${esc(o.name)}</h2>
     <table class="tape"><thead><tr><th>${esc(me.name)}</th><th>Tale of the tape</th><th style="text-align:right">${esc(o.name)}</th></tr></thead><tbody>
     ${row('Record', PR.stage === 'pro' ? recStr(me.pro) : recStr(me.am), recStr(o.rec))}
     ${row('Height', `${me.h} cm (${ftIn(me.h)})`, `${o.h} cm (${ftIn(o.h)})`)}
@@ -988,23 +1092,26 @@ function prefight() {
     ${row('Power', me.stats.power, o.stats.power)}${row('Speed', me.stats.speed, o.stats.speed)}${row('Chin', me.stats.chin, o.stats.chin)}${row('Cardio', me.stats.cardio, o.stats.cardio)}
     </tbody></table><p>${o.reach > me.reach + 4 ? 'He has the longer reach. Get inside his jab.' : me.reach > o.reach + 4 ? 'You have the reach. Keep him on the end of your jab.' : 'Even reach. Win the jab battle.'}</p>
     <div class="seg"><button class="go" id="walkBtn">Walk out</button><button id="backBtn">Not yet</button></div>`;
-  showOnly('prefight'); $('walkBtn').onclick = () => { QUICK = null; startFight(PR.next); }; $('backBtn').onclick = toHub; $('walkBtn').focus();
+  showOnly('prefight'); $('walkBtn').onclick = () => { QUICK = null; startFight(PR.next, { rounds: PR.rounds }); }; $('backBtn').onclick = toHub; $('walkBtn').focus();
 }
+const fmtLen = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 /* ================= hub ================= */
 function statBars(st, edit) {
   return STAT_KEYS.map(([k, l]) => `<div class="stat${edit ? ' edit' : ''}"><span>${l}</span><div class="bar"><i style="width:${st[k]}%;background:var(--gold)"></i></div><b>${st[k]}</b>${edit ? `<span class="pm"><button data-s="${k}" data-d="-1" aria-label="Lower ${l}">−</button><button data-s="${k}" data-d="1" aria-label="Raise ${l}">+</button></span>` : ''}</div>`).join('');
 }
+function idleGym(fighter) {
+  setScene('gym'); fightUI(false); showMsg('', ''); $('call').classList.add('hidden'); $('coach').classList.add('hidden');
+  O.root.visible = false; P.root.visible = true; P.mitt = false;
+  P.look(fighter); P.stats(fighter); P.reset(new V3(0, 0, 0), .3); shadow.t = 1.2;
+}
 function toHub() {
-  MODE = 'hub'; QUICK = null; setScene('gym'); fightUI(false); showMsg('', ''); $('call').classList.add('hidden');
-  P.look(PR); P.stats(PR); P.mitt = false; O.root.visible = false;
-  P.reset(new V3(0, 0, 0), .3); shadow.t = 1.2;
+  MODE = 'hub'; QUICK = null; idleGym(PR); buildShelf(PR.trophies);
   renderHub(); showOnly('hub');
 }
 function renderHub() {
-  const pr = PR, o = pr.next, rec = pr.stage === 'pro' ? `Pro ${recStr(pr.pro)}${pr.pro.ko ? ` (${pr.pro.ko} KO)` : ''}` : `Amateur ${recStr(pr.am)}`;
-  const fightReady = pr.fightIn <= 0;
-  $('hub').innerHTML = `<div class="kicker">${WEIGHTS[pr.w][0]} · ${rec}${pr.rank ? ` · ranked ${pr.rank}` : pr.stage === 'pro' ? ' · unranked' : ''}</div>
+  const pr = PR, o = pr.next, fightReady = pr.fightIn <= 0;
+  $('hub').innerHTML = `<div class="kicker">${WEIGHTS[pr.w][0]} · ${esc(recLine(pr))}${pr.rank ? ` · ranked ${pr.rank}` : pr.stage === 'pro' ? ' · unranked' : ''}</div>
     <h1>${esc(pr.name)}</h1>${pr.nick ? `<p>“${esc(pr.nick)}”</p>` : ''}
     ${statBars(pr.stats)}
     <div class="card"><div class="kicker">Week ${pr.week} · ${fightReady ? 'Fight night' : `next fight in ${pr.fightIn} week${pr.fightIn > 1 ? 's' : ''}`}</div>
@@ -1012,36 +1119,19 @@ function renderHub() {
       <p class="note">${STYLES[o.style].name} · ${recStr(o.rec)} · ${o.h} cm, reach ${o.reach} cm · ${pr.rounds} rounds</p>
       ${fightReady ? `<button class="go" id="fightBtn">Go to fight night</button>` : `<button class="go" id="trainBtn">Train this week</button>`}
     </div>
-    <div class="seg" style="margin-top:6px"><button id="quickBtn">Quick fight</button><button id="editBtn">Edit fighter</button><button id="histBtn">Fight history</button></div>
-    <div id="hubExtra"></div>
-    ${DESK.canInstall ? `<div class="card"><div class="kicker">Play it like a game</div><p class="note">Install this as its own app on your computer. It gets a window and an icon, and updates itself whenever a new version is published.</p><button class="go" id="installBtn">Install as app</button><p class="note" id="installMsg"></p></div>` : ''}
-    <p class="note" style="margin-top:14px">Career saved to ${Save.where}. <button id="resetBtn" style="min-height:32px;font-size:14px;padding:0 10px">Start over</button></p>`;
-  if ($('installBtn')) $('installBtn').onclick = async () => {
-    try {
-      const r = await DESK.d.install.request();
-      $('installMsg').textContent = r === 'installed' ? 'Installing. The game will open in its own window; after that, launch it from the Start menu.' : r === 'cancelled' ? 'No problem, you can install it any time.' : 'Installing isn\'t possible here. Use Install as app in the artifact menu of the Claude desktop app.';
-      if (r === 'installed') DESK.canInstall = false;
-    } catch (e) { $('installMsg').textContent = 'Installing didn\'t start: ' + e.message; }
-  };
+    <div class="seg" style="margin-top:6px"><button id="recBtn">Records</button><button id="troBtn">Trophy room</button><button id="editBtn">Edit fighter</button><button id="quickBtn">Quick fight</button></div>
+    <div class="seg" style="margin-top:8px"><button id="menuBtn">Main menu</button></div>
+    <p class="note" style="margin-top:14px">Saved to ${Save.where} · slot ${SAVE.active + 1}.</p>`;
   if (fightReady) $('fightBtn').onclick = prefight; else $('trainBtn').onclick = openTrainMenu;
-  $('quickBtn').onclick = () => {
-    $('hubExtra').innerHTML = `<h3>Quick fight</h3><p class="note">Three rounds against a random ${WEIGHTS[PR.w][0].toLowerCase()}. Doesn't count toward your record.</p><div class="seg"><button data-q=".15">Novice</button><button data-q=".5">Contender</button><button data-q=".85">Champion</button></div>`;
-    for (const b of $('hubExtra').querySelectorAll('[data-q]')) b.onclick = () => { QUICK = makeOpp(+b.dataset.q, PR.w, PR.trunks); QUICK.rec = { w: randInt(3, 25), l: randInt(0, 5) }; startFight(QUICK); };
-  };
-  $('editBtn').onclick = () => openCreator(false);
-  $('histBtn').onclick = () => {
-    $('hubExtra').innerHTML = `<h3>Fight history</h3>` + (PR.history.length ? `<table><thead><tr><th>Opponent</th><th>Result</th><th>Week</th></tr></thead><tbody>${PR.history.map(h => `<tr><td>${esc(h.opp)}</td><td>${h.res} ${esc(h.how || '')}</td><td>${h.wk}</td></tr>`).join('')}</tbody></table>` : `<p class="note">No fights yet. Your first bout is coming up.</p>`);
-  };
-  $('resetBtn').onclick = () => {
-    $('hubExtra').innerHTML = `<div class="card"><p>Start over? This deletes your fighter, record and training for good.</p><div class="confirm"><button class="go" id="yesReset">Delete and start over</button><button id="noReset">Keep my career</button></div></div>`;
-    $('yesReset').onclick = () => { PR = newProfile(); Save.save(PR); openCreator(true); };
-    $('noReset').onclick = () => { $('hubExtra').innerHTML = ''; };
-  };
+  $('recBtn').onclick = openRecords; $('troBtn').onclick = () => openTrophies(toHub);
+  $('editBtn').onclick = () => openCreator(false); $('quickBtn').onclick = () => openQuick(SAVE.active, toHub);
+  $('menuBtn').onclick = toMenu;
 }
 
 /* ================= creator ================= */
-let draft = null;
-function openCreator(isNew) {
+let draft = null, CREATOR_BACK = null;
+function openCreator(isNew, back) {
+  CREATOR_BACK = back || null;
   MODE = 'creator'; setScene('gym'); O.root.visible = false; fightUI(false);
   draft = JSON.parse(JSON.stringify(PR)); draft.isNew = isNew || !PR.created;
   if (draft.isNew && !draft.name) draft.name = '';
@@ -1066,7 +1156,7 @@ function renderCreator() {
     <label>Gloves</label><div class="row">${sw('gloves', KIT)}</div>
     <label>Waistband</label><div class="row">${sw('trim', KIT)}</div>
     ${isNew ? `<h3>Attributes · ${d.pts} point${d.pts === 1 ? '' : 's'} to spend</h3>${statBars(d.stats, true)}<p class="note">Everything starts at 45. Training raises them over your career; at creation nothing goes above 65.</p>` : ''}
-    <div class="seg" style="margin-top:16px"><button class="go" id="saveF">${isNew ? 'Start career' : 'Save'}</button>${isNew && !PR.created ? '' : '<button id="cancelF">Cancel</button>'}</div>
+    <div class="seg" style="margin-top:16px"><button class="go" id="saveF">${isNew ? 'Start career' : 'Save'}</button><button id="cancelF">Cancel</button></div>
     <p class="note" id="fErr"></p>`;
   const c = $('creator');
   $('fName').oninput = e => { d.name = e.target.value; };
@@ -1092,9 +1182,9 @@ function renderCreator() {
     if (!d.name.trim()) { $('fErr').textContent = 'Give your fighter a name first.'; $('fName').focus(); return; }
     const wasNew = d.isNew; delete d.isNew; d.name = d.name.trim(); d.nick = d.nick.trim();
     if (wasNew) { d.created = true; scheduleNext(d); }
-    PR = d; Save.save(PR); toHub();
+    PR = fixProfile(d); persist(); toHub();
   };
-  if ($('cancelF')) $('cancelF').onclick = toHub;
+  if ($('cancelF')) $('cancelF').onclick = () => { if (CREATOR_BACK) CREATOR_BACK(); else toHub(); };
   P.look(d);
 }
 
@@ -1115,9 +1205,9 @@ function openTrainMenu() {
   for (const b of $('trainMenu').querySelectorAll('[data-t]')) b.onclick = () => runTraining(b.dataset.t);
   $('tBack').onclick = () => { renderHub(); showOnly('hub'); };
 }
-function finishWeek(lines, title) {
-  PR.fightIn = Math.max(0, PR.fightIn - 1); PR.week++; Save.save(PR);
-  $('trainResult').innerHTML = `<h2>${esc(title)}</h2>${lines.join('')}<p class="note">${PR.fightIn ? `${PR.fightIn} week${PR.fightIn > 1 ? 's' : ''} until you fight ${esc(PR.next.name)}.` : `Fight week. Time to face ${esc(PR.next.name)}.`}</p><button class="go" id="trDone">Back to the gym</button>`;
+function finishWeek(lines, title, got = []) {
+  PR.fightIn = Math.max(0, PR.fightIn - 1); PR.week++; persist();
+  $('trainResult').innerHTML = `<h2>${esc(title)}</h2>${lines.join('')}${trophyLines(got)}<p class="note">${PR.fightIn ? `${PR.fightIn} week${PR.fightIn > 1 ? 's' : ''} until you fight ${esc(PR.next.name)}.` : `Fight week. Time to face ${esc(PR.next.name)}.`}</p><button class="go" id="trDone">Back to the gym</button>`;
   showOnly('trainResult'); $('trDone').onclick = toHub; $('trDone').focus();
 }
 function runTraining(id) {
@@ -1127,31 +1217,33 @@ function runTraining(id) {
   finishWeek(lines, `${t.name} done`);
 }
 const COMBOS = [[1], [1, 1], [1, 2], [1, 2], [1, 1, 2], [1, 2, 3], [3, 2], [2, 3, 2], [1, 6, 3], [1, 2, 3, 2], [6, 3, 2], [1, 2, 6, 3]];
-const NUM = { 1: 'jab', 2: 'cross', 3: 'hook', 6: 'upper' }, KEYNUM = { KeyJ: 1, KeyK: 2, KeyU: 3, KeyI: 6 }, NUMKEY = { 1: 'J', 2: 'K', 3: 'U', 6: 'I' };
+const NUM = { 1: 'jab', 2: 'cross', 3: 'hook', 6: 'upper' }, ACTNUM = { jab: 1, cross: 2, hook: 3, upper: 6 };
 const TR = {};
+function trainerSetup(dist) {
+  O.root.visible = true; O.look({ h: 176, reach: 178, build: 2, skin: 1, trunks: 2, gloves: 2, trim: 2, mittColor: 0xc9a46a, shoes: 0x222222 });
+  O.stats({ stats: { power: 30, speed: 40, chin: 50, cardio: 50 }, w: 4, build: 1 });
+  O.reset(new V3(0, 0, dist), Math.PI); O.mitt = true;
+  O.aimFor = p => O.gloves[p.d.hand === 'L' ? 'R' : 'L'].getWorldPosition(new V3());
+}
 function startMitts() {
   MODE = 'train'; setScene('gym'); audioInit(); showOnly();
-  P.look(PR); P.stats(PR); P.mitt = false; P.reset(new V3(0, 0, -.45), 0);
-  O.root.visible = true; O.look({ h: 176, reach: 178, build: 2, skin: 1, trunks: 2, gloves: 2, trim: 2, mittColor: 0xc9a46a, shoes: 0x222222 });
-  O.stats({ stats: { power: 50, speed: 50, chin: 50, cardio: 50 }, w: 4, build: 1 });
-  O.reset(new V3(0, 0, .42), Math.PI); O.mitt = true;
-  O.aimFor = p => O.gloves[p.d.hand === 'L' ? 'R' : 'L'].getWorldPosition(new V3());
+  P.look(PR); P.stats(PR); P.mitt = false; P.reset(new V3(0, 0, -.45), 0); trainerSetup(.42);
   const list = []; for (let i = 0; i < 10; i++) list.push(COMBOS[Math.min(COMBOS.length - 1, randInt(0, 3) + Math.floor(i * .9))]);
   Object.assign(TR, { list, i: -1, seq: null, pos: 0, wait: 1.4, t: 0, last: 0, perfect: 0, good: 0, slow: 0, punches: 0, clean: 0, landed: 0, failed: false, done: false });
-  fightUI(true, 'Throw what the trainer calls: J = 1 jab · K = 2 cross · U = 3 hook · I = 6 uppercut');
+  fightUI(true, `Throw what the trainer calls: ${K('jab')} = 1 jab · ${K('cross')} = 2 cross · ${K('hook')} = 3 hook · ${K('upper')} = 6 uppercut`);
   $('call').classList.remove('hidden'); $('callNums').textContent = 'Ready'; $('callKeys').textContent = ''; $('callMeta').textContent = 'Mitt work · 10 combos';
 }
 function renderCall(badAt) {
   $('callNums').innerHTML = TR.seq.map((n, i) => `<span class="${i < TR.pos ? 'done' : i === badAt ? 'bad' : ''}">${n}</span>`).join(' · ');
-  $('callKeys').textContent = TR.seq.map(n => NUMKEY[n]).join(' · ');
+  $('callKeys').textContent = TR.seq.map(n => K(NUM[n])).join(' · ');
   $('callMeta').textContent = `Combo ${TR.i + 1} of ${TR.list.length}`;
 }
 function nextCombo() {
   TR.i++; if (TR.i >= TR.list.length) return endMitts();
   TR.seq = TR.list[TR.i]; TR.pos = 0; TR.failed = false; TR.t = 0; TR.last = 0; TR.wait = 0; renderCall();
 }
-function trainPress(code) {
-  const n = KEYNUM[code]; if (!n || !TR.seq || TR.wait > 0 || TR.done) return;
+function trainAction(a) {
+  const n = ACTNUM[a]; if (!n || !TR.seq || TR.wait > 0 || TR.done) return;
   const now = TR.t, gap = now - TR.last;
   const mitt = O.gloves[PUNCH[NUM[n]].hand === 'L' ? 'R' : 'L'].getWorldPosition(new V3());
   if (n !== TR.seq[TR.pos]) { TR.failed = true; renderCall(TR.pos); popText('Wrong punch', mitt, '#ff6b6b'); TR.wait = .9; return; }
@@ -1162,26 +1254,306 @@ function trainPress(code) {
   TR.last = now; TR.pos++; renderCall();
   if (TR.pos >= TR.seq.length) { TR.clean++; TR.wait = .9; }
 }
+function mittLanding(onLand) {
+  const p = P.punch;
+  if (p && !p.hit && ((p.phase === 1 && p.k > .55) || (p.phase === 2 && p.k < .2))) {
+    const side = p.d.hand === 'L' ? 'R' : 'L', g = P.gloves[p.d.hand].getWorldPosition(new V3()), m = O.gloves[side].getWorldPosition(new V3());
+    if (g.distanceTo(m) < .2 * P.s) { p.hit = true; sfx.pad(); O.mittKick[side] = .07; burst(m, new V3(0, .4, 0), 4); onLand(p); }
+  }
+}
 function updateMitts(dt) {
   TR.t += dt;
   if (TR.wait > 0) { TR.wait -= dt; if (TR.wait <= 0) nextCombo(); }
   else if (TR.seq && !TR.done && TR.t - TR.last > (TR.pos === 0 ? 2.6 : 1.4)) { TR.failed = true; renderCall(TR.pos); TR.wait = .9; }
-  const p = P.punch;
-  if (p && !p.hit && ((p.phase === 1 && p.k > .55) || (p.phase === 2 && p.k < .2))) {
-    const side = p.d.hand === 'L' ? 'R' : 'L', g = P.gloves[p.d.hand].getWorldPosition(new V3()), m = O.gloves[side].getWorldPosition(new V3());
-    if (g.distanceTo(m) < .2 * P.s) { p.hit = true; TR.landed++; sfx.pad(); O.mittKick[side] = .07; burst(m, new V3(0, .4, 0), 4); }
-  }
+  mittLanding(() => TR.landed++);
 }
 function endMitts() {
   TR.done = true; $('call').classList.add('hidden'); fightUI(false);
   const rhythm = TR.punches ? (TR.perfect + TR.good * .5) / TR.punches : 0, combos = TR.clean / TR.list.length, landed = TR.punches ? TR.landed / TR.punches : 0;
   const gs = gain('speed', 1 + 4 * rhythm), gp = gain('power', 1 + 3 * combos * landed);
+  const got = checkTrophies({ mitts: true, perfectAll: TR.punches > 0 && TR.perfect === TR.punches && TR.clean === TR.list.length });
   finishWeek([
     `<table><tbody><tr><td>Combos completed</td><td>${TR.clean} of ${TR.list.length}</td></tr><tr><td>On rhythm (perfect / good / slow)</td><td>${TR.perfect} / ${TR.good} / ${TR.slow}</td></tr><tr><td>Punches that hit the mitt</td><td>${TR.landed} of ${TR.punches}</td></tr></tbody></table>`,
     `<p>Speed: <span class="gain">+${gs}</span> → ${PR.stats.speed}</p><p>Power: <span class="gain">+${gp}</span> → ${PR.stats.power}</p>`,
     `<p class="note">${rhythm > .75 ? 'Your trainer nods. Sharp hands today.' : rhythm > .45 ? 'Decent session. Faster between punches next time.' : 'Your trainer wants the combos snapped together, not one punch at a time.'}</p>`
-  ], 'Mitt work done');
+  ], 'Mitt work done', got);
 }
+
+/* ================= tutorial ================= */
+const TSTEPS = [
+  { id: 'move', title: 'Footwork', text: () => `Move with ${K('up')} ${K('left')} ${K('down')} ${K('right')}. You always face your opponent, so left and right circle around him. Walk around the trainer.`, need: 3, unit: 'metres' },
+  { id: 'jab', title: 'The jab (1)', text: () => `Press ${K('jab')} to jab the trainer's mitt. It's your fastest, cheapest punch and it sets up everything else.`, need: 3, unit: 'jabs on the mitt' },
+  { id: 'cross', title: 'The cross (2)', text: () => `Press ${K('cross')}. The rear hand: slower than the jab, but much harder.`, need: 3, unit: 'crosses on the mitt' },
+  { id: 'one2', title: 'The one-two', text: () => `Jab then cross, fast: ${K('jab')} then ${K('cross')}. Snap them together instead of throwing one at a time.`, need: 2, unit: 'one-twos' },
+  { id: 'hook', title: 'The lead hook (3)', text: () => `Press ${K('hook')}. It swings around a high guard, but only lands up close.`, need: 2, unit: 'hooks on the mitt' },
+  { id: 'upper', title: 'The rear uppercut (6)', text: () => `Press ${K('upper')}. It comes up through the middle of a guard. Short range, like the hook.`, need: 2, unit: 'uppercuts on the mitt' },
+  { id: 'body', title: 'Body shots', text: () => `Hold ${K('body')} while you punch to go to the body. Body shots drain your opponent's stamina and how much of it he can get back.`, need: 2, unit: 'body shots' },
+  { id: 'block', title: 'Blocking', text: () => `The trainer jabs at you now. Hold ${K('block')} to raise your guard. A block stops most of a head shot, but you can't punch while you hold it.`, need: 3, unit: 'jabs blocked' },
+  { id: 'slip', title: 'Slipping', text: () => `Slip his jab instead: when he calls "Jab!", tap ${K('slipL')} or ${K('slipR')}. A slip makes a straight punch miss completely. In a real fight there's no call, so you read his shoulders.`, need: 2, unit: 'jabs slipped' },
+  { id: 'stam', title: 'Stamina and damage', text: () => `In a real fight every punch costs stamina. A tired fighter hits slower and softer and his guard drops. Damage also builds over the whole fight, so getting hurt late is worse than early. If you're knocked down, hammer ${K('block')} to beat the count. In a fight, Esc pauses.`, info: true }
+];
+const TUT = {};
+function startTutorial() {
+  MODE = 'tutorial'; setScene('gym'); audioInit(); showOnly();
+  const f = PR || stockFighter(); P.look(f); P.stats(f); P.mitt = false; P.reset(new V3(0, 0, -.45), 0);
+  trainerSetup(.42);
+  Object.assign(TUT, { i: 0, n: 0, t: 0, lastJab: -9, last: P.pos.clone(), jabT: 1.6, done: false });
+  fightUI(true, 'Esc leaves the tutorial'); $('coach').classList.remove('hidden'); renderCoach();
+}
+function tutStep() { return TSTEPS[TUT.i]; }
+function renderCoach() {
+  const c = $('coach');
+  if (TUT.done) {
+    c.innerHTML = `<div class="kicker">Tutorial complete</div><h2>You're ready</h2><p>That's every tool in the game. Use them in a career, or try a quick fight first.</p>
+      <div class="seg">${SAVE.slots.some(Boolean) ? '' : '<button class="go" id="cStart">Start a career</button>'}<button ${SAVE.slots.some(Boolean) ? 'class="go" ' : ''}id="cQuick">Quick fight</button><button id="cMenu">Main menu</button></div>`;
+    if ($('cStart')) $('cStart').onclick = () => { SAVE.active = SAVE.slots.findIndex(s => !s); if (SAVE.active < 0) SAVE.active = 0; PR = newProfile(); openCreator(true, toMenu); };
+    $('cQuick').onclick = () => openQuick(); $('cMenu').onclick = toMenu;
+    return;
+  }
+  const s = tutStep();
+  c.innerHTML = `<div class="kicker">Step ${TUT.i + 1} of ${TSTEPS.length}</div><h2>${s.title}</h2><p>${esc(s.text())}</p>
+    ${s.info ? '' : `<div class="prog" id="cProg">${Math.min(Math.floor(TUT.n), s.need)} of ${s.need} ${s.unit}</div>`}
+    <div class="seg" style="margin-top:8px">${s.info ? '<button class="go" id="cNext">Next</button>' : '<button id="cSkip">Skip step</button>'}<button id="cExit">Leave tutorial</button></div>`;
+  if ($('cNext')) $('cNext').onclick = nextTutStep;
+  if ($('cSkip')) $('cSkip').onclick = nextTutStep;
+  $('cExit').onclick = exitTutorial;
+}
+function nextTutStep() {
+  TUT.i++; TUT.n = 0; TUT.jabT = 1.4; TUT.fireIn = null;
+  P.punch = null; P.queue = []; P.reset(new V3(0, 0, -.45), 0); O.reset(new V3(0, 0, .42), Math.PI); O.punch = null;
+  O.mitt = !(tutStep() && (tutStep().id === 'block' || tutStep().id === 'slip'));
+  if (TUT.i >= TSTEPS.length) { TUT.done = true; SAVE.tutDone = true; Save.save(); fightUI(false); }
+  renderCoach();
+}
+function tutProgress(by = 1) {
+  const s = tutStep(); if (!s || s.info || TUT.done) return;
+  const before = Math.floor(TUT.n); TUT.n += by;
+  if (Math.floor(TUT.n) !== before && $('cProg')) $('cProg').textContent = `${Math.min(Math.floor(TUT.n), s.need)} of ${s.need} ${s.unit}`;
+  if (TUT.n >= s.need) { popText('Nice', P.headPos().add(new V3(0, .3, 0)), '#e8b931'); setTimeout(nextTutStep, 700); TUT.n = -999; }
+}
+function tutAction(a) {
+  const s = tutStep(); if (!s || TUT.done) return;
+  if (ACTP[a] && ['jab', 'cross', 'one2', 'hook', 'upper', 'body'].includes(s.id)) {
+    P.startPunch(ACTP[a], !!held.body);
+    if (s.id === 'body' && held.body) tutProgress();
+    if (s.id === 'one2') { if (a === 'jab') TUT.lastJab = TUT.t; else if (a === 'cross' && TUT.t - TUT.lastJab < .75) { tutProgress(); TUT.lastJab = -9; } }
+  }
+  if (a === 'slipL') P.doSlip(1);
+  if (a === 'slipR') P.doSlip(-1);
+}
+function exitTutorial() { $('coach').classList.add('hidden'); toMenu(); }
+function updateTutorial(dt) {
+  const s = tutStep(); TUT.t += dt;
+  P.inp.mx = P.inp.mz = 0; P.inp.block = false; O.inp.mx = O.inp.mz = 0; O.inp.block = false;
+  if (s && s.id === 'move') { playerInput(P); P.inp.block = false; }
+  if (s && (s.id === 'block' || s.id === 'slip')) P.inp.block = !!held.block;
+  P.stam = Math.max(P.stam, 70); P.head = 100;
+  const before = P.pos.clone();
+  P.update(dt, O, T0); O.update(dt, P, T0 + 1.3);
+  const sep = P.pos.clone().sub(O.pos).setY(0); if (sep.length() < .6) P.pos.copy(O.pos).add(sep.normalize().multiplyScalar(.6));
+  if (!s || TUT.done) return;
+  if (s.id === 'move') tutProgress(before.distanceTo(P.pos));
+  if (['jab', 'cross', 'hook', 'upper'].includes(s.id)) mittLanding(p => { if (p.type === s.id) tutProgress(); });
+  else if (s.id === 'one2' || s.id === 'body') mittLanding(() => { });
+  if (s.id === 'block' || s.id === 'slip') {
+    TUT.jabT -= dt;
+    if (TUT.jabT <= 0 && !O.punch && TUT.fireIn == null) { TUT.fireIn = .25; popText('Jab!', O.headPos().add(new V3(0, .25, 0)), '#ff9b6b'); }
+    if (TUT.fireIn != null) { TUT.fireIn -= dt; if (TUT.fireIn <= 0) { TUT.fireIn = null; TUT.jabT = rand(1.6, 2.3); O.speed = .5; O.stam = 100; O.startPunch('jab', false); } }
+    const p = O.punch;
+    if (p && !p.hit && p.phase >= 1) {
+      if (P.slip) p.sawSlip = true;
+      const g = O.gloves.L.getWorldPosition(new V3()), d = g.distanceTo(P.headPos());
+      if (p.phase === 1 && p.k > .5 && d < (s.id === 'slip' ? .2 : .24) * P.s) {
+        p.hit = true;
+        if (P.blocking) { sfx.block(); P.hs.vp -= .4; if (s.id === 'block') { popText('Blocked', g, '#e8b931'); tutProgress(); } }
+        else { sfx.hit(3); P.hs.vp -= 1.6; popText(s.id === 'block' ? `Hold ${K('block')}` : 'Too late', g, '#ff9b6b'); }
+      } else if (p.phase === 2 && p.k > .25) {
+        p.hit = true;
+        if (s.id === 'slip' && p.sawSlip) { popText('Slipped', P.headPos(), '#e8b931'); tutProgress(); }
+      }
+    }
+  }
+}
+
+/* ================= main menu ================= */
+function toMenu() {
+  MODE = 'menu'; QUICK = null; G.paused = false;
+  PR = SAVE.slots[SAVE.active];
+  idleGym(PR || stockFighter()); buildShelf(PR ? PR.trophies : {});
+  renderMenu(); showOnly('menu');
+}
+function renderMenu() {
+  const pr = SAVE.slots[SAVE.active], used = SAVE.slots.filter(Boolean).length, earned = pr ? Object.keys(pr.trophies).length : 0;
+  $('menu').innerHTML = `<div class="kicker">Career prototype</div><h1>Boxing</h1><p>Build a boxer, train him, and take him from amateur bouts to a world ranking.</p>
+    <div class="stack">
+    ${pr ? `<button class="go wide" id="mContinue"><span>Continue career</span><small>${esc(pr.name)} · ${esc(recLine(pr))} · week ${pr.week}</small></button>`
+      : `<button class="go wide" id="mNew"><span>Start a career</span><small>Build your boxer</small></button>`}
+    <button class="wide" id="mSlots"><span>Career slots</span><small>${used} of 3 in use</small></button>
+    <button class="wide" id="mQuick"><span>Quick fight</span><small>No record on the line</small></button>
+    <button class="wide" id="mTrophy"><span>Trophy room</span><small>${pr ? `${earned} of ${TROPHIES.length} earned` : 'Start a career to earn trophies'}</small></button>
+    <button class="wide" id="mTut"${!SAVE.tutDone ? ' style="border-color:var(--gold)"' : ''}><span>Tutorial</span><small>${SAVE.tutDone ? 'Every punch, the block and the slip' : 'New here? Start with this'}</small></button>
+    <button class="wide" id="mSet"><span>Settings</span><small>Controls, camera, audio</small></button>
+    </div>
+    ${DESK.canInstall ? `<div class="card"><div class="kicker">Play it like a game</div><p class="note">Install this as its own app. It gets a window and an icon, and updates itself whenever a new version is published.</p><button class="go" id="installBtn">Install as app</button><p class="note" id="installMsg"></p></div>` : ''}
+    <p class="note" style="margin-top:12px">Quick fights: ${recStr(SAVE.qf)}${SAVE.qf.d ? '' : ''} · saved to ${Save.where}</p>`;
+  if ($('mContinue')) $('mContinue').onclick = toHub;
+  if ($('mNew')) $('mNew').onclick = () => { PR = newProfile(); openCreator(true, toMenu); };
+  $('mSlots').onclick = openSlots; $('mQuick').onclick = () => openQuick(null, toMenu);
+  $('mTrophy').onclick = () => { if (pr) openTrophies(toMenu); else $('mTrophy').querySelector('small').textContent = 'Start a career first: trophies belong to a fighter'; };
+  $('mTut').onclick = startTutorial; $('mSet').onclick = () => openSettings(toMenu);
+  if ($('installBtn')) $('installBtn').onclick = async () => {
+    try {
+      const r = await DESK.d.install.request();
+      $('installMsg').textContent = r === 'installed' ? 'Installing. The game will open in its own window; after that, launch it from the Start menu.' : r === 'cancelled' ? 'No problem, you can install it any time.' : "Installing isn't possible here. Use Install as app in the artifact menu of the Claude desktop app.";
+      if (r === 'installed') DESK.canInstall = false;
+    } catch (e) { $('installMsg').textContent = "Installing didn't start: " + e.message; }
+  };
+  ($('mContinue') || $('mNew')).focus();
+}
+
+/* ================= career slots ================= */
+function openSlots() { MODE = 'menu'; renderSlots(-1); showOnly('slots'); }
+function renderSlots(confirmAt) {
+  $('slots').innerHTML = `<div class="kicker">Careers</div><h1>Career slots</h1><p>Three separate careers. Each keeps its own fighter, record, trophies and training.</p>` +
+    SAVE.slots.map((p, i) => `<div class="card"><div class="kicker">Slot ${i + 1}${i === SAVE.active && p ? ' · last played' : ''}</div>
+      ${p ? `<div class="big">${esc(p.name)}</div><p class="note">${WEIGHTS[p.w][0]} · ${esc(recLine(p))} · week ${p.week}${p.rank ? ` · ranked ${p.rank}` : ''}</p>
+        ${confirmAt === i ? `<p>Delete ${esc(p.name)}'s career for good? His record, trophies and training go with it.</p><div class="confirm"><button class="go" data-del="${i}">Delete career</button><button data-keep="1">Keep it</button></div>`
+          : `<div class="seg"><button class="go" data-play="${i}">Play</button><button data-ask="${i}">Delete</button></div>`}`
+        : `<div class="big" style="color:var(--dim)">Empty</div><div class="seg" style="margin-top:8px"><button class="go" data-new="${i}">New career</button></div>`}
+    </div>`).join('') + `<button id="slBack">Back</button>`;
+  const q = s => $('slots').querySelectorAll(s);
+  for (const b of q('[data-play]')) b.onclick = () => { SAVE.active = +b.dataset.play; PR = SAVE.slots[SAVE.active]; Save.save(); toHub(); };
+  for (const b of q('[data-new]')) b.onclick = () => { SAVE.active = +b.dataset.new; PR = newProfile(); openCreator(true, openSlots); };
+  for (const b of q('[data-ask]')) b.onclick = () => renderSlots(+b.dataset.ask);
+  for (const b of q('[data-keep]')) b.onclick = () => renderSlots(-1);
+  for (const b of q('[data-del]')) b.onclick = () => { const i = +b.dataset.del; SAVE.slots[i] = null; if (SAVE.active === i) { const j = SAVE.slots.findIndex(Boolean); SAVE.active = j < 0 ? i : j; } Save.save(); PR = SAVE.slots[SAVE.active]; P.look(PR || stockFighter()); renderSlots(-1); };
+  $('slBack').onclick = toMenu;
+}
+
+/* ================= quick fight ================= */
+const QDIFF = [['Novice', .15], ['Contender', .5], ['Champion', .85], ['Legend', 1]];
+const QS = { fighter: -1, diff: 1, style: -1, rounds: 3, len: 90 };
+let QBACK = null;
+function openQuick(pref, back) {
+  MODE = 'menu'; if (back) QBACK = back; if (!QBACK) QBACK = toMenu;
+  if (pref != null) QS.fighter = pref; if (QS.fighter >= 0 && !SAVE.slots[QS.fighter]) QS.fighter = -1;
+  idleGym(qsFighter()); renderQuick(); showOnly('quick');
+}
+const qsFighter = () => QS.fighter >= 0 ? SAVE.slots[QS.fighter] : stockFighter();
+function renderQuick() {
+  const seg = (key, opts) => opts.map(([label, v]) => `<button data-q="${key}" data-v="${v}" aria-pressed="${QS[key] === v}">${label}</button>`).join('');
+  const f = qsFighter();
+  $('quick').innerHTML = `<div class="kicker">Exhibition</div><h1>Quick fight</h1><p>Doesn't touch any career. Your quick-fight record is ${recStr(SAVE.qf)}.</p>
+    <label for="qF">Your fighter</label><select id="qF"><option value="-1"${QS.fighter < 0 ? ' selected' : ''}>Stock boxer (all 50s)</option>${SAVE.slots.map((p, i) => p ? `<option value="${i}"${QS.fighter === i ? ' selected' : ''}>${esc(p.name)} · ${WEIGHTS[p.w][0]}</option>` : '').join('')}</select>
+    <p class="note">${WEIGHTS[f.w][0]} · power ${f.stats.power} · speed ${f.stats.speed} · chin ${f.stats.chin} · cardio ${f.stats.cardio}</p>
+    <label>Opponent level</label><div class="seg">${seg('diff', QDIFF.map(([l], i) => [l, i]))}</div>
+    <label>Opponent style</label><div class="seg">${seg('style', [['Random', -1], ...STYLES.map((s, i) => [s.name, i])])}</div>
+    <label>Rounds</label><div class="seg">${seg('rounds', [3, 4, 6, 8, 10, 12].map(n => [String(n), n]))}</div>
+    <label>Round length</label><div class="seg">${seg('len', [60, 90, 120, 180].map(s => [fmtLen(s), s]))}</div>
+    <div class="seg" style="margin-top:16px"><button class="go" id="qGo">Fight</button><button id="qBack">Back</button></div>`;
+  $('qF').onchange = e => { QS.fighter = +e.target.value; P.look(qsFighter()); renderQuick(); };
+  for (const b of $('quick').querySelectorAll('[data-q]')) b.onclick = () => { QS[b.dataset.q] = +b.dataset.v; renderQuick(); };
+  $('qGo').onclick = () => {
+    const me = qsFighter(), opp = makeOpp(QDIFF[QS.diff][1], me.w, me.trunks);
+    if (QS.style >= 0) opp.style = QS.style;
+    opp.rec = { w: randInt(3, 10 + QS.diff * 10), l: randInt(0, 5) };
+    QUICK = { opp, cfg: { fighter: me, rounds: QS.rounds, roundLen: QS.len } };
+    startFight(opp, QUICK.cfg);
+  };
+  $('qBack').onclick = () => { const b = QBACK; QBACK = null; b(); };
+}
+
+/* ================= records ================= */
+function streaks(h) {
+  let cur = 0, best = 0, run = 0;
+  for (const f of h) { if (f.res === 'W') cur++; else break; }
+  for (let i = h.length - 1; i >= 0; i--) { if (h[i].res === 'W') { run++; best = Math.max(best, run); } else run = 0; }
+  return { cur, best };
+}
+function openRecords() {
+  const p = PR, t = p.totals, s = streaks(p.history), acc = t.thrown ? Math.round(t.landed / t.thrown * 100) + '%' : '–';
+  const row = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+  $('records').innerHTML = `<div class="kicker">${esc(p.name)} · ${WEIGHTS[p.w][0]}</div><h1>Records</h1>
+    <h3>Records</h3><table><tbody>${row('Professional', `${recStr(p.pro)}${p.pro.ko ? `, ${p.pro.ko} by KO` : ''}`)}${row('Amateur', recStr(p.am))}${row('Knockout rate (pro)', p.pro.w ? Math.round(p.pro.ko / p.pro.w * 100) + '%' : '–')}${row('Current win streak', s.cur)}${row('Best win streak', s.best)}${row('Ranking', p.rank ? `#${p.rank}` : p.stage === 'pro' ? 'Unranked' : 'Amateur')}</tbody></table>
+    <h3>Career numbers</h3><table><tbody>${row('Bouts', t.fights)}${row('Rounds boxed', t.rounds)}${row('Punches landed', `${t.landed} of ${t.thrown} (${acc})`)}${row('Power punches landed', t.power)}${row('Knockdowns scored', t.kdFor)}${row('Times knocked down', t.kdAgainst)}</tbody></table>
+    <h3>Fight log</h3>${p.history.length ? `<div class="log"><table><thead><tr><th>Week</th><th>Opponent</th><th>Result</th></tr></thead><tbody>${p.history.map(h => `<tr><td>${h.wk}</td><td>${esc(h.opp)}${h.orec ? ` <span class="note">(${esc(h.orec)})</span>` : ''}</td><td>${h.res} ${esc(h.how || '')}${h.rnd ? `, rd ${h.rnd}` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<p class="note">No fights yet.</p>'}
+    <p class="note">Quick fights (all fighters): ${recStr(SAVE.qf)}</p>
+    <button id="rcBack">Back</button>`;
+  showOnly('records'); $('rcBack').onclick = () => { renderHub(); showOnly('hub'); }; $('rcBack').focus();
+}
+
+/* ================= trophies ================= */
+const TIER = { bronze: 0xb0703a, silver: 0xc4c8cc, gold: 0xd9a92e };
+const TROPHIES = [
+  { id: 'debut', name: 'Fight night', desc: 'Box your first bout', tier: 'bronze' },
+  { id: 'firstwin', name: 'First win', desc: 'Win a bout', tier: 'bronze' },
+  { id: 'mitts', name: 'Sharp hands', desc: 'Finish a mitt session with every punch on rhythm', tier: 'bronze' },
+  { id: 'firstko', name: 'Lights out', desc: 'Win by knockout or stoppage', tier: 'silver' },
+  { id: 'getup', name: 'Off the canvas', desc: 'Get knocked down and still win', tier: 'silver' },
+  { id: 'amateur5', name: 'Turned pro', desc: 'Win five amateur bouts', tier: 'silver' },
+  { id: 'ranked', name: 'Ranked', desc: 'Break into the top 30', tier: 'silver' },
+  { id: 'top10', name: 'Top ten', desc: 'Reach the top 10', tier: 'gold' },
+  { id: 'no1', name: 'Number one contender', desc: 'Reach number 1', tier: 'gold' },
+  { id: 'unbeaten10', name: 'Unbeaten in ten', desc: 'Start your pro career 10-0', tier: 'gold' }
+];
+function checkTrophies(c) {
+  const got = [], a = id => { if (!PR.trophies[id]) { PR.trophies[id] = { wk: PR.week }; got.push(TROPHIES.find(t => t.id === id)); } };
+  if (c.fight) {
+    a('debut'); if (c.won) a('firstwin'); if (c.won && (c.how === 'KO' || c.how === 'TKO')) a('firstko'); if (c.gotUp) a('getup');
+    if (PR.stage === 'pro') a('amateur5'); if (PR.rank) a('ranked'); if (PR.rank && PR.rank <= 10) a('top10'); if (PR.rank === 1) a('no1');
+    if (PR.pro.w >= 10 && PR.pro.l === 0 && PR.pro.d === 0) a('unbeaten10');
+  }
+  if (c.mitts && c.perfectAll) a('mitts');
+  return got;
+}
+const trophyLines = got => got.map(t => `<p class="gain">Trophy earned: ${esc(t.name)}. ${esc(t.desc)}.</p>`).join('');
+function openTrophies(back) {
+  MODE = 'trophy'; showOnly('trophy'); buildShelf(PR.trophies);
+  const n = Object.keys(PR.trophies).length;
+  $('trophy').innerHTML = `<div class="kicker">${esc(PR.name)}</div><h1>Trophy room</h1><p>${n} of ${TROPHIES.length} earned. Each one takes its place on the gym shelf.</p>` +
+    TROPHIES.map(t => { const e = PR.trophies[t.id]; return `<div class="troph${e ? '' : ' locked'}"><span class="medal" style="background:${hex(TIER[t.tier])}"></span><span><b>${esc(t.name)}</b><br><span class="note">${esc(t.desc)}</span></span><span class="note">${e ? `Week ${e.wk}` : 'Locked'}</span></div>`; }).join('') +
+    `<div class="card"><div class="kicker">Championship belts</div><p class="note">Belts arrive with the sanctioning bodies in milestone 3, and they'll hang here too.</p></div><button id="trBack">Back</button>`;
+  $('trBack').onclick = back || toHub; $('trBack').focus({ preventScroll: true }); $('trophy').scrollTop = 0;
+}
+
+/* ================= settings ================= */
+let SBACK = null, sTab = 'controls';
+function openSettings(back) { SBACK = back || toMenu; renderSettings(); showOnly('settings'); }
+function renderSettings() {
+  const tabs = [['controls', 'Controls'], ['camera', 'Camera'], ['audio', 'Audio'], ['game', 'Gameplay']];
+  const seg = (path, opts) => opts.map(([l, v]) => `<button data-set="${path}" data-v='${JSON.stringify(v)}' aria-pressed="${getPath(path) === v}">${l}</button>`).join('');
+  let body = '';
+  if (sTab === 'controls') body = `<p class="note">Click a key, then press the new one. Esc cancels. Arrow keys always move too, and Esc pauses a fight.</p>` +
+    ACTIONS.map(([a, l]) => `<div class="bind"><span>${l}</span><button data-bind="${a}">${esc(rebinding && rebinding.a === a ? 'Press a key…' : keyLabel(SET.keys[a]))}</button></div>`).join('') +
+    `<button id="sReset" style="margin-top:10px">Reset to defaults</button><p class="note touchonly">On a phone, the on-screen buttons stay the same.</p>`;
+  if (sTab === 'camera') body = `<label>Default fight camera</label><div class="seg">${seg('cam.view', [['Behind your fighter', 0], ['Broadcast side view', 1]])}</div><p class="note">You can still switch mid-fight with ${esc(K('cam'))}.</p>
+    <label>Camera shake on big punches</label><div class="seg">${seg('cam.shake', [['On', true], ['Off', false]])}</div>
+    <label>Field of view</label><div class="seg">${seg('cam.wide', [['Normal', false], ['Wide', true]])}</div>`;
+  if (sTab === 'audio') body = [['master', 'Master volume'], ['fx', 'Punches and bell'], ['crowd', 'Crowd']].map(([k, l]) => `<label for="v_${k}">${l}</label><div class="range-row"><input type="range" id="v_${k}" min="0" max="100" value="${SET.audio[k]}"><b id="vv_${k}">${SET.audio[k]}</b></div>`).join('') + `<button id="sTest" style="margin-top:12px">Test sound</button>`;
+  if (sTab === 'game') body = `<label>Round length in your career</label><div class="seg">${seg('careerRoundLen', [60, 90, 120, 180].map(s => [fmtLen(s), s]))}</div><p class="note">Real professional rounds are 3:00. Longer rounds make stamina matter more. Quick fights set their own length.</p>`;
+  $('settings').innerHTML = `<h1>Settings</h1><div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" aria-pressed="${sTab === k}">${l}</button>`).join('')}</div>${body}<div class="seg" style="margin-top:16px"><button class="go" id="sBack">Done</button></div>`;
+  const q = s => $('settings').querySelectorAll(s);
+  for (const b of q('[data-tab]')) b.onclick = () => { sTab = b.dataset.tab; if (sTab === 'audio') audioInit(); renderSettings(); };
+  for (const b of q('[data-set]')) b.onclick = () => { setPath(b.dataset.set, JSON.parse(b.dataset.v)); Save.save(); resize(); renderSettings(); };
+  for (const b of q('[data-bind]')) b.onclick = () => {
+    const a = b.dataset.bind;
+    rebinding = { a, cancel() { rebinding = null; renderSettings(); }, set(code) {
+      const other = ACTIONS.find(([x]) => x !== a && SET.keys[x] === code);
+      if (other) SET.keys[other[0]] = SET.keys[a];
+      SET.keys[a] = code; rebinding = null; Save.save(); renderSettings();
+    } };
+    renderSettings();
+  };
+  if ($('sReset')) $('sReset').onclick = () => { SET.keys = { ...DEFAULT_KEYS }; Save.save(); renderSettings(); };
+  for (const k of ['master', 'fx', 'crowd']) if ($('v_' + k)) {
+    $('v_' + k).oninput = e => { SET.audio[k] = +e.target.value; $('vv_' + k).textContent = SET.audio[k]; applyAudio(); };
+    $('v_' + k).onchange = () => Save.save();
+  }
+  if ($('sTest')) $('sTest').onclick = () => { audioInit(); sfx.hit(9); setTimeout(() => sfx.bell(1), 250); sfx.roar(.15); setTimeout(() => sfx.roar(0), 1200); };
+  $('sBack').onclick = () => { rebinding = null; const b = SBACK; b(); };
+}
+function getPath(p) { return p.split('.').reduce((o, k) => o[k], SET); }
+function setPath(p, v) { const ks = p.split('.'), last = ks.pop(); ks.reduce((o, k) => o[k], SET)[last] = v; }
 
 /* ================= HUD & camera ================= */
 function bar(id, v, max = 100) { $(id).style.width = clamp(v / max * 100, 0, 100) + '%'; }
@@ -1192,19 +1564,21 @@ function hud() {
   const c = Math.max(0, Math.ceil(G.clock)); $('tm').textContent = `${(c / 60) | 0}:${String(c % 60).padStart(2, '0')}`;
   $('pRec').textContent = P.kdFight ? `Down ${P.kdFight}×` : ''; $('oRec').textContent = O.kdFight ? `Down ${O.kdFight}×` : '';
   $('vig').style.opacity = clamp((40 - P.head) / 40, 0, .85);
-  const m = $('mash'), show = G.state === 'fight' && P.down && P.down.rising == null && !P.down.final;
+  const m = $('mash'), show = G.state === 'fight' && !G.paused && P.down && P.down.rising == null && !P.down.final;
   m.classList.toggle('hidden', !show); if (show) $('mashBar').style.width = clamp(P.down.mash / P.down.need * 100, 0, 100) + '%';
 }
 const camPos = new V3(3, 2, 4), camLook = new V3(0, 1.2, 0);
 function updateCamera(dt, t) {
   let pos, look; const narrow = innerWidth < 700, side = !narrow;
-  if (MODE === 'hub' || MODE === 'load') {
+  if (MODE === 'hub' || MODE === 'load' || MODE === 'menu') {
     const a = .55 + Math.sin(t * .1) * .12; const r = narrow ? 4.6 : 3.0;
     pos = new V3(Math.sin(a) * r, narrow ? 1.2 : 1.55, Math.cos(a) * r); look = new V3(side ? -.75 : 0, narrow ? .05 : 1.15, 0);
   } else if (MODE === 'creator') {
     const a = .35 + Math.sin(t * .25) * .35; const r = narrow ? 4.2 : 2.3;
     pos = new V3(Math.sin(a) * r, narrow ? 1.2 : 1.45, Math.cos(a) * r); look = new V3(side ? -.55 : 0, narrow ? .05 : 1.05, 0);
-  } else if (MODE === 'train') {
+  } else if (MODE === 'trophy') {
+    pos = narrow ? new V3(-.2, 1.35, .1) : new V3(-2.1, 1.5, .8); look = narrow ? new V3(-4.85, .75, .1) : new V3(-4.85, 1.38, .8);
+  } else if (MODE === 'train' || MODE === 'tutorial') {
     pos = new V3(2.4, 1.65, .4); look = new V3(0, 1.3, 0);
   } else if (G.cam === 1 || P.down || O.down) {
     const mid = P.pos.clone().add(O.pos).multiplyScalar(.5), ax = O.pos.clone().sub(P.pos).setY(0).normalize();
@@ -1214,10 +1588,11 @@ function updateCamera(dt, t) {
     look = P.headPos().lerp(O.headPos(), .78); look.y -= .3;
   }
   const k = 1 - Math.exp(-dt * 5); camPos.lerp(pos, k); camLook.lerp(look, k);
-  camera.position.copy(camPos).add(new V3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).multiplyScalar(G.shake)); camera.lookAt(camLook);
+  const shake = SET && !SET.cam.shake ? 0 : G.shake;
+  camera.position.copy(camPos).add(new V3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).multiplyScalar(shake)); camera.lookAt(camLook);
   G.shake *= Math.exp(-dt * 10);
 }
-function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w / h < .8 ? 62 : 50; camera.updateProjectionMatrix(); }
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = (w / h < .8 ? 62 : 50) + (SET && SET.cam.wide ? 10 : 0); camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 
 /* ================= loop ================= */
@@ -1225,21 +1600,24 @@ let last = performance.now(), T0 = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   const rdt = Math.min(.05, (now - last) / 1000); last = now; T0 += rdt;
-  if (G.slowT > 0) { G.slowT -= rdt; G.timeScale = .35; } else G.timeScale = 1;
+  if (G.slowT > 0 && !G.paused) { G.slowT -= rdt; G.timeScale = .35; } else if (G.slowT <= 0) G.timeScale = 1;
   const dt = rdt * (MODE === 'fight' ? G.timeScale : 1);
   if (P && O) {
-    if (MODE === 'hub' || MODE === 'creator') {
+    if (MODE === 'hub' || MODE === 'creator' || MODE === 'menu' || MODE === 'trophy') {
       P.inp.mx = P.inp.mz = 0; P.inp.block = false;
       shadow.t -= dt;
-      if (shadow.t <= 0 && MODE === 'hub') { shadow.t = rand(1.4, 3.2); const c = pick([['jab'], ['jab', 'cross'], ['jab', 'jab'], ['cross', 'hook'], ['jab', 'cross', 'hook']]); c.forEach((t, i) => i ? P.queue.push([t, false]) : P.startPunch(t, false)); if (Math.random() < .25) setTimeout(() => P.doSlip(pick([1, -1])), 700); }
+      if (shadow.t <= 0 && MODE !== 'creator') { shadow.t = rand(1.4, 3.2); const c = pick([['jab'], ['jab', 'cross'], ['jab', 'jab'], ['cross', 'hook'], ['jab', 'cross', 'hook']]); c.forEach((t, i) => i ? P.queue.push([t, false]) : P.startPunch(t, false)); if (Math.random() < .25) setTimeout(() => P.doSlip(pick([1, -1])), 700); }
       P.stam = 100; P.update(dt, ghost, T0);
       updateDust(dt);
     } else if (MODE === 'train') {
       P.inp.mx = P.inp.mz = 0; P.inp.block = false; O.inp.mx = O.inp.mz = 0; O.inp.block = false;
       P.stam = Math.max(P.stam, 60);
       P.update(dt, O, T0); O.update(dt, P, T0 + 1.3); if (!TR.done) updateMitts(dt); updateDust(dt);
+    } else if (MODE === 'tutorial') {
+      updateTutorial(dt); updateDust(dt);
     } else if (MODE === 'fight') {
-      if (G.state === 'fight') {
+      if (G.paused) { /* frozen */ }
+      else if (G.state === 'fight') {
         playerInput(P); ai(O, P, dt); G.time += dt;
         P.update(dt, O, G.time); O.update(dt, P, G.time + 1.7);
         const sep = O.pos.clone().sub(P.pos).setY(0), dist = sep.length();
@@ -1256,11 +1634,12 @@ function frame(now) {
         for (const f of [P, O]) { f.inp.mx = f.inp.mz = 0; f.inp.block = false; f.update(dt, f === P ? O : P, G.time += dt * .5); }
         if (G.state === 'break') { G.breakT -= rdt; if (G.breakT <= 0) nextRound(); }
       }
-      if (msgTimer > 0) { msgTimer -= rdt; if (msgTimer <= 0) showMsg('', ''); }
+      if (msgTimer > 0 && !G.paused) { msgTimer -= rdt; if (msgTimer <= 0) showMsg('', ''); }
       hud();
     }
   }
-  updateSpray(dt); updateCamera(rdt, T0);
+  if (!G.paused) updateSpray(dt);
+  updateCamera(rdt, T0);
   renderer.render(scene, camera);
 }
 setScene('gym');
@@ -1271,14 +1650,12 @@ const raw = atob($('glbdata').textContent.trim()), buf = new Uint8Array(raw.leng
 for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
 const loader = new GLTFLoader();
 const parse = () => new Promise((res, rej) => loader.parse(buf.buffer.slice(0), '', res, rej));
-Promise.all([parse(), parse(), Save.load()]).then(([a, b, saved]) => {
+Promise.all([parse(), parse(), Save.load()]).then(([a, b, save]) => {
   P = new Fighter(a, true); O = new Fighter(b, false); O.root.visible = false;
-  PR = saved && saved.v === 1 && saved.created ? saved : newProfile();
-  if (PR.created && !PR.next) scheduleNext(PR);
-  P.look(PR); P.reset(new V3(0, 0, 0), .3);
-  window.__game = { G, get P() { return P; }, get O() { return O; }, get PR() { return PR; }, get MODE() { return MODE; }, TR, startFight, toHub, prefight, knockdown, onPress, makeOpp, setPR: p => { PR = p; } };
-  if (PR.created) toHub(); else openCreator(true);
-  desktopSetup();
+  SAVE = save; SET = SAVE.settings; PR = SAVE.slots[SAVE.active]; resize();
+  window.__game = { G, TR, TUT, startFight, toHub, toMenu, prefight, knockdown, onAction, makeOpp, startTutorial, openQuick, openSettings, openSlots, openRecords, openTrophies, nextTutStep,
+    get P() { return P; }, get O() { return O; }, get PR() { return PR; }, get MODE() { return MODE; }, get SAVE() { return SAVE; }, get SET() { return SET; } };
+  toMenu(); desktopSetup();
 }).catch(e => { $('loadTxt').textContent = 'The gym failed to load: ' + e.message; });
 }
 </script>
