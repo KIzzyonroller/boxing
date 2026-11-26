@@ -17,7 +17,7 @@ const TRAIN = [
 const fatigueOf = () => Math.round(PR.fatigue || 0);
 const fatigueWord = f => f >= 70 ? 'overtrained' : f >= 45 ? 'tired' : f >= 20 ? 'working' : 'fresh';
 const fatigueMul = () => { const f = fatigueOf(); return f >= 70 ? .5 : f >= 45 ? .8 : 1; };
-function gain(stat, amt) { const cur = PR.stats[stat], age = ageOf(PR); const g = Math.max(0, Math.round(amt * fatigueMul() * (TRAINERS[PR.trainer || 0] || TRAINERS[0]).mult * (age <= 25 ? 1.12 : age >= 33 ? .6 : age >= 30 ? .8 : 1) * (1.25 - cur / 100))); PR.stats[stat] = Math.min(99, cur + g); return g; }
+function gain(stat, amt) { const cur = PR.stats[stat], age = ageOf(PR); amt *= ((stat === 'power' || stat === 'chin') && has('strength') ? 1.15 : 1) * (TR.kind === 'bag' && has('bags') ? 1.1 : 1) * (G.spar && has('ring') ? 1.15 : 1); const g = Math.max(0, Math.round(amt * fatigueMul() * (TRAINERS[PR.trainer || 0] || TRAINERS[0]).mult * (age <= 25 ? 1.12 : age >= 33 ? .6 : age >= 30 ? .8 : 1) * (1.25 - cur / 100))); PR.stats[stat] = Math.min(99, cur + g); return g; }
 const statName = k => STAT_KEYS.find(s => s[0] === k)[1];
 const gainLine = (k, g) => `<p>${statName(k)}: <span class="gain">+${g}</span> → ${PR.stats[k]}</p>`;
 function fatigueBar() {
@@ -40,7 +40,7 @@ function openTrainMenu() {
 }
 function finishWeek(lines, title, got = [], load = 0) {
   const before = fatigueOf();
-  PR.fatigue = clamp(before + load - 12, 0, 100);
+  PR.fatigue = clamp(before + load - 12 - (has('nutri') ? 6 : 0) - (has('recovery') ? 5 : 0), 0, 100);
   PR.fightIn = Math.max(0, PR.fightIn - 1); PR.week++; careerWeek(PR);
   const wev = weekEvent(); if (wev) lines.push(`<p class="gold">This week: ${esc(wev)}</p>`);
   if (load >= 20 && PR.fatigue >= 70 && !PR.injury && Math.random() < .3) { PR.injury = { what: pick(['a strained shoulder', 'a sore hand', 'a tweaked back']), weeks: randInt(2, 3) }; lines.push(`<p class="bad">Overtraining caught up with you: ${PR.injury.what}. ${PR.injury.weeks} weeks out of hard training.</p>`); }
@@ -65,9 +65,11 @@ function runTraining(id) {
       o.stats.power > o.stats.speed ? 'His right hand is the danger, and he loads up before it: you can see it coming.' : 'He is quicker than he is heavy-handed. Volume, not one shot.',
       o.stats.cardio < 50 ? 'He fades late. Make him work early.' : 'He keeps his pace for the whole fight.',
       o.stats.chin < 50 ? 'He has been hurt by body shots before.' : 'He takes a good shot.'];
-    return finishWeek([`<p>You watched four of ${esc(o.name)}'s fights. ${esc(S.name)}.</p><ul>${tend.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="note">On fight night his power shots are a little slower to arrive: you know what to look for.</p>`], 'Film study', [], 4);
+    const vg = has('video') ? gain('speed', 1.2) : 0;
+    return finishWeek([(vg ? gainLine('speed', vg) : '') + `<p>You watched four of ${esc(o.name)}'s fights. ${esc(S.name)}.</p><ul>${tend.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="note">On fight night his power shots are a little slower to arrive: you know what to look for.</p>`], 'Film study', [], 4);
   }
   if (id === 'spar') return startSpar();
+  if (id === 'combo') return openComboLib();
   return startDrill(id);
 }
 
@@ -153,24 +155,26 @@ function setupMitts() {
   setCall('Ready', '', 'Mitt work · 10 combos');
 }
 const VIDEO_COMBO = [1, 2, 'R', 'OH', 5];
+const comboSeq = () => (COMBO_LIB[PR && PR.comboPick || 0] || COMBO_LIB[0]).seq;
 function setupCombo() {
   setupMitts();
-  TR.list = [...VIDEO_COMBO.map(n => [n]), [1, 2], [1, 2, 'R'], ['R', 'OH', 5], VIDEO_COMBO, VIDEO_COMBO, VIDEO_COMBO, VIDEO_COMBO];
+  const C = comboSeq(); TR.combo = C;
+  TR.list = [...C.map(n => [n]), C.slice(0, 2), C.slice(0, 3), C.slice(-3), C, C, C, C];
   TR.rolls = 0; TR.rollOk = 0;
   warmCoach(TR.list.map(comboWords).concat(['Now put it all together.']));
   fightUI(true, `${K('jab')} jab · ${K('cross')} cross · ${K('roll')} roll under his hook · ${K('over')} overhand · ${K('lupper')} lead uppercut · Esc stops the session`);
   setCall('Ready', '', 'Learn the combo · move by move, then at speed');
 }
 function renderCall(badAt) {
-  const teach = TR.kind === 'combo' && TR.i < VIDEO_COMBO.length;
+  const teach = TR.kind === 'combo' && TR.i < TR.combo.length;
   setCall(TR.seq.map((n, i) => `<span class="${i < TR.pos ? 'done' : i === badAt ? 'bad' : ''}">${teach ? NAMEW[n] : NUMLBL[n] || n}</span>`).join(' · '), TR.seq.map(n => K(NUM[n])).join(' · '),
-    TR.kind === 'combo' ? (teach ? `Step ${TR.i + 1} of ${VIDEO_COMBO.length}: ${({ 1: 'snap it straight out and back', 2: 'turn the back foot, hips through', R: 'bend the knees, dip under his hook in a U, hands glued to your head', OH: 'lean forward and loop the right hand over his guard', 5: 'dip to your lead side, elbow bent, drive up' })[TR.seq[0]]}` : TR.i === VIDEO_COMBO.length ? 'Now in pieces' : `Full combo ${TR.i - VIDEO_COMBO.length - 2} of 4 · at speed`) : `Combo ${TR.i + 1} of ${TR.list.length}`);
+    TR.kind === 'combo' ? (teach ? `Step ${TR.i + 1} of ${TR.combo.length}: ${({ 1: 'snap it straight out and back', 2: 'turn the back foot, hips through', R: 'bend the knees, dip under his hook in a U, hands glued to your head', OH: 'lean forward and loop the right hand over his guard', 5: 'dip to your lead side, elbow bent, drive up', 3: 'turn the lead hip and shoulder, elbow level', 6: 'drop the rear shoulder and drive up through the chin' })[TR.seq[0]]}` : TR.i === TR.combo.length ? 'Now in pieces' : `Full combo ${TR.i - TR.combo.length - 2} of 4 · at speed`) : `Combo ${TR.i + 1} of ${TR.list.length}`);
   if (TR.seq[TR.pos] === 'R' && !O.punch) { O.speed = .55; O.stam = 100; O.startPunch('hook', false); }
 }
 function nextCombo() {
   TR.i++; if (TR.i >= TR.list.length) return endMitts();
   TR.seq = TR.list[TR.i]; TR.pos = 0; TR.failed = false; TR.t = 0; TR.last = 0; TR.wait = 0; renderCall();
-  if (TR.kind === 'combo' && TR.i === VIDEO_COMBO.length + 3) coachQuiet('Now put it all together.'); else coachQuiet(comboWords(TR.seq));
+  if (TR.kind === 'combo' && TR.i === TR.combo.length + 3) coachQuiet('Now put it all together.'); else coachQuiet(comboWords(TR.seq));
 }
 function mittAction(a) {
   const n = ACTNUM[a]; if (!n || !TR.seq || TR.wait > 0) return;
@@ -207,7 +211,7 @@ function endMitts() {
   const verdict = rhythm > .75 ? 'Sharp hands today.' : rhythm > .45 ? 'Decent. Faster between punches next time.' : 'Snap the combos together, not one punch at a time.';
   coach(verdict);
   if (TR.kind === 'combo') PR.combo = true;
-  endDrill(TR.kind === 'combo' ? 'Combo session done' : 'Mitt work done', [TR.kind === 'combo' ? '<p>Jab, cross, roll, overhand, lead uppercut. In a fight, the overhand and lead uppercut are on their own keys, and a punch straight after a roll lands harder.</p>' : '', tbl([['Combos completed', `${TR.clean} of ${TR.list.length}`], ['On rhythm (perfect / good / slow)', `${TR.perfect} / ${TR.good} / ${TR.slow}`], ['Punches that hit the mitt', `${TR.landed} of ${TR.punches}`]]),
+  endDrill(TR.kind === 'combo' ? 'Combo session done' : 'Mitt work done', [TR.kind === 'combo' ? `<p>${esc((COMBO_LIB[PR.comboPick || 0] || COMBO_LIB[0]).name)}. A punch straight after a roll lands harder.</p>` : '', tbl([['Combos completed', `${TR.clean} of ${TR.list.length}`], ['On rhythm (perfect / good / slow)', `${TR.perfect} / ${TR.good} / ${TR.slow}`], ['Punches that hit the mitt', `${TR.landed} of ${TR.punches}`]]),
     gainLine('speed', gs), gainLine('power', gp), `<p class="note">Your trainer: “${verdict}”</p>`], got);
 }
 
@@ -442,18 +446,21 @@ function endDefense() {
 /* ---------- sparring ---------- */
 function startSpar() {
   const avg = (PR.stats.power + PR.stats.speed + PR.stats.chin + PR.stats.cardio) / 4;
-  const o = makeOpp(clamp((avg - 36) / 52, .05, .9) * .85, PR.w, PR.trunks); o.name = pick(FIRST) + ' ' + pick(LAST); o.spar = true;
+  const sp = sparPartner(), o = makeOpp(clamp(sp.lvl + (avg - 50) / 200, .05, .9), PR.w, PR.trunks); o.name = sp.name; o.style = sp.style; o.spar = true;
+  const fav = Object.entries(sp.seen || {}).sort((a, b) => b[1] - a[1])[0]; G.sparFav = fav && fav[1] > 15 ? fav[0] : null; G.partner = sp;
   QUICK = null; startFight(o, { rounds: 1, roundLen: 120, spar: true });
+  const mem = partnerMemory(sp); if (mem) setTimeout(() => coach(mem), 1500);
 }
 function endSpar(how) {
   const a = P.stats_[0], b = O.stats_[0], took = 100 - P.head, acc = a.thrown ? a.landed / a.thrown : 0;
+  const sp = G.partner; if (sp) { if (a.landed > b.landed) { sp.l++; sp.lvl = Math.min(.95, sp.lvl + .03); } else sp.w++; for (const [k, n] of Object.entries(G.tc || {})) sp.seen[k] = (sp.seen[k] || 0) + n; }
   const gc = gain('chin', took > 30 ? 2 + (took > 55 ? 1 : 0) : took > 12 ? 1 : 0), gs = gain('speed', 1 + 3 * clamp(acc / .45, 0, 1)), gca = gain('cardio', a.thrown > 40 ? 1 : 0);
   const stopped = how === 'STOP';
   const verdict = stopped ? 'That\'s enough for today. Keep your hands up.' : a.landed > b.landed ? 'You won the round. Good work.' : 'He got the better of that one. We\'ll fix it.';
   G.state = 'over'; document.body.classList.remove('fighting'); $('pauseBtn').classList.add('hidden'); fightUI(false); sfx.bell(2); showMsg('', '');
   setTimeout(() => {
     coach(verdict);
-    finishWeek([`<p>Sparring with ${esc(O.name)}${stopped ? '. Your coach stopped it.' : '.'}</p>`, statsTable([['Punches landed', `${a.landed} of ${a.thrown}`, `${b.landed} of ${b.thrown}`], ['Power punches', a.power, b.power]]),
+    finishWeek([`<p>Sparring with ${esc(O.name)}${stopped ? '. Your coach stopped it.' : '.'}${sp ? ` You are ${sp.l}-${sp.w} against him in sparring; he gets a little better each time you beat him.` : ''}</p>`, statsTable([['Punches landed', `${a.landed} of ${a.thrown}`, `${b.landed} of ${b.thrown}`], ['Power punches', a.power, b.power]]),
       gainLine('chin', gc), gainLine('speed', gs), gca ? gainLine('cardio', gca) : '', `<p class="note">Your coach: “${verdict}”</p>`], 'Sparring done', [], TRAIN.find(t => t.id === 'spar').load);
     MODE = 'hub';
   }, 1400);

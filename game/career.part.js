@@ -49,7 +49,7 @@ function oppFromRoster(f) { return Object.assign({}, f, { stats: Object.assign({
 function makeOffers(pr) {
   const W = pr.world, offers = [], ranks = playerRanks(pr), pro = pr.pro, n = pro.w + pro.l + pro.d;
   const prom = PROMOTERS.find(p => p.id === pr.promoter) || PROMOTERS[0];
-  const purseFor = (lvl, title) => Math.round((1500 + 60000 * Math.pow(lvl, 3) + (pr.rank ? (41 - pr.rank) * 900 : 0)) * (title ? 6 : 1) * prom.mult * rand(.9, 1.1) / 100) * 100;
+  const purseFor = (lvl, title) => Math.round((1500 + 60000 * Math.pow(lvl, 3) + (pr.rank ? (41 - pr.rank) * 900 : 0)) * (title ? 6 : 1) * prom.mult * (1 + (pr.hype || 0) / 200) * rand(.9, 1.1) / 100) * 100;
   // mandatory defense due: the only offer
   const held = Object.keys(pr.belts || {});
   if (held.length && pr.mandatoryIn <= 0) {
@@ -79,6 +79,7 @@ function makeOffers(pr) {
 }
 function scheduleNext(pr) {
   if (pr.stage === 'amateur') {
+    if (amTourneyNext(pr)) return;
     const n = pr.am.w + pr.am.l, o = makeOpp(clamp(.06 + n * .07, 0, .45), pr.w, pr.trunks);
     o.rec = { w: randInt(0, 3 + n), l: randInt(0, 3) };
     pr.next = o; pr.fightIn = 3; pr.rounds = 3; pr.offers = null; pr.nextDeal = null; return;
@@ -137,11 +138,16 @@ function careerAfterFight(pr, won, draw, how, notes) {
   const beat = P.totalHeadDmg > 80 || P.kdFight > 1 || (P.cut && P.cut.sev > .6);
   if (beat && Math.random() < .55) { pr.injury = { what: P.cut && P.cut.sev > .6 ? 'a cut over the eye' : pick(['a concussion', 'a damaged hand', 'cracked ribs']), weeks: randInt(3, 6) }; notes.push(`Injury: ${pr.injury.what}. Out of hard training for ${pr.injury.weeks} weeks.`); }
   if (how === 'KO' && !won) pr.kosAgainst = (pr.kosAgainst || 0) + 1;
+  if (P.cut) pr.scars = (pr.scars || 0) + 1;
+  pr.hype = clamp((pr.hype || 0) + (won ? (how === 'KO' || how === 'TKO' ? 8 : 4) : draw ? 0 : -10) + (deal.title && won ? 20 : 0), 0, 100);
+  if (pr.press && pr.press.kind === 2) { const ko = won && (how === 'KO' || how === 'TKO'); pr.hype = clamp(pr.hype + (ko ? 12 : -20), 0, 100); notes.push(ko ? 'You called the knockout and delivered. The fans love you.' : 'You promised a knockout and did not deliver. The fans noticed.'); }
+  pr.press = null;
   pr.weightCut = false;
 }
 /* weekly: aging, injuries healing, the world moving */
 function careerWeek(pr) {
   if (pr.injury) { pr.injury.weeks--; if (pr.injury.weeks <= 0) pr.injury = null; }
+  if (pr.hype) pr.hype = Math.max(0, pr.hype - .8);
   worldWeek(pr);
   const age = ageOf(pr);
   if (age !== pr.lastAge) {

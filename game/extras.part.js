@@ -46,7 +46,7 @@ function foul(by, what) {
 function cutmanUI() {
   if (!P.cut || P.cut.sev < .15) return '';
   return `<div class="card" id="cutman"><div class="kicker">Cutman</div><p>Your cut is ${P.cut.sev > .9 ? 'bad. One more bad round and the doctor stops it.' : 'bleeding.'} Press the button when the needle is in the gold zone. Three tries.</p>
-    <div class="meter tall"><div class="zone" style="left:42%;width:16%"></div><div class="needle" id="cmNeedle"></div></div><button id="cmBtn" style="margin-top:8px">Press</button><span class="note" id="cmRes"></span></div>`;
+    <div class="meter tall"><div class="zone" style="left:${has('cutman') ? 36 : 42}%;width:${has('cutman') ? 28 : 16}%"></div><div class="needle" id="cmNeedle"></div></div><button id="cmBtn" style="margin-top:8px">Press</button><span class="note" id="cmRes"></span></div>`;
 }
 function cutmanStart() {
   if (!$('cmBtn')) return;
@@ -55,7 +55,7 @@ function cutmanStart() {
   tick();
   $('cmBtn').onclick = () => {
     if (tries <= 0) return; tries--;
-    const ok = x > .42 && x < .58; if (ok) P.cut.sev = Math.max(0, P.cut.sev - .3);
+    const ok = has('cutman') ? x > .36 && x < .64 : x > .42 && x < .58; if (ok) P.cut.sev = Math.max(0, P.cut.sev - .3);
     $('cmRes').textContent = ` ${ok ? 'Pressure held. Bleeding slowed.' : 'Missed the spot.'} ${tries} left.`;
     if (P.cut.sev <= 0.05) { P.cut = null; $('cmRes').textContent = ' Closed it up.'; tries = 0; }
     if (!tries) run = false;
@@ -129,7 +129,7 @@ function weekEvent() {
     () => { PR.fatigue = Math.min(100, fatigueOf() + 15); return 'You caught a cold. Fatigue up.'; },
     () => { const k = pick(STAT_KEYS)[0]; PR.stats[k] = Math.min(99, PR.stats[k] + 2); return `A retired champion dropped by the gym and worked with you. ${statName(k)} +2.`; },
     () => { if (PR.nextDeal && PR.nextDeal.purse) { PR.nextDeal.purse = Math.round(PR.nextDeal.purse * 1.1); return 'Your press conference went viral. Purse up 10%.'; } return 'A local paper ran a story on you.'; },
-    () => { PR.weightCut = true; return 'Making weight is a struggle this camp. You will start the fight a little drained.'; },
+    () => { if (has('nutri')) return 'Your nutritionist kept your weight right on track.'; PR.weightCut = true; return 'Making weight is a struggle this camp. You will start the fight a little drained.'; },
     () => { PR.fatigue = Math.max(0, fatigueOf() - 15); return 'A good week of sleep and food. Fatigue down.'; },
     () => { PR.scout = PR.next ? PR.next.name : PR.scout; return 'Your coach got hold of tape on your next opponent.'; }
   ]);

@@ -144,6 +144,11 @@ body.photo .hud,body.photo #hint,body.photo #pauseBtn,body.photo .caption,body.p
 .belts{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}.belt{background:linear-gradient(180deg,#f7d774,#b8860b);color:#111;font:700 13px "Barlow Condensed",sans-serif;padding:3px 9px;border-radius:3px;box-shadow:inset 0 -3px 0 var(--c)}
 .gold{color:var(--gold)}.bad{color:#ff8a8a}.news summary{cursor:pointer;color:var(--dim);margin-top:8px}
 button.offer small{display:block;text-align:left;margin-top:3px;line-height:1.35}button.offer{flex-direction:column;align-items:flex-start;margin:7px 0}button.offer span{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}button.offer em{font-style:normal;color:var(--gold);font-size:13px}
+.tvcard{margin:10px 0;background:linear-gradient(180deg,#14161e,#0b0c11);border:1px solid var(--line);border-radius:6px;overflow:hidden;font-family:"Barlow Condensed",sans-serif}
+.tvh{background:var(--gold);color:#111;font-weight:700;padding:4px 10px;font-size:14px}.tvr{display:grid;grid-template-columns:1fr 48px 48px;padding:4px 10px;border-top:1px solid var(--line)}.tvr b{text-align:center}.tvr b.r{color:#ff6b70}.tvr b.b{color:#6f9cff}
+.tvf{display:grid;grid-template-columns:1fr 48px 48px;padding:3px 10px;font-size:12px;color:var(--dim)}.tvf span:first-child{grid-column:2;text-align:center}.tvf .r{color:#ff6b70}.tvf .b{color:#6f9cff;text-align:center}
+.focusbar{position:relative;height:16px;margin:6px 0;background:rgba(255,255,255,.08);border-radius:8px}.focusbar span{position:absolute;left:42%;width:16%;top:0;bottom:0;border:2px solid var(--gold);border-radius:8px}.focusbar i{position:absolute;top:3px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#fff}
+body.cb{--red:#e8871e;--blue:#2f8fd8;--green:#36a3c9}body.bigtext .side,body.bigtext .panel{font-size:18px}body.bigtext .hint{font-size:17px}
 .hidden{display:none!important}
 .pad{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;gap:10px;padding:10px max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));pointer-events:none}
 .pad .grp{display:grid;gap:6px;pointer-events:auto}
@@ -194,7 +199,7 @@ button.offer small{display:block;text-align:left;margin-top:3px;line-height:1.35
   </div>
 </div>
 <div class="msg hidden" id="msg"></div>
-<div class="mash hidden" id="mash">Hammer Space or tap to beat the count<div class="bar"><i id="mashBar" style="background:var(--gold);width:0"></i></div></div>
+<div class="mash hidden" id="mash">Hammer Space or tap to beat the count. Hit it when the dot is centred to count double.<div class="focusbar"><span></span><i id="focusDot" class="hidden"></i></div><div class="bar"><i id="mashBar" style="background:var(--gold);width:0"></i></div></div>
 <div class="hint hidden" id="hint"></div>
 <div class="drill hidden" id="drill"></div>
 <div class="fpv" id="fpv"></div>
@@ -366,7 +371,7 @@ const RING = 3.1;
   for (let i = 0; i < N; i++) { const p = pick(seats), a = p.s * Math.PI / 2; pos[i * 3] = p.x * Math.cos(a) + (p.d - .3) * Math.sin(a); pos[i * 3 + 1] = p.y + 1.0; pos[i * 3 + 2] = -p.x * Math.sin(a) + (p.d - .3) * Math.cos(a); }
   const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); fg.setAttribute('color', new THREE.BufferAttribute(fcol, 3));
   arena.add(new THREE.Points(fg, new THREE.PointsMaterial({ size: .35, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })));
-  window.__flash = rate => { fcol.fill(0); for (let i = 0; i < N; i++) if (Math.random() < rate) fcol.set([1, 1, 1], i * 3); fg.attributes.color.needsUpdate = true; };
+  window.__flash = rate => { if (SET && SET.access && SET.access.noFlash) return; fcol.fill(0); for (let i = 0; i < N; i++) if (Math.random() < rate) fcol.set([1, 1, 1], i * 3); fg.attributes.color.needsUpdate = true; };
 }
 
 /* show lights: sweeping coloured spots with visible beams, ring haze, LED apron, glowing corner posts */
@@ -663,7 +668,7 @@ class Fighter {
     this.s = d.h / 180;
     const bx = [.95, 1, 1.06][d.build ?? 1] * (.93 + (d.w ?? 4) * .017);   // heavier divisions carry more bulk
     this.root.scale.set(this.s * bx, this.s, this.s * bx);
-    this.sp = !!d.southpaw; this.pstyle = d.pstyle || null;
+    this.sp = !!d.southpaw; this.pstyle = d.pstyle || null; this.desc = d;
     if (!this.tats) { this.tats = ['L', 'R'].map(s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.05, .046, .09, 14, 1, true), new THREE.MeshStandardMaterial({ color: 0x1a2430, roughness: .6, transparent: true, opacity: .75, side: THREE.DoubleSide })); this.B['UpperArm' + s].add(m); m.position.set(0, .12, 0); return m; }); }
     this.tats[0].visible = (d.tattoo || 0) >= 1; this.tats[1].visible = d.tattoo === 2;
     if (!this.robe) { this.robe = new THREE.Mesh(new THREE.CylinderGeometry(.21, .3, .95, 20, 1, true), new THREE.MeshStandardMaterial({ roughness: .35, metalness: .15, side: THREE.DoubleSide })); this.B.Chest.add(this.robe); this.robe.position.set(0, -.28, 0); this.robe.visible = false; }
@@ -680,7 +685,7 @@ class Fighter {
   reset(start, yaw) {
     this.pos.copy(start); this.yaw = yaw; this.vel.set(0, 0, 0); this.push.set(0, 0, 0);
     this.head = 100; this.headCap = 100; this.body = 100; this.stam = 100; this.stamMax = 100;
-    this.punch = null; this.queue = []; this.stun = 0; this.slip = null; this.rollD = null; this.rolledT = -9; this.feint = null; this.pullD = null; this.buckle = 0; this.swell = { L: 0, R: 0 }; this.sweat = 0; this.cut = null; this.blocking = false;
+    this.punch = null; this.queue = []; this.stun = 0; this.slip = null; this.rollD = null; this.rolledT = -9; this.feint = null; this.pullD = null; this.buckle = 0; this.swell = { L: 0, R: 0 }; this.sweat = 0; this.cut = null; this.liver = null; this.blocking = false;
     this.down = null; this.kdFight = 0; this.kdRound = 0; this.totalHeadDmg = 0; this.fall = 0; this.ai = null;
     this.inp = { mx: 0, mz: 0, block: false };
     this.stats_ = []; this.newRound();
@@ -695,7 +700,7 @@ class Fighter {
   get busy() { return !!(this.down || this.stun > 0); }
 
   startPunch(type, body) {
-    if (this.busy || this.slip || this.rollD || this.pullD || (G.clinch && MODE === 'fight')) return false;
+    if (this.busy || this.slip || this.rollD || this.pullD || (MODE === 'fight' && (G.clinch || G.restart || ((P.down || O.down) && !this.down)))) return false;
     if (this.punch) { if (this.queue.length < 1) this.queue.push([type, body]); return false; }
     const d = punchFor(type, this.sp);
     const tired = 0.55 + 0.45 * clamp(this.stam / 100, 0, 1);
@@ -876,7 +881,7 @@ class Fighter {
   updateDown(dt) {
     const d = this.down; d.t += dt;
     this.fall = d.t < .75 ? 1.48 * Math.pow(d.t / .75, 2) : 1.48;
-    if (d.rising != null) { d.rising += dt; this.fall = 1.48 * (1 - easeIO(d.rising / 1.1)); if (d.rising >= 1.1) { this.down = null; this.fall = 0; this.stun = .4; this.punch = null; this.queue = []; } }
+    if (d.rising != null) { d.rising += dt; this.fall = 1.48 * (1 - easeIO(d.rising / 1.1)); if (d.rising >= 1.1) { this.down = null; this.fall = 0; if (MODE === 'fight' && !G.sim) G.restart = { t: 0, f: this }; this.stun = .4; this.punch = null; this.queue = []; } }
     this.root.position.set(this.pos.x, 0, this.pos.z); this.root.rotation.set(-this.fall, this.yaw, 0);
     for (const b of Object.values(this.B)) { b.quaternion.copy(b.userData.restQ); b.position.copy(b.userData.restP); }
     this.rotIn(this.B.Head, qE(.2 + this.hs.p, this.hs.y + .3, this.hs.r));
@@ -930,7 +935,8 @@ function recordResult(pr, won, draw, how, extra) {
   pr.history = pr.history.slice(0, 100);
   if (am) {
     won ? pr.am.w++ : pr.am.l++;
-    if (pr.am.w >= 5) { pr.stage = 'pro'; notes.push('Five amateur wins. You have turned professional: longer fights, better opponents, a pro record from zero.'); }
+    amTourneyResult(pr, won, notes);
+    if (pr.am.w >= 5 && !(pr.amT && !pr.amT.out && !pr.amChamp)) { pr.stage = 'pro'; if (pr.amChamp) pr.rank = 34; notes.push('Five amateur wins. You have turned professional: longer fights, better opponents, a pro record from zero.'); }
   } else {
     if (draw) pr.pro.d++;
     else if (won) {
@@ -949,7 +955,7 @@ function recordResult(pr, won, draw, how, extra) {
 
 /* ================= save ================= */
 const DEFAULT_KEYS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', jab: 'KeyJ', cross: 'KeyK', hook: 'KeyU', upper: 'KeyI', lupper: 'KeyO', over: 'KeyL', roll: 'KeyR', feint: 'KeyF', pull: 'KeyX', clinch: 'KeyG', taunt: 'KeyT', pivot: 'KeyV', help: 'KeyH', body: 'ShiftLeft', block: 'Space', slipL: 'KeyQ', slipR: 'KeyE', cam: 'KeyC' };
-function defaultSettings() { return { keys: { ...DEFAULT_KEYS }, cam: { view: 0, shake: true, wide: false, ref: true }, gfx: 'high', audio: { master: 80, fx: 90, crowd: 70, voice: true, comm: true, engine: 'jarvis' }, careerRoundLen: 90 }; }
+function defaultSettings() { return { keys: { ...DEFAULT_KEYS }, cam: { view: 0, shake: true, wide: false, ref: true }, gfx: 'high', access: { oneBtn: false, colorblind: false, bigText: false, noFlash: false }, audio: { master: 80, fx: 90, crowd: 70, voice: true, comm: true, engine: 'jarvis' }, careerRoundLen: 90 }; }
 function newSave() { return { v: 2, slots: [null, null, null], active: 0, settings: defaultSettings(), qf: { w: 0, l: 0, d: 0 }, tutDone: false }; }
 function fixProfile(p) {
   p.totals = Object.assign({ fights: 0, rounds: 0, thrown: 0, landed: 0, power: 0, kdFor: 0, kdAgainst: 0 }, p.totals || {});
@@ -964,7 +970,7 @@ function normalizeSave(data) {
   if (data && data.v === 2 && Array.isArray(data.slots)) s = data;
   else { s = newSave(); if (data && data.created) s.slots[0] = data; }
   const st = s.settings || {}, d = defaultSettings();
-  s.settings = { keys: Object.assign(d.keys, st.keys || {}), cam: Object.assign(d.cam, st.cam || {}), audio: Object.assign(d.audio, st.audio || {}), careerRoundLen: st.careerRoundLen || 90 };
+  s.settings = { keys: Object.assign(d.keys, st.keys || {}), cam: Object.assign(d.cam, st.cam || {}), audio: Object.assign(d.audio, st.audio || {}), careerRoundLen: st.careerRoundLen || 90, gfx: st.gfx || d.gfx, access: Object.assign(d.access, st.access || {}) };
   s.slots = [0, 1, 2].map(i => { const p = s.slots[i]; return p && p.created ? fixProfile(p) : null; });
   s.qf = Object.assign({ w: 0, l: 0, d: 0 }, s.qf || {}); s.tutDone = !!s.tutDone;
   if (!(s.active >= 0 && s.active < 3)) s.active = 0;
@@ -1057,7 +1063,7 @@ function ai(me, op, dt) {
   if (!G.clinch && dist < .7 && (me.head < 35 || me.trait === 'dirty') && Math.random() < dt * (me.trait === 'dirty' ? .5 : .8)) startClinch(me);
   if (me.trait === 'cocky' && !me.punch && !me.taunt && Math.random() < dt * .12) { me.taunt = 1; comment('tauntO'); }
   if ((G.oppDesc && (G.oppDesc.style === 0 || G.oppDesc.style === 4)) && Math.max(Math.abs(op.pos.x), Math.abs(op.pos.z)) > RING - .9) A.cut = Math.sign(op.vel.dot(me.right()) || 1); else A.cut = 0;   // cut off the ring
-  if (op.punch && !op.punch.seen) { op.punch.seen = true; A.react = { t: rand(.08, .2) / D.reflex * (1 - read * .6), p: op.punch }; }
+  if (op.punch && !op.punch.seen) { op.punch.seen = true; const knows = G.spar && G.sparFav === op.punch.type ? .3 : 0; A.react = { t: rand(.08, .2) / D.reflex * (1 - (read + knows) * .6), p: op.punch }; }
   if (A.react) {
     A.react.t -= dt;
     if (A.react.t <= 0) {
@@ -1133,6 +1139,8 @@ function onAction(a) {
   if (a === 'slipL') P.doSlip(1);
   if (a === 'slipR') P.doSlip(-1);
   if (a === 'roll') P.doRoll();
+  if (a === 'block' && SET.access && SET.access.oneBtn) oneButtonDefense();
+  if (ACTP[a]) G.tc[a] = (G.tc[a] || 0) + 1;
   if (a === 'feint') P.doFeint();
   if (a === 'pull') P.doPull();
   if (a === 'clinch') { startClinch(P); if (G.clinch) { G.holds = (G.holds || 0) + 1; if (G.holds >= 4) { foul(P, 'holding'); G.holds = 0; } } }
@@ -1187,7 +1195,7 @@ function checkHit(a, d) {
   const dirW = tgt.clone().sub(a.headPos()).setY(0).normalize();
   const stamF = .3 + .7 * Math.pow(clamp(a.stam / 100, 0, 1), .8);
   const afterRoll = G.time - a.rolledT < .8, taunted = d.taunt > 0;
-  let dmg = p.d.dmg * a.power * stamF * (counter ? 1.4 : 1) * (afterRoll ? 1.25 : 1) * (taunted ? 1.3 : 1) * (a.pstyle === 'slugger' && p.type !== 'jab' ? 1.08 : 1) * rand(.85, 1.15) * (G.spar ? .5 : 1);
+  let dmg = p.d.dmg * a.power * stamF * (counter ? 1.4 : 1) * (afterRoll ? 1.25 : 1) * (taunted ? 1.3 : 1) * ((p.type === 'cross' || p.type === 'over') && outsideFoot(a, d) ? 1.12 : 1) * (a.pstyle === 'slugger' && p.type !== 'jab' ? 1.08 : 1) * rand(.85, 1.15) * (G.spar ? .5 : 1);
   if (afterRoll && a.isPlayer) { a.rolledT = -9; popText('Roll and return', tgt, '#e8b931'); }
   const range = a.pos.distanceTo(d.pos), smothered = p.d.path === 'straight' && range < .62 * a.s, arm = a.stam < 15;
   if (smothered) dmg *= .45;
@@ -1207,6 +1215,7 @@ function checkHit(a, d) {
   if (d.isPlayer) G.fpHit = Math.min(1, (G.fpHit || 0) + dmg / 14);
   if (taunted && a.isPlayer) popText('Caught him showboating', tgt, '#e8b931');
   if (p.body && Math.random() < (a.trait === 'dirty' ? .06 : a.isPlayer ? .004 : .008)) foul(a, 'low blows');
+  liverCheck(a, d, p);
   if (dmg >= 11) { CROWD.burst.push(G.time); CROWD.excite = Math.min(1, (CROWD.excite || 0) + .35); }
   if (!QUICK && PR && PR.stage === 'amateur' && !G.spar && dmg >= 11 && d.head > 0 && d.head < 25 && !d.down) standingEight(d);
   if (REFS.ref && REFS.ref.stopEarly && !G.spar && !d.down && d.head > 0 && d.head < 10 && d.buckle > 0 && G.state === 'fight') { REFS.waveT = 2.5; endFight(a, 'TKO', `The referee stepped in to save ${d.isPlayer ? 'you' : surname(d.name)}`); }
@@ -1250,11 +1259,24 @@ function knockdown(d, a) {
   else if (!d.isPlayer) { const pKO = clamp(.08 + .22 * (d.kdFight - 1) + d.totalHeadDmg / 350 + (d.head < -15 ? .25 : 0), 0, .92); d.down.getUp = Math.random() < pKO ? 99 : randInt(4, 8); }
   showMsg(d.down.final ? '' : 'Down!', ''); G.zoom = .5; CROWD.excite = 1; comment('kd', { f: d });
 }
-function mash() { const d = P.down; if (!d || d.rising != null || d.final) return; d.mash++; }
+function mash() { const d = P.down; if (!d || d.rising != null || d.final) return; d.mash += focusBonus(); }
+function neutralCorner(f, downed) {
+  const c = [new V3(RING - .55, 0, -(RING - .55)), new V3(-(RING - .55), 0, RING - .55)].sort((a, b) => b.distanceTo(downed.pos) - a.distanceTo(downed.pos))[0];
+  const to = c.sub(f.pos).setY(0), fw = f.fwd(), rt = new V3(-fw.z, 0, fw.x);
+  f.inp.mz = clamp(to.dot(fw) * 3, -1, 1); f.inp.mx = clamp(to.dot(rt) * 3, -1, 1); f.inp.block = false; f.punch = null; f.queue = [];
+}
+/* after a fighter gets up the referee wipes his gloves and looks in his eyes before waving them on */
+function updateRestart(dt) {
+  const r = G.restart; r.t += dt;
+  const other = r.f === P ? O : P;
+  for (const f of [P, O]) { f.punch = null; f.queue = []; f.inp.block = false; f.inp.mx = f.inp.mz = 0; }
+  if (r.t < .1 && !r.said) { r.said = true; showMsg('', r.f.isPlayer ? 'The referee checks you' : `The referee checks ${surname(r.f.name)}`, 1.6); }
+  if (REF && REF.root.visible) { const between = r.f.pos.clone().lerp(other.pos, .25); REF.handT = { L: r.f.W(r.f.T(new V3(.08, 1.15, .45))), R: r.f.W(r.f.T(new V3(-.08, 1.15, .45))) }; REFS.spot = between; }
+  if (r.t > 2.2) { G.restart = null; if (REF && REF.root.visible) refSay('Box!'); else showMsg('', 'Box!', .8); }
+}
 function updateCount(f, other, dt) {
   const d = f.down; if (!d || d.rising != null) return;
-  other.inp.mx = other.inp.mz = 0;
-  const away = other.pos.clone().sub(f.pos).setY(0); if (away.length() < 2.2) other.pos.addScaledVector(away.normalize(), dt * 1.2);
+  neutralCorner(other, f);
   if (d.t < d.nextCount) return;
   d.nextCount += REFS.ref ? REFS.ref.count : 1; d.count++;
   if (REF && REF.root.visible) { REFS.countArm = 1; if (d.count <= 10) say(COUNTW[d.count] + '!', 'ref', true); }
@@ -1331,10 +1353,13 @@ function updateRef(dt) {
   }
   let want = REFS.spot.clone(), face = mid;
   const downF = P.down ? P : O.down ? O : null;
-  R.handT = null;
+  if (!G.restart) R.handT = null;
   if (G.state === 'over' && G.winner) {
     const w = G.winner; want = w.pos.clone().addScaledVector(w.right(), .6); face = w.pos;
     const up = w.W(w.T(new V3(-.18, 2.12, .08))); w.handT = { R: up }; R.handT = { L: up.clone().add(new V3(0, -.08, 0)) };
+  } else if (G.restart) {
+    want = REFS.spot ? REFS.spot.clone() : mid; face = G.restart.f.pos;
+    R.handT = REF.handT;
   } else if (downF) {
     const other = downF === P ? O : P, dirO = other.pos.clone().sub(downF.pos).setY(0).normalize();
     want = downF.pos.clone().addScaledVector(dirO, .95); face = downF.pos;
@@ -1345,7 +1370,7 @@ function updateRef(dt) {
     R.handT = { L: R.W(R.T(new V3(.05 + w, 1.35, .45))), R: R.W(R.T(new V3(-.05 - w, 1.35, .45))) };
   } else if (G.state === 'fight') {
     // smothered at close range for too long: step in and break them
-    REFS.close = L < .5 * (P.s + O.s) / 2 && !P.stun && !O.stun && !P.punch && !O.punch ? REFS.close + dt : Math.max(0, REFS.close - dt * 2);   // only a real stall, not infighting
+    REFS.close = L < .6 && !P.stun && !O.stun && !P.punch && !O.punch ? REFS.close + dt : Math.max(0, REFS.close - dt * 2);   // only a real stall, not infighting
     if (REFS.close > (REFS.ref ? REFS.ref.breakT : 1.6) + 1.5 && REFS.breakT <= 0) { REFS.breakT = 1.1; REFS.close = 0; refSay('Break!'); for (const f of [P, O]) { f.punch = null; f.queue = []; } }
     if (REFS.breakT > 0) {
       REFS.breakT -= dt; want = mid.clone().addScaledVector(perp, (REFS.spot && perp.dot(REFS.spot.clone().sub(mid)) < 0 ? -1 : 1) * .5);
@@ -1356,7 +1381,7 @@ function updateRef(dt) {
   want.x = clamp(want.x, -RING + .4, RING - .4); want.z = clamp(want.z, -RING + .4, RING - .4);
   if (!(REFS.breakT > 0)) for (const f of [P, O]) { const off = R.pos.clone().sub(f.pos).setY(0), d = off.length(); if (d < 1.05) want.addScaledVector(off.normalize(), (1.05 - d) * 2.2); }   // walk around them, not through
   const to = want.sub(R.pos).setY(0), fw = face.clone().sub(R.pos).setY(0).normalize(), rt = new V3(-fw.z, 0, fw.x);
-  R.inp.mz = clamp(to.dot(fw) * 3, -1, 1); R.inp.mx = clamp(-to.dot(rt) * 3, -1, 1); R.inp.block = false; R.stam = 100;
+  R.inp.mz = clamp(to.dot(fw) * 3, -1, 1); R.inp.mx = clamp(to.dot(rt) * 3, -1, 1); R.inp.block = false; R.stam = 100;
   R.update(dt, { pos: face }, T0 + 2.6);
   const chest = R.pos.clone().setY(1.3), seg = mid.clone().setY(1.3).sub(camPos), u = clamp(chest.clone().sub(camPos).dot(seg) / seg.lengthSq(), 0, 1);
   const inFront = u < .97 && chest.distanceTo(camPos.clone().addScaledVector(seg, u)) < .75;
@@ -1528,7 +1553,7 @@ function commentRoundStart() {
 function commentOpening() {
   const o = G.oppDesc || {}, on = callName(O), pn = callName(P);
   const styleLine = [`${on} likes to come forward and put on pressure.`, `${on} likes to box from range, behind the jab.`, `${on} is a counterpuncher. He waits for you to lead.`, `${on} is a big puncher who loads up on every shot.`, `${on} swarms. Non-stop pressure up close.`][o.style || 0];
-  const notes = [o.rec ? `${on} comes in at ${recWords(o.rec)}.` : '', styleLine, o.southpaw ? `And he's a southpaw, so ${pn} needs to watch that left hand.` : '', o.trait ? `${TRAITS[o.trait].tell}` : ''].filter(Boolean).join(' ');
+  const notes = [memoryLine(), o.rec ? `${on} comes in at ${recWords(o.rec)}.` : '', styleLine, o.southpaw ? `And he's a southpaw, so ${pn} needs to watch that left hand.` : '', o.trait ? `${TRAITS[o.trait].tell}` : ''].filter(Boolean).join(' ');
   setTimeout(() => comment('round', { text: notes }), 4500);
 }
 function warmCommentary() {
@@ -1662,9 +1687,9 @@ function endRound() {
   G.state = 'break'; sfx.bell(1); scoreRound();
   commentRoundEnd();
   const a = P.st, b = O.st;
-  $('brk').innerHTML = `<h2>End of round ${G.round}</h2><p>The judges' cards stay sealed until the end.</p>` +
+  $('brk').innerHTML = `<h2>End of round ${G.round}</h2><p>The official cards stay sealed until the end.</p>` +
     statsTable([['Punches landed', `${a.landed} of ${a.thrown}`, `${b.landed} of ${b.thrown}`], ['Power punches landed', a.power, b.power], ['Knockdowns scored', b.kd, a.kd]]) +
-    `<p>Your corner: ${cornerAdvice()}</p>` + cutmanUI() +
+    `<p>Your corner: ${cornerAdvice()}</p>` + tvScorecard() + cutmanUI() +
     `<button class="go" id="nextBtn">Round ${G.round + 1}</button>`;
   showOnly('brk'); $('nextBtn').onclick = nextRound; $('nextBtn').focus(); G.breakT = P.cut ? 30 : 20; cutmanStart();
 }
@@ -1687,7 +1712,7 @@ function nextRound() {
     f.reset(f === P ? new V3(0, 0, -1.2) : new V3(0, 0, 1.2), f === P ? 0 : Math.PI);
     f.stats_ = keep.stats; f.newRound();
     f.stamMax = Math.min(100, keep.stamMax + 18); f.stam = f.stamMax; f.headCap = keep.headCap; f.head = Math.min(keep.headCap, keep.head + (keep.headCap - keep.head) * .5);
-    f.body = Math.min(100, keep.body + 15); f.kdFight = keep.kdFight; f.totalHeadDmg = keep.tot; f.swell = { L: keep.swell.L * .85, R: keep.swell.R * .85 }; f.sweat = keep.sweat * .7; f.cut = keep.cut; if (f.cut) f.cut.sev *= .8;   // the corner works on it
+    f.body = Math.min(100, keep.body + 15); f.kdFight = keep.kdFight; f.totalHeadDmg = keep.tot; f.swell = { L: keep.swell.L * .85, R: keep.swell.R * .85 }; f.sweat = keep.sweat * .7; f.cut = keep.cut; if (f.cut) f.cut.sev *= f.isPlayer && has('cutman') ? .6 : .8;   // the corner works on it
   }
   O.ai = null; G.state = 'fight'; sfx.bell(1); showMsg(`Round ${G.round}`, '', 1.2); camPos.set(0, 6.5, -4.5);
   commentRoundStart();
@@ -1735,6 +1760,7 @@ function endFight(winner, how, detail) {
     else $('homeBtn').onclick = toHub;
     $(QUICK ? 'againBtn' : 'homeBtn').focus();
   };
+  G.lastHow = how;
   if ((how === 'KO' || how === 'TKO') && !G.sim) setTimeout(() => { if (!startReplay(G.winner)) showResult(); else REPLAY.play.done = showResult; }, 1800);
   else setTimeout(showResult, how === 'DEC' || how === 'RTD' ? 600 : 2200);
 }
@@ -1750,11 +1776,11 @@ function announceResult(won, draw, how) {
 }
 function hintText() { return `${K('jab')} jab · ${K('cross')} cross · ${K('hook')} hook · ${K('upper')} uppercut · hold ${K('body')} for the body · ${K('block')} block · ${K('slipL')} / ${K('slipR')} slip · ${K('lupper')} lead upper · ${K('over')} overhand · ${K('roll')} roll · ${K('feint')} feint · ${K('pull')} pull back · ${K('clinch')} clinch · ${K('up')}${K('left')}${K('down')}${K('right')} move · ${K('cam')} camera · Esc pause`; }
 function startFight(opp, cfg = {}) {
-  REPLAY.buf = []; REPLAY.play = null; $('replayTag').classList.add('hidden'); G.fouls = [0, 0]; G.deduct = [0, 0]; G.holds = 0; G.eight = null; G.foulPause = 0; CROWD.burst = []; CROWD.idle = 0; CROWD.chantT = 5;
+  REPLAY.buf = []; REPLAY.play = null; $('replayTag').classList.add('hidden'); G.restart = null; G.fouls = [0, 0]; G.deduct = [0, 0]; G.holds = 0; G.eight = null; G.foulPause = 0; CROWD.burst = []; CROWD.idle = 0; CROWD.chantT = 5;
   MODE = 'fight'; setScene('arena'); audioInit(); showOnly(); G.paused = false; $('coach').classList.add('hidden');
   const me = cfg.fighter || PR;
   G.oppDesc = opp; G.ai = aiFor(opp); G.rounds = cfg.rounds || PR.rounds; G.roundLen = cfg.roundLen || SET.careerRoundLen; G.round = 1; G.clock = G.roundLen;
-  G.cards = [[], [], []]; G.judgesBias = [rand(-.15, .15), rand(-.15, .15), rand(-.15, .15)]; G.cam = SET.cam.view;
+  G.tc = {}; G.cards = [[], [], []]; G.judgesBias = [rand(-.15, .15), rand(-.15, .15), rand(-.15, .15)]; G.cam = SET.cam.view;
   P.mitt = false; O.mitt = false; O.aimFor = null; O.root.visible = true; P.root.visible = true;
   P.look(me); P.stats(me); P.name = me.name || 'You';
   O.look(opp); O.stats(opp); if (opp.trait === 'iron') O.chin *= 1.18; if (opp.trait === 'glass') O.chin *= .82; O.trait = opp.trait; O.name = opp.name; O.mats.Shoes && O.mats.Shoes.color.set(0xe0ddd6);
@@ -1765,6 +1791,8 @@ function startFight(opp, cfg = {}) {
   P.handT = O.handT = null;
   G.spar = !!cfg.spar; refStart(); O.tell = !QUICK && !G.spar && PR && PR.scout === opp.name;
   if (QUICK && QUICK.daily && QUICK.daily.mod.tired) G.stamCap = 70;
+  if (!QUICK && PR && PR.press && G.ai) G.ai.aggr *= 1 + PR.press.fired;
+  if (!QUICK && PR && !cfg.fighter) ageLook(P, PR);
   if (QUICK && QUICK.daily) { G.stamCap = QUICK.daily.mod.tired ? 70 : 100; } else if (!QUICK && !cfg.fighter && PR) { const cap = Math.round(100 - Math.max(0, fatigueOf() - 40) * .5 - (PR.weightCut ? 8 : 0)); P.stamMax = P.stam = cap; G.stamCap = cap; } else if (!(QUICK && QUICK.daily)) G.stamCap = 100;
   if (G.sim) { G.state = 'fight'; return; }
   if (G.spar) { setScene('gym'); G.state = 'intro'; $('pName').textContent = P.name; $('oName').textContent = O.name + ' (sparring)'; beginRound1(); return; }
@@ -1801,7 +1829,7 @@ function prefight() {
     ${row('Power', me.stats.power, o.stats.power)}${row('Speed', me.stats.speed, o.stats.speed)}${row('Chin', me.stats.chin, o.stats.chin)}${row('Cardio', me.stats.cardio, o.stats.cardio)}
     </tbody></table>${deal.purse ? `<p>Purse: <b>${money(deal.purse)}</b> before your promoter's cut.</p>` : ''}${PR.scout === o.name ? '<p class="gain">You studied his film: his power shots are easier to read.</p>' : ''}${fatigueOf() > 40 ? `<p class="note">You're carrying fatigue (${fatigueOf()}): you start with ${Math.round(100 - (fatigueOf() - 40) * .5)}% stamina.</p>` : ''}<p>${o.reach > me.reach + 4 ? 'He has the longer reach. Get inside his jab.' : me.reach > o.reach + 4 ? 'You have the reach. Keep him on the end of your jab.' : 'Even reach. Win the jab battle.'}</p>
     <div class="seg"><button class="go" id="walkBtn">Walk out</button><button id="backBtn">Not yet</button></div>`;
-  showOnly('prefight'); $('walkBtn').onclick = () => { QUICK = null; startFight(PR.next, { rounds: PR.rounds }); }; $('backBtn').onclick = toHub; $('walkBtn').focus();
+  showOnly('prefight'); $('walkBtn').onclick = () => { QUICK = null; const go = () => startFight(PR.next, { rounds: PR.rounds }); if (PR.stage === 'pro') pressConference(() => weighIn(go)); else go(); }; $('backBtn').onclick = toHub; $('walkBtn').focus();
 }
 const fmtLen = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -1813,6 +1841,7 @@ function idleGym(fighter) {
   setScene('gym'); fightUI(false); showMsg('', ''); $('call').classList.add('hidden'); $('drill').classList.add('hidden'); $('coach').classList.add('hidden'); propsFor(null); P.root.position.y = 0;
   O.root.visible = false; P.root.visible = true; P.mitt = false; P.handT = null; if (REF) REF.root.visible = false; P.headMesh.visible = true; renderer.domElement.style.filter = '';
   P.look(fighter); P.stats(fighter); P.reset(new V3(0, 0, 0), .3); shadow.t = 1.2;
+  if (fighter && fighter.created && fighter.stats) { ageLook(P, fighter); buildGymExtras(); }
 }
 function toHub() {
   hush(); MODE = 'hub'; QUICK = null; idleGym(PR); buildShelf(PR.trophies);
@@ -1831,7 +1860,7 @@ function renderHub() {
   else card = `<div class="kicker">Week ${pr.week}</div><div class="big">${pr.offers && pr.offers[0] && pr.offers[0].kind === 'mandatory' ? 'Mandatory defense due' : 'Pick your next fight'}</div><p class="note">${(pr.offers || []).length} offer${(pr.offers || []).length === 1 ? '' : 's'} on the table.</p><button class="go" id="offBtn">See fight offers</button>`;
   const news = [pr.news, ...((pr.world && pr.world.news) || []).slice(0, 3)].filter(Boolean);
   const next = TRAINERS[(pr.trainer || 0) + 1];
-  $('hub').innerHTML = `<div class="kicker">${WEIGHTS[pr.w][0]} · ${esc(recLine(pr))}${pr.rank ? ` · ranked ${pr.rank}` : pro ? ' · unranked' : ''} · age ${ageOf(pr)}${pro ? ` · ${money(pr.money || 0)}` : ''}</div>
+  $('hub').innerHTML = `<div class="kicker">${WEIGHTS[pr.w][0]} · ${esc(recLine(pr))}${pr.rank ? ` · ranked ${pr.rank}` : pro ? ' · unranked' : ''} · age ${ageOf(pr)}${pro ? ` · hype ${Math.round(pr.hype || 0)}` : ''}${pro ? ` · ${money(pr.money || 0)}` : ''}</div>
     <h1>${esc(pr.name)}</h1>${pr.nick ? `<p>“${esc(pr.nick)}”</p>` : ''}
     ${belts.length ? `<p class="belts">${belts.map(b => `<span class="belt" style="--c:${hex(BODIES.find(x => x.id === b).col)}">${BODIES.find(x => x.id === b).short} champion</span>`).join('')}</p>` : ''}
     ${statBars(pr.stats)}
@@ -1841,7 +1870,7 @@ function renderHub() {
     <div class="card">${card}</div>
     ${news.length ? `<details class="news"><summary>Around the division</summary>${news.map(n => `<p class="note">${esc(n)}</p>`).join('')}</details>` : ''}
     <div class="seg" style="margin-top:6px"><button id="recBtn">Records</button><button id="troBtn">Trophy room</button>${pro && pr.world ? '<button id="rankBtn">Rankings</button>' : ''}<button id="editBtn">Edit fighter</button><button id="quickBtn">Quick fight</button></div>
-    ${pro ? `<div class="seg" style="margin-top:6px">${pr.w < WEIGHTS.length - 1 ? '<button id="upBtn">Move up a division</button>' : ''}${pr.w > 0 ? '<button id="downBtn">Move down</button>' : ''}${next ? `<button id="hireBtn"${(pr.money || 0) < next.cost ? ' disabled' : ''}>Hire ${next.name.toLowerCase()} (${money(next.cost)})</button>` : ''}</div>` : ''}
+    ${pro ? `<div class="seg" style="margin-top:6px">${pr.w < WEIGHTS.length - 1 ? '<button id="upBtn">Move up a division</button>' : ''}${pr.w > 0 ? '<button id="downBtn">Move down</button>' : ''}<button id="teamBtn">Team and gym</button>${next ? `<button id="hireBtn"${(pr.money || 0) < next.cost ? ' disabled' : ''}>Hire ${next.name.toLowerCase()} (${money(next.cost)})</button>` : ''}</div>` : ''}
     <div class="seg" style="margin-top:8px"><button id="menuBtn">Main menu</button>${pro ? '<button id="retBtn">Retire</button>' : ''}</div><div id="hubConfirm"></div>
     <p class="note" style="margin-top:14px">Saved to ${Save.where} · slot ${SAVE.active + 1}.</p>`;
   if ($('fightBtn')) $('fightBtn').onclick = prefight; if ($('trainBtn')) $('trainBtn').onclick = openTrainMenu;
@@ -1850,7 +1879,7 @@ function renderHub() {
   const confirm = (q, yes, fn) => { $('hubConfirm').innerHTML = `<div class="card"><p>${q}</p><div class="confirm"><button class="go" id="hcYes">${yes}</button><button id="hcNo">Cancel</button></div></div>`; $('hcYes').onclick = fn; $('hcNo').onclick = () => { $('hubConfirm').innerHTML = ''; }; $('hcYes').focus(); };
   if ($('upBtn')) $('upBtn').onclick = () => confirm(`Move up to ${WEIGHTS[pr.w + 1][0]}? More power, less speed, a new set of opponents.${belts.length ? ' Your titles will be vacated.' : ''}`, 'Move up', () => changeWeight(1));
   if ($('downBtn')) $('downBtn').onclick = () => confirm(`Cut down to ${WEIGHTS[pr.w - 1][0]}? Quicker, a little less power.${belts.length ? ' Your titles will be vacated.' : ''}`, 'Move down', () => changeWeight(-1));
-  if ($('hireBtn')) $('hireBtn').onclick = hireTrainer;
+  if ($('hireBtn')) $('hireBtn').onclick = hireTrainer; if ($('teamBtn')) $('teamBtn').onclick = openTeam;
   if ($('retBtn')) $('retBtn').onclick = () => confirm(`Retire at ${ageOf(pr)} with a record of ${recStr(pr.pro)}? This ends the career in this slot.`, 'Retire', retire);
   $('recBtn').onclick = openRecords; $('troBtn').onclick = () => openTrophies(toHub);
   $('editBtn').onclick = () => openCreator(false); $('quickBtn').onclick = () => openQuick(SAVE.active, toHub);
@@ -2040,6 +2069,7 @@ function updateTutorial(dt) {
 }
 
 /*@include extras*/
+/*@include ideas*/
 
 /* ================= main menu ================= */
 function toMenu() {
@@ -2058,6 +2088,7 @@ function renderMenu() {
     <button class="wide" id="mQuick"><span>Quick fight</span><small>No record on the line</small></button>
     <button class="wide" id="mTour"><span>Tournament</span><small>${SAVE.tourney && !SAVE.tourney.out && SAVE.tourney.round < 3 ? `In progress: round ${SAVE.tourney.round + 1} of 3` : "Eight fighters, three wins for the trophy"}</small></button>
     <button class="wide" id="mDaily"><span>Daily challenge</span><small>Same opponent for everyone today</small></button>
+    <button class="wide" id="mMgr"><span>Manager mode</span><small>Run a stable of boxers</small></button>
     <button class="wide" id="mTrophy"><span>Trophy room</span><small>${pr ? `${earned} of ${TROPHIES.length} earned` : 'Start a career to earn trophies'}</small></button>
     <button class="wide" id="mTut"${!SAVE.tutDone ? ' style="border-color:var(--gold)"' : ''}><span>Tutorial</span><small>${SAVE.tutDone ? 'Every punch, the block and the slip' : 'New here? Start with this'}</small></button>
     <button class="wide" id="mSet"><span>Settings</span><small>Controls, camera, audio</small></button>
@@ -2067,7 +2098,7 @@ function renderMenu() {
   if ($('mContinue')) $('mContinue').onclick = toHub;
   if ($('mSlots2')) $('mSlots2').onclick = openSlots;
   if ($('mNew')) $('mNew').onclick = () => { PR = newProfile(); openCreator(true, toMenu); };
-  $('mSlots').onclick = openSlots; $('mQuick').onclick = () => openQuick(null, toMenu); $('mTour').onclick = () => openTourney(false); $('mDaily').onclick = openDaily;
+  $('mSlots').onclick = openSlots; $('mQuick').onclick = () => openQuick(null, toMenu); $('mTour').onclick = () => openTourney(false); $('mDaily').onclick = openDaily; $('mMgr').onclick = openManager;
   $('mTrophy').onclick = () => { if (pr) openTrophies(toMenu); else $('mTrophy').querySelector('small').textContent = 'Start a career first: trophies belong to a fighter'; };
   $('mTut').onclick = startTutorial; $('mSet').onclick = () => openSettings(toMenu);
   if ($('installBtn')) $('installBtn').onclick = async () => {
@@ -2149,8 +2180,10 @@ function openRecords() {
     <h3>Career numbers</h3><table><tbody>${row('Bouts', t.fights)}${row('Rounds boxed', t.rounds)}${row('Punches landed', `${t.landed} of ${t.thrown} (${acc})`)}${row('Power punches landed', t.power)}${row('Knockdowns scored', t.kdFor)}${row('Times knocked down', t.kdAgainst)}</tbody></table>
     <h3>Fight log</h3>${p.history.length ? `<div class="log"><table><thead><tr><th>Week</th><th>Opponent</th><th>Result</th></tr></thead><tbody>${p.history.map(h => `<tr><td>${h.wk}</td><td>${esc(h.opp)}${h.orec ? ` <span class="note">(${esc(h.orec)})</span>` : ''}</td><td>${h.res} ${esc(h.how || '')}${h.rnd ? `, rd ${h.rnd}` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<p class="note">No fights yet.</p>'}
     <p class="note">Quick fights (all fighters): ${recStr(SAVE.qf)}</p>
+    <h3>Highlight reel</h3>${reelLoad().length ? reelLoad().map((c, i) => `<button class="wide offer" data-reel="${i}"><span>${esc(c.title)}</span><small>${esc(c.date)} · watch the replay</small></button>`).join('') : '<p class="note">Your best knockouts are saved here on this device.</p>'}
     <button id="rcBack">Back</button>`;
   showOnly('records'); $('rcBack').onclick = () => { renderHub(); showOnly('hub'); }; $('rcBack').focus();
+  for (const b of $('records').querySelectorAll('[data-reel]')) b.onclick = () => reelPlay(+b.dataset.reel);
 }
 
 /* ================= trophies ================= */
@@ -2169,6 +2202,7 @@ const TROPHIES = [
   { id: 'champion', name: 'World champion', desc: 'Win a world title', tier: 'gold' },
   { id: 'unified', name: 'Unified', desc: 'Hold two world titles at once', tier: 'gold' },
   { id: 'rival', name: 'Score settled', desc: 'Beat a rival in a rematch', tier: 'silver' },
+  { id: 'amchamp', name: 'National amateur champion', desc: 'Win the national amateur championships', tier: 'silver' },
   { id: 'hof', name: 'Hall of Fame', desc: 'Retire and be inducted into the Hall of Fame', tier: 'gold' }
 ];
 function checkTrophies(c) {
@@ -2177,7 +2211,7 @@ function checkTrophies(c) {
     a('debut'); if (c.won) a('firstwin'); if (c.won && (c.how === 'KO' || c.how === 'TKO')) a('firstko'); if (c.gotUp) a('getup');
     if (PR.stage === 'pro') a('amateur5'); if (PR.rank) a('ranked'); if (PR.rank && PR.rank <= 10) a('top10'); if (PR.rank === 1) a('no1');
     if (PR.pro.w >= 10 && PR.pro.l === 0 && PR.pro.d === 0) a('unbeaten10');
-    if (PR.titleWins) a('champion'); if (Object.keys(PR.belts || {}).length >= 2) a('unified'); if (PR.rivalsBeaten) a('rival');
+    if (PR.amChamp) a('amchamp'); if (PR.titleWins) a('champion'); if (Object.keys(PR.belts || {}).length >= 2) a('unified'); if (PR.rivalsBeaten) a('rival');
   }
   if (c.mitts && c.perfectAll) a('mitts');
   if (c.hof) a('hof');
@@ -2197,7 +2231,7 @@ function openTrophies(back) {
 let SBACK = null, sTab = 'controls';
 function openSettings(back) { SBACK = back || toMenu; renderSettings(); showOnly('settings'); }
 function renderSettings() {
-  const tabs = [['controls', 'Controls'], ['camera', 'Camera'], ['audio', 'Audio'], ['game', 'Gameplay']];
+  const tabs = [['controls', 'Controls'], ['camera', 'Camera'], ['audio', 'Audio'], ['game', 'Gameplay'], ['access', 'Accessibility']];
   const seg = (path, opts) => opts.map(([l, v]) => `<button data-set="${path}" data-v='${JSON.stringify(v)}' aria-pressed="${getPath(path) === v}">${l}</button>`).join('');
   let body = '';
   if (sTab === 'controls') body = `<p class="note">Click a key, then press the new one. Esc cancels. Arrow keys always move too, and Esc pauses a fight.</p>` +
@@ -2212,6 +2246,7 @@ function renderSettings() {
     <label>Live commentary voice</label><div class="seg">${seg('audio.comm', [['On', true], ['Off', false]])}</div><p class="note">Captions always show what's said.</p>
     <button id="sTest" style="margin-top:12px">Test sound</button>`;
   if (sTab === 'game') body = `<label>Round length in your career</label><div class="seg">${seg('careerRoundLen', [60, 90, 120, 180].map(s => [fmtLen(s), s]))}</div><p class="note">Real professional rounds are 3:00. Longer rounds make stamina matter more. Quick fights set their own length.</p>`;
+  if (sTab === 'access') body = `<label>One-button defense</label><div class="seg">${seg('access.oneBtn', [['On', true], ['Off', false]])}</div><p class="note">Tap block as a punch comes: you slip straights and roll hooks automatically.</p><label>Colour-blind friendly colours</label><div class="seg">${seg('access.colorblind', [['On', true], ['Off', false]])}</div><label>Larger text</label><div class="seg">${seg('access.bigText', [['On', true], ['Off', false]])}</div><label>Reduce flashes</label><div class="seg">${seg('access.noFlash', [['On', true], ['Off', false]])}</div><p class="note">Gamepads work too: left stick moves, X jab, Y cross, B hook, A uppercut, RT overhand, LT lead uppercut, RB block, LB body, d-pad slips, roll and feint.</p>`;
   $('settings').innerHTML = `<h1>Settings</h1><div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" aria-pressed="${sTab === k}">${l}</button>`).join('')}</div>${body}<div class="seg" style="margin-top:16px"><button class="go" id="sBack">Done</button></div>`;
   const q = s => $('settings').querySelectorAll(s);
   for (const b of q('[data-tab]')) b.onclick = () => { sTab = b.dataset.tab; if (sTab === 'audio') audioInit(); renderSettings(); };
@@ -2338,6 +2373,7 @@ function recordFrame() {
 function startReplay(focus) {
   if (G.sim || window.__noReplay || REPLAY.buf.length < 40) return false;
   REPLAY.play = { frames: REPLAY.buf.slice(-220), i: 0, focus, t: 0 }; REPLAY.buf = [];
+  if (focus === P) reelSave(REPLAY.play.frames, `${G.lastHow || 'KO'} of ${O.name}, round ${G.round}`);
   $('replayTag').classList.remove('hidden'); return true;
 }
 function updateReplay(dt) {
@@ -2371,14 +2407,16 @@ function updateClinch(dt) {
 function fightStep(dt) {
   recordFrame();
   if (G.eight || G.foulPause > 0) { if (G.eight) updateEight(dt); else { G.foulPause -= dt; for (const f of [P, O]) { f.inp.mx = f.inp.mz = 0; f.inp.block = false; } } G.time += dt; P.update(dt, O, G.time); O.update(dt, P, G.time + 1.7); return; }
-  crowdTick(dt);
+  crowdTick(dt); liverTick(dt);
   playerInput(P); if (G.bot) G.bot(dt); ai(O, P, dt); G.time += dt;
   if (G.clinch) updateClinch(dt);
+  { const dn = P.down ? P : O.down ? O : null; if (dn) neutralCorner(dn === P ? O : P, dn); if (G.restart) for (const f of [P, O]) { f.inp.mx = f.inp.mz = 0; f.inp.block = false; } }
   P.update(dt, O, G.time); O.update(dt, P, G.time + 1.7);
   const sep = O.pos.clone().sub(P.pos).setY(0), dist = sep.length();
   if (dist < .56 && !P.down && !O.down) { sep.normalize().multiplyScalar((.56 - dist) / 2); O.pos.add(sep); P.pos.sub(sep); }
   checkHit(P, O); checkHit(O, P);
   for (const [f, o] of [[P, O], [O, P]]) if (f.down) updateCount(f, o, dt);
+  if (G.restart) updateRestart(dt);
   if (P.stam < 18 && !COMM.tiredP) { COMM.tiredP = true; comment('tiredP'); } else if (P.stam > 45) COMM.tiredP = false;
   if (O.stam < 22 && !COMM.tiredO) { COMM.tiredO = true; comment('tiredO'); } else if (O.stam > 45) COMM.tiredO = false;
   if (!P.down && !O.down && G.state === 'fight') {
@@ -2442,6 +2480,7 @@ function frame(now) {
   }
   if (!G.paused) updateSpray(dt);
   updateCamera(rdt, T0);
+  padTick(); if (MODE === 'fight' && P) focusTick(rdt); if (SET) applyAccess();
   if (window.__crowdU) { window.__crowdU.uTime.value = T0; window.__crowdU.uExcite.value = CROWD.excite || 0; }
   if (composer && SET && SET.gfx !== 'low' && !PHOTO.on) composer.render(); else renderer.render(scene, camera);
 }

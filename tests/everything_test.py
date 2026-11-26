@@ -20,6 +20,7 @@ with sync_playwright() as pw:
     def hub(): ev("window.__game.PR.fightIn = 3; window.__game.toHub()"); time.sleep(.4)
     def drill(kind, bot, shorten, label=None):
         hub(); pg.click("#trainBtn"); time.sleep(.3); pg.click(f"[data-t='{kind}']"); time.sleep(.8)
+        if kind == 'combo': pg.click("[data-cl='0']"); time.sleep(.8)
         ev(shorten); t0 = time.time(); shot = False
         while time.time() - t0 < 150:
             if pg.locator("#trainResult:not(.hidden)").count(): break

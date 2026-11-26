@@ -14,7 +14,7 @@ with sync_playwright() as pw:
     pg.click("#mNew"); time.sleep(.6); pg.fill("#fName", "Career Test"); ev("document.getElementById('fAge').value = 22; document.getElementById('fAge').dispatchEvent(new Event('input'))"); pg.click("#saveF"); time.sleep(1)
     check("age set", ev(f"{G}.PR.age") == 22)
     # five amateur wins -> pro
-    for i in range(5): ev(f"{G}.recordResult({G}.PR, true, false, 'KO', {{}})")
+    for i in range(6): ev(f"{G}.recordResult({G}.PR, true, false, 'KO', {{}})")   # three wins, then the three-round amateur championships
     check("turned pro", ev(f"{G}.PR.stage") == "pro"); check("world made", ev(f"!!{G}.PR.world && {G}.PR.world.roster.length === 40"))
     ev(f"{G}.toHub()"); time.sleep(.5); pg.screenshot(path=f"{S}/w_hub_pro.png")
     check("promoter prompt", pg.locator("#promBtn").count() == 1)
